@@ -1,0 +1,93 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'jacoco'
+}
+
+configurations {
+    xjcTool
+}
+
+group = 'name.jurgenei.gradle'
+version = '0.1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation 'org.docx4j:docx4j-core:17.0.2'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+
+    xjcTool 'org.glassfish.jaxb:jaxb-xjc:4.0.5'
+
+    testImplementation gradleTestKit()
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+}
+
+def generatedJaxbDir = layout.buildDirectory.dir('generated/sources/xjc/main')
+
+tasks.register('generateCanonicalJaxb', JavaExec) {
+    group = 'build'
+    description = 'Generates JAXB classes from canonical.xsd into a dedicated generated package.'
+    classpath = configurations.xjcTool
+    mainClass = 'com.sun.tools.xjc.XJCFacade'
+    inputs.file(file('src/main/resources/schema/canonical.xsd'))
+    outputs.dir(generatedJaxbDir)
+
+    doFirst {
+        generatedJaxbDir.get().asFile.mkdirs()
+    }
+
+    args(
+            '-extension',
+            '-no-header',
+            '-encoding', 'UTF-8',
+            '-d', generatedJaxbDir.get().asFile.absolutePath,
+            '-p', 'name.jurgenei.gradle.ooxml.generated.canonical',
+            file('src/main/resources/schema/canonical.xsd').absolutePath
+    )
+}
+
+sourceSets {
+    main {
+        java.srcDir(generatedJaxbDir)
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateCanonicalJaxb')
+}
+
+gradlePlugin {
+    plugins {
+        ooxmlPlugin {
+            id = 'name.jurgenei.gradle.ooxml'
+            implementationClass = 'name.jurgenei.gradle.ooxml.OoXmlPlugin'
+            displayName = 'OOXML Canonical Plugin'
+            description = 'Converts DOCX/PPTX/XLSX to canonical XML and extracts assets.'
+            tags = ['ooxml', 'docx4j', 'jaxb', 'docx', 'pptx', 'xlsx', 'xml']
+        }
+    }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
