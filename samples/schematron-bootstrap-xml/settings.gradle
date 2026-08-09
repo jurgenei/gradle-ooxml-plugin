@@ -1,0 +1,7 @@
+pluginManagement {
+    includeBuild('../..')
+    includeBuild('../../../gradle-xml-plugin')
+}
+
+rootProject.name = 'schematron-bootstrap-xml'
+

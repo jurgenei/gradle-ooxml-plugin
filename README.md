@@ -100,6 +100,11 @@ You can pass canonical schema location to `gradle-xml-plugin` tasks using:
 - `ooxml.canonicalSchemaUrl` for URL-based consumption
 - optional local copy strategy if you maintain curated rule/XSD pairs
 
+Sample project (kept on OOXML side to preserve dependency direction):
+
+- `samples/schematron-bootstrap-xml`
+- Runs bootstrap + Schematron validation using `gradle-xml-plugin` while sourcing schema URL from `ooxml` extension
+
 ## Development
 
 Run tests:
