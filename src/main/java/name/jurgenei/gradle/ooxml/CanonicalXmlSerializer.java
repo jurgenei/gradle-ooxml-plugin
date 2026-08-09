@@ -11,6 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+/**
+ * Serializes canonical model objects to XML using JAXB.
+ */
 final class CanonicalXmlSerializer {
     private final JAXBContext jaxbContext;
 
@@ -22,6 +25,13 @@ final class CanonicalXmlSerializer {
         }
     }
 
+    /**
+     * Writes canonical XML to disk, creating parent directories when necessary.
+     *
+     * @param document canonical model instance.
+     * @param outputFile target output path.
+     * @throws IOException if serialization fails.
+     */
     void write(CanonicalDocument document, Path outputFile) throws IOException {
         try {
             Files.createDirectories(outputFile.getParent());

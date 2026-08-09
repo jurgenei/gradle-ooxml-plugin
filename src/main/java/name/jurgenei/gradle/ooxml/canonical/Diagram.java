@@ -8,6 +8,9 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Canonical diagram topology container.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Diagram {
     @XmlElement(name = "Shape", namespace = CanonicalNamespace.URI)
@@ -19,15 +22,27 @@ public class Diagram {
     public Diagram() {
     }
 
+    /**
+     * Creates a diagram with explicit shape and connector topology.
+     *
+     * @param shapes diagram nodes.
+     * @param connectors diagram edges.
+     */
     public Diagram(List<Shape> shapes, List<Connector> connectors) {
         this.shapes = shapes;
         this.connectors = connectors;
     }
 
+    /**
+     * @return diagram shape nodes.
+     */
     public List<Shape> getShapes() {
         return shapes;
     }
 
+    /**
+     * @return connector relationships between shapes.
+     */
     public List<Connector> getConnectors() {
         return connectors;
     }

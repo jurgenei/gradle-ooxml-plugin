@@ -3,6 +3,9 @@ package name.jurgenei.gradle.ooxml;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Resolves canonical document id and version from input filename stem.
+ */
 final class VersionResolver {
     private static final Pattern V_PREFIX_PATTERN = Pattern.compile("^(?<id>.+?)_v(?<version>[0-9]+(?:\\.[0-9]+)*)$", Pattern.CASE_INSENSITIVE);
     private static final Pattern NUMERIC_SUFFIX_PATTERN = Pattern.compile("^(?<id>.+?)_(?<version>[0-9]+(?:\\.[0-9]+)*)$", Pattern.CASE_INSENSITIVE);
@@ -11,6 +14,19 @@ final class VersionResolver {
     private VersionResolver() {
     }
 
+    /**
+     * Resolves known version suffix conventions.
+     *
+     * <p>Supported patterns include:</p>
+     * <ul>
+     *   <li>{@code name_v3}</li>
+     *   <li>{@code name_1.2}</li>
+     *   <li>{@code name_FINAL}, {@code name_DRAFT}, {@code name_SNAPSHOT}, {@code name_RC1}</li>
+     * </ul>
+     *
+     * @param fileStem filename without extension.
+     * @return resolved id/version tuple.
+     */
     static ResolvedVersion resolve(String fileStem) {
         Matcher vPrefix = V_PREFIX_PATTERN.matcher(fileStem);
         if (vPrefix.matches()) {
@@ -30,7 +46,9 @@ final class VersionResolver {
         return new ResolvedVersion(fileStem, "");
     }
 
-    record ResolvedVersion(String documentId, String version) {
-    }
+    /**
+     * Parsed identity/version pair used in canonical metadata.
+     */
+    record ResolvedVersion(String documentId, String version) { }
 }
 

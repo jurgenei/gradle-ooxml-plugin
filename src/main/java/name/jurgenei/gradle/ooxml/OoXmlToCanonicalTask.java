@@ -21,6 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
+/**
+ * Converts OOXML inputs into canonical XML documents.
+ */
 @DisableCachingByDefault(because = "Output fan-out depends on input collection shape")
 public abstract class OoXmlToCanonicalTask extends DefaultTask {
     private final OpenXmlValidator validator = new OpenXmlValidator();
@@ -44,19 +47,29 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
 
+    /**
+     * Adds one or more sources using Gradle file notation.
+     *
+     * @param source file, folder, fileTree, or collection.
+     */
     public void source(Object source) {
         getSourceFiles().from(source);
     }
 
+    /**
+     * Runs canonicalization for all resolved OOXML sources.
+     */
     @TaskAction
     public void convert() {
         Path outputRoot = getOutputDirectory().get().getAsFile().toPath();
         Set<File> inputs = InputCollector.resolve(getInputFile(), getSourceFiles());
         try {
             Files.createDirectories(outputRoot);
+            getLogger().debug("Preparing OOXML to canonical conversion for {} input file(s)", inputs.size());
             for (File input : inputs) {
                 validator.validate(input);
                 Path output = outputRoot.resolve(toOutputName(input));
+                getLogger().debug("Converting '{}' to '{}'", input.getAbsolutePath(), output.toAbsolutePath());
                 serializer.write(canonicalizer.canonicalize(input), output);
             }
         } catch (Exception e) {
@@ -71,4 +84,3 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
         return stem + ".xml";
     }
 }
-

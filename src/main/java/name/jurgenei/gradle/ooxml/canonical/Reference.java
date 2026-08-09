@@ -6,6 +6,9 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
+/**
+ * Canonical internal/document-local reference.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Reference {
     @XmlAttribute(name = "target")
@@ -17,15 +20,27 @@ public class Reference {
     public Reference() {
     }
 
+    /**
+     * Creates a canonical reference.
+     *
+     * @param target reference target identifier.
+     * @param text optional reference label.
+     */
     public Reference(String target, String text) {
         this.target = target;
         this.text = text;
     }
 
+    /**
+     * @return reference target identifier.
+     */
     public String getTarget() {
         return target;
     }
 
+    /**
+     * @return optional reference text/label.
+     */
     public String getText() {
         return text;
     }

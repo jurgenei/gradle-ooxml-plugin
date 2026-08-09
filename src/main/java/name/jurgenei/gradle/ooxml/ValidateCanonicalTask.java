@@ -21,6 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+/**
+ * Validates canonical XML documents against bundled {@code canonical.xsd}.
+ */
 @DisableCachingByDefault(because = "Validation work depends on dynamic file content")
 public abstract class ValidateCanonicalTask extends DefaultTask {
     @Inject
@@ -31,6 +34,9 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
     @InputDirectory
     public abstract DirectoryProperty getInputDirectory();
 
+    /**
+     * Validates every XML file found under {@link #getInputDirectory()}.
+     */
     @TaskAction
     public void validate() {
         if (!getInputDirectory().isPresent()) {

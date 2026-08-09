@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OoXmlPluginTest {
     @Test
@@ -20,6 +21,10 @@ class OoXmlPluginTest {
         assertInstanceOf(OoXmlToCanonicalTask.class, project.getTasks().getByName("ooxmlToCanonical"));
         assertInstanceOf(ExtractAssetsTask.class, project.getTasks().getByName("extractAssets"));
         assertInstanceOf(ValidateCanonicalTask.class, project.getTasks().getByName("validateCanonical"));
+
+        OoXmlExtension extension = project.getExtensions().getByType(OoXmlExtension.class);
+        assertNotNull(extension.getCanonicalSchemaUrl().getOrNull());
+        assertTrue(extension.getCanonicalSchemaUrl().get().contains("canonical.xsd"));
     }
 }
 
