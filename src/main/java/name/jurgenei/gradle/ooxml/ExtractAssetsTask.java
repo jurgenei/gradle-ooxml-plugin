@@ -20,6 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
+/**
+ * Extracts OOXML package assets (media, embeddings) to the configured output directory.
+ */
 @DisableCachingByDefault(because = "Output depends on package internals")
 public abstract class ExtractAssetsTask extends DefaultTask {
     private final OpenXmlValidator validator = new OpenXmlValidator();
@@ -42,10 +45,18 @@ public abstract class ExtractAssetsTask extends DefaultTask {
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
 
+    /**
+     * Adds one or more sources using Gradle file notation.
+     *
+     * @param source file, folder, fileTree, or collection.
+     */
     public void source(Object source) {
         getSourceFiles().from(source);
     }
 
+    /**
+     * Runs extraction for all resolved OOXML sources.
+     */
     @TaskAction
     public void extract() {
         Path outputRoot = getOutputDirectory().get().getAsFile().toPath();

@@ -9,7 +9,17 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/**
+ * Copies media and embedding entries from OOXML packages to a deterministic output tree.
+ */
 final class AssetExtractor {
+    /**
+     * Extracts supported asset entries to {@code outputDirectory/<input-stem>/...}.
+     *
+     * @param input source OOXML archive.
+     * @param outputDirectory extraction root.
+     * @throws IOException if reading or writing fails.
+     */
     void extract(File input, Path outputDirectory) throws IOException {
         String stem = stem(input.getName());
         Path base = outputDirectory.resolve(stem);

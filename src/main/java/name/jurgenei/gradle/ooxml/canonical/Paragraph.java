@@ -6,6 +6,9 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
+/**
+ * Canonical paragraph with source provenance attributes.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Paragraph {
     @XmlElement(name = "Text", namespace = CanonicalNamespace.URI, required = true)

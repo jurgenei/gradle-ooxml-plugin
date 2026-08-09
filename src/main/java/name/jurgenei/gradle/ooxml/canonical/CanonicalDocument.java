@@ -6,6 +6,9 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
+/**
+ * Root JAXB type for canonical XML output.
+ */
 @XmlRootElement(name = "Document", namespace = CanonicalNamespace.URI)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CanonicalDocument {
@@ -23,10 +26,16 @@ public class CanonicalDocument {
         this.body = body;
     }
 
+    /**
+     * @return document-level metadata.
+     */
     public Metadata getMetadata() {
         return metadata;
     }
 
+    /**
+     * @return canonical content body.
+     */
     public Body getBody() {
         return body;
     }

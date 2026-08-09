@@ -5,7 +5,16 @@ import org.docx4j.openpackaging.packages.OpcPackage;
 
 import java.io.File;
 
+/**
+ * Performs lightweight OOXML package validation before extraction/serialization.
+ */
 final class OpenXmlValidator {
+    /**
+     * Validates with docx4j and falls back to structural ZIP checks when needed.
+     *
+     * @param file candidate OOXML file.
+     * @throws Docx4JException when validation fails and structural fallback also fails.
+     */
     void validate(File file) throws Docx4JException {
         try {
             OpcPackage pkg = OpcPackage.load(file);

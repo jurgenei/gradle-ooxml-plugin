@@ -33,9 +33,22 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/**
+ * Maps OOXML package structures to canonical model objects.
+ *
+ * <p>The canonicalizer keeps format-specific parsing details internal and emits a stable
+ * canonical representation used by downstream validation and transformation tasks.</p>
+ */
 final class OoXmlCanonicalizer {
     private static final String REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
+    /**
+     * Canonicalizes a single OOXML package.
+     *
+     * @param inputFile source OOXML document.
+     * @return canonical model.
+     * @throws IOException when package access or XML parsing fails.
+     */
     CanonicalDocument canonicalize(File inputFile) throws IOException {
         String fileName = inputFile.getName();
         String stem = stem(fileName);
@@ -50,7 +63,7 @@ final class OoXmlCanonicalizer {
         try (ZipFile zipFile = new ZipFile(inputFile)) {
             ZipEntry entry = zipFile.getEntry("word/document.xml");
             if (entry == null) {
-git eee                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
             }
             try (InputStream input = zipFile.getInputStream(entry)) {
                 Document document = parseXml(input);

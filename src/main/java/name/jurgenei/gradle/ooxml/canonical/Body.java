@@ -8,6 +8,9 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Canonical body container aggregating normalized structural and relational content.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Body {
     @XmlElement(name = "Paragraph", namespace = CanonicalNamespace.URI)

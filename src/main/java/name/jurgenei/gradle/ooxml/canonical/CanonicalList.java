@@ -9,6 +9,9 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Canonical list container with ordered/unordered semantics.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CanonicalList {
     @XmlAttribute(name = "ordered")
@@ -20,15 +23,27 @@ public class CanonicalList {
     public CanonicalList() {
     }
 
+    /**
+     * Creates a canonical list with explicit ordering and items.
+     *
+     * @param ordered whether list order is semantically significant.
+     * @param items canonical list items.
+     */
     public CanonicalList(boolean ordered, List<ListItem> items) {
         this.ordered = ordered;
         this.items = items;
     }
 
+    /**
+     * @return {@code true} for ordered lists, otherwise {@code false}.
+     */
     public boolean isOrdered() {
         return ordered;
     }
 
+    /**
+     * @return list items in source-relative order.
+     */
     public List<ListItem> getItems() {
         return items;
     }

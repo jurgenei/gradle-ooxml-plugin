@@ -8,6 +8,9 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Canonical table container.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Table {
     @XmlElement(name = "Row", namespace = CanonicalNamespace.URI)
@@ -16,10 +19,18 @@ public class Table {
     public Table() {
     }
 
+    /**
+     * Creates a table with pre-populated row content.
+     *
+     * @param rows canonical rows.
+     */
     public Table(List<Row> rows) {
         this.rows = rows;
     }
 
+    /**
+     * @return canonical rows in document order.
+     */
     public List<Row> getRows() {
         return rows;
     }

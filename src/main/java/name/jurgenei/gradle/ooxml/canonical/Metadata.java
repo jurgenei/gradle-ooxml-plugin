@@ -5,6 +5,9 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
+/**
+ * Canonical metadata captured from source filename/type context.
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Metadata {
     @XmlElement(name = "DocumentId", namespace = CanonicalNamespace.URI, required = true)
