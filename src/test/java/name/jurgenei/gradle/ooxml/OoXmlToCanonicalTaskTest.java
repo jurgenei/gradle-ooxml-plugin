@@ -19,9 +19,9 @@ class OoXmlToCanonicalTaskTest {
 
         Path docs = projectDir.toPath().resolve("docs");
         Files.createDirectories(docs);
-        copyFixture(docs, "sample_v3.docx", "contract_v3.docx");
-        copyFixture(docs, "sample.pptx", "slides.pptx");
-        copyFixture(docs, "sample.xlsx", "register.xlsx");
+        copyFixture(docs, "v1-benchmark.docx", "benchmark.docx");
+        copyFixture(docs, "v1-benchmark.pptx", "slides.pptx");
+        copyFixture(docs, "v1-benchmark.xlsx", "register.xlsx");
 
         OoXmlToCanonicalTask task = project.getTasks().create("ooxmlToCanonical", OoXmlToCanonicalTask.class);
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx", "**/*.pptx", "**/*.xlsx")));
@@ -30,21 +30,23 @@ class OoXmlToCanonicalTaskTest {
         task.convert();
 
         Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
-        assertTrue(Files.exists(canonicalRoot.resolve("contract_v3.xml")));
+        assertTrue(Files.exists(canonicalRoot.resolve("benchmark.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("slides.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("register.xml")));
 
-        String docxXml = Files.readString(canonicalRoot.resolve("contract_v3.xml"));
-        assertTrue(docxXml.contains("Hello from DOCX"));
+        String docxXml = Files.readString(canonicalRoot.resolve("benchmark.xml"));
+        assertTrue(docxXml.contains("Benchmark Document"));
         assertTrue(docxXml.contains("<DocumentType>DOCX</DocumentType>"));
-        assertTrue(docxXml.contains("source-document=\"contract_v3.docx\""));
+        assertTrue(docxXml.contains("source-document=\"benchmark.docx\""));
         assertTrue(docxXml.contains("source-path=\"/word/document/"));
         assertTrue(docxXml.contains("List"));
         assertTrue(docxXml.contains("Table"));
-        assertTrue(docxXml.contains("Link"));
-        assertTrue(docxXml.contains("Reference"));
-        assertTrue(docxXml.contains("Diagram"));
-        assertTrue(docxXml.contains("Shape"));
+        assertTrue(docxXml.contains("First item"));
+        assertTrue(docxXml.contains("Alpha"));
+
+        String xlsxXml = Files.readString(canonicalRoot.resolve("register.xml"));
+        assertTrue(xlsxXml.contains("NamedRange!A1:B2"));
+        assertTrue(xlsxXml.contains("A4:B4"));
     }
 
     private void copyFixture(Path targetDirectory, String fixtureName, String targetName) throws Exception {

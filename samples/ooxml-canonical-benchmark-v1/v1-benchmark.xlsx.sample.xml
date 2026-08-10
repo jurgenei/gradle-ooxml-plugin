@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:Document xmlns:c="http://jurgenei.name/canonical">
+  <c:Metadata>
+    <c:DocumentId>v1-benchmark</c:DocumentId>
+    <c:Version/>
+    <c:SourceFile>v1-benchmark.xlsx</c:SourceFile>
+    <c:DocumentType>XLSX</c:DocumentType>
+  </c:Metadata>
+  <c:Body>
+    <c:Paragraph source-document="v1-benchmark.xlsx" source-path="/xl/worksheets/sheet1.xml/A1">
+      <c:Text>A1=Application</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-document="v1-benchmark.xlsx" source-path="/xl/worksheets/sheet2.xml/B1">
+      <c:Text>B1=EU</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-document="v1-benchmark.xlsx" source-path="/xl/worksheets/sheet3.xml/A4">
+      <c:Text>A4=Merged Cell</c:Text>
+    </c:Paragraph>
+    <c:Reference target="NamedRange!A1:B2">
+      <c:Text>SampleRange</c:Text>
+    </c:Reference>
+    <c:Reference target="A4:B4">
+      <c:Text>merge</c:Text>
+    </c:Reference>
+  </c:Body>
+</c:Document>
+

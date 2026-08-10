@@ -116,6 +116,7 @@ final class OoXmlCanonicalizer {
         List<Diagram> diagrams = new ArrayList<>();
         try (ZipFile zipFile = new ZipFile(inputFile)) {
             List<String> shared = readSharedStrings(zipFile);
+            references.addAll(extractWorkbookDefinedNames(zipFile));
             List<ZipEntry> sheets = findEntries(zipFile, "xl/worksheets/sheet", ".xml");
             for (ZipEntry sheet : sheets) {
                 try (InputStream input = zipFile.getInputStream(sheet)) {
@@ -217,20 +218,63 @@ final class OoXmlCanonicalizer {
 
     private List<CanonicalList> extractDocxLists(Document document) {
         NodeList paragraphNodes = document.getElementsByTagNameNS("*", "p");
+        List<CanonicalList> lists = new ArrayList<>();
         List<ListItem> items = new ArrayList<>();
+        Boolean ordered = null;
         for (int i = 0; i < paragraphNodes.getLength(); i++) {
             Element paragraph = (Element) paragraphNodes.item(i);
-            if (containsDescendant(paragraph, "numPr")) {
-                String text = extractNestedText(paragraph);
-                if (!text.isEmpty()) {
-                    items.add(new ListItem(text));
+            Boolean nextOrdered = docxListOrdering(paragraph);
+            if (nextOrdered == null) {
+                if (!items.isEmpty() && ordered != null) {
+                    lists.add(new CanonicalList(ordered, List.copyOf(items)));
+                    items.clear();
+                    ordered = null;
                 }
+                continue;
+            }
+            if (ordered != null && !ordered.equals(nextOrdered) && !items.isEmpty()) {
+                lists.add(new CanonicalList(ordered, List.copyOf(items)));
+                items.clear();
+            }
+            ordered = nextOrdered;
+            String text = extractNestedText(paragraph);
+            if (!text.isEmpty()) {
+                items.add(new ListItem(text));
             }
         }
-        if (items.isEmpty()) {
+        if (!items.isEmpty() && ordered != null) {
+            lists.add(new CanonicalList(ordered, List.copyOf(items)));
+        }
+        if (lists.isEmpty()) {
             return List.of();
         }
-        return List.of(new CanonicalList(false, items));
+        return lists;
+    }
+
+    private Boolean docxListOrdering(Element paragraph) {
+        if (containsDescendant(paragraph, "numPr")) {
+            return true;
+        }
+        Element paragraphProperties = firstDescendant(paragraph, "pPr");
+        if (paragraphProperties == null) {
+            return null;
+        }
+        Element style = firstDescendant(paragraphProperties, "pStyle");
+        if (style == null) {
+            return null;
+        }
+        String value = attributeAny(style, "w:val");
+        if (value.isEmpty()) {
+            value = attributeAny(style, "val");
+        }
+        String normalized = value.toLowerCase(Locale.ROOT);
+        if (normalized.contains("listnumber")) {
+            return true;
+        }
+        if (normalized.contains("listbullet")) {
+            return false;
+        }
+        return null;
     }
 
     private List<Table> extractDocxTables(Document document) {
@@ -449,7 +493,40 @@ final class OoXmlCanonicalizer {
             }
         }
 
+        NodeList mergeCellNodes = document.getElementsByTagNameNS("*", "mergeCell");
+        for (int i = 0; i < mergeCellNodes.getLength(); i++) {
+            Element mergeCell = (Element) mergeCellNodes.item(i);
+            String ref = attributeAny(mergeCell, "ref");
+            if (!ref.isEmpty()) {
+                references.add(new Reference(ref, "merge"));
+            }
+        }
+
         return new SheetExtraction(paragraphs, new Table(rows), links, references);
+    }
+
+    private List<Reference> extractWorkbookDefinedNames(ZipFile zipFile) throws IOException {
+        ZipEntry workbookEntry = zipFile.getEntry("xl/workbook.xml");
+        if (workbookEntry == null) {
+            return List.of();
+        }
+        try (InputStream input = zipFile.getInputStream(workbookEntry)) {
+            Document workbook = parseXml(input);
+            NodeList definedNames = workbook.getElementsByTagNameNS("*", "definedName");
+            List<Reference> references = new ArrayList<>();
+            for (int i = 0; i < definedNames.getLength(); i++) {
+                Element definedName = (Element) definedNames.item(i);
+                String name = attributeAny(definedName, "name");
+                String target = definedName.getTextContent();
+                if (target != null) {
+                    target = target.trim().replace("$", "");
+                }
+                if (target != null && !target.isEmpty()) {
+                    references.add(new Reference(target, name));
+                }
+            }
+            return references;
+        }
     }
 
     private List<Diagram> extractDrawingDiagrams(ZipFile zipFile) throws IOException {
@@ -487,6 +564,16 @@ final class OoXmlCanonicalizer {
     }
 
     private String resolveSheetCellValue(Element cell, List<String> sharedStrings) {
+        String type = cell.getAttribute("t");
+        if ("inlineStr".equals(type)) {
+            NodeList inlineTexts = cell.getElementsByTagNameNS("*", "t");
+            if (inlineTexts.getLength() == 0) {
+                return "";
+            }
+            String inlineValue = inlineTexts.item(0).getTextContent();
+            return inlineValue == null ? "" : inlineValue.trim();
+        }
+
         NodeList values = cell.getElementsByTagNameNS("*", "v");
         if (values.getLength() == 0) {
             return "";
@@ -495,7 +582,6 @@ final class OoXmlCanonicalizer {
         if (value.isEmpty()) {
             return "";
         }
-        String type = cell.getAttribute("t");
         if ("s".equals(type)) {
             try {
                 int index = Integer.parseInt(value);
