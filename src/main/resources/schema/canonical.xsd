@@ -38,8 +38,8 @@
         <xs:sequence>
             <xs:element name="Text" type="xs:string"/>
         </xs:sequence>
-        <xs:attribute name="source-document" type="xs:string" use="optional"/>
         <xs:attribute name="source-path" type="xs:string" use="optional"/>
+        <xs:attribute name="label" type="xs:string" use="optional"/>
     </xs:complexType>
 
     <xs:complexType name="ListType">

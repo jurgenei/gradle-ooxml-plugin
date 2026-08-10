@@ -167,7 +167,7 @@ final class OoXmlCanonicalizer {
         List<Paragraph> paragraphs = new ArrayList<>();
         for (int i = 0; i < texts.size(); i++) {
             String text = texts.get(i);
-            paragraphs.add(new Paragraph(text, sourceDocument, sourcePathPrefix + "/text[" + (i + 1) + "]"));
+            paragraphs.add(new Paragraph(text, sourcePathPrefix + "/text[" + (i + 1) + "]"));
         }
         return paragraphs;
     }
@@ -210,10 +210,33 @@ final class OoXmlCanonicalizer {
             Element paragraph = (Element) paragraphNodes.item(i);
             String text = extractNestedText(paragraph);
             if (!text.isEmpty()) {
-                paragraphs.add(new Paragraph(text, sourceDocument, "/word/document/p[" + (i + 1) + "]"));
+                paragraphs.add(new Paragraph(text, "/word/document/p[" + (i + 1) + "]", docxHeadingLabel(paragraph)));
             }
         }
         return paragraphs;
+    }
+
+    private String docxHeadingLabel(Element paragraph) {
+        Element paragraphProperties = firstDescendant(paragraph, "pPr");
+        if (paragraphProperties == null) {
+            return null;
+        }
+        Element style = firstDescendant(paragraphProperties, "pStyle");
+        if (style == null) {
+            return null;
+        }
+        String value = attributeAny(style, "w:val");
+        if (value.isEmpty()) {
+            value = attributeAny(style, "val");
+        }
+        String normalized = value.toLowerCase(Locale.ROOT);
+        if (normalized.startsWith("heading1")) {
+            return "h1";
+        }
+        if (normalized.startsWith("heading2")) {
+            return "h2";
+        }
+        return null;
     }
 
     private List<CanonicalList> extractDocxLists(Document document) {
@@ -288,7 +311,7 @@ final class OoXmlCanonicalizer {
             Element paragraph = (Element) paragraphNodes.item(i);
             String text = extractNestedText(paragraph);
             if (!text.isEmpty()) {
-                paragraphs.add(new Paragraph(text, sourceDocument, sourcePathPrefix + "/p[" + (i + 1) + "]"));
+                paragraphs.add(new Paragraph(text, sourcePathPrefix + "/p[" + (i + 1) + "]"));
             }
         }
         return paragraphs;
@@ -426,10 +449,9 @@ final class OoXmlCanonicalizer {
             Element connectorNode = (Element) connectorNodes.item(i);
             Element stCxn = firstDescendant(connectorNode, "stCxn");
             Element endCxn = firstDescendant(connectorNode, "endCxn");
-            connectors.add(new Connector(
-                    stCxn == null ? "" : attributeAny(stCxn, "id"),
-                    endCxn == null ? "" : attributeAny(endCxn, "id")
-            ));
+            String sourceId = stCxn == null ? "" : attributeAny(stCxn, "id");
+            String targetId = endCxn == null ? "" : attributeAny(endCxn, "id");
+            connectors.add(resolveConnectorEndpoints(sourceId, targetId, shapes));
         }
 
         if (shapes.isEmpty() && connectors.isEmpty()) {
@@ -471,7 +493,6 @@ final class OoXmlCanonicalizer {
         for (Map.Entry<String, String> cellEntry : orderedCells.entrySet()) {
             paragraphs.add(new Paragraph(
                     cellEntry.getKey() + "=" + cellEntry.getValue(),
-                    sourceDocument,
                     "/" + sheetPath + "/" + cellEntry.getKey()
             ));
         }
@@ -549,10 +570,9 @@ final class OoXmlCanonicalizer {
                     Element connectorNode = (Element) connectorNodes.item(i);
                     Element stCxn = firstDescendant(connectorNode, "stCxn");
                     Element endCxn = firstDescendant(connectorNode, "endCxn");
-                    connectors.add(new Connector(
-                            stCxn == null ? "" : attributeAny(stCxn, "id"),
-                            endCxn == null ? "" : attributeAny(endCxn, "id")
-                    ));
+                    String sourceId = stCxn == null ? "" : attributeAny(stCxn, "id");
+                    String targetId = endCxn == null ? "" : attributeAny(endCxn, "id");
+                    connectors.add(resolveConnectorEndpoints(sourceId, targetId, shapes));
                 }
 
                 if (!shapes.isEmpty() || !connectors.isEmpty()) {
@@ -594,6 +614,36 @@ final class OoXmlCanonicalizer {
             return "";
         }
         return value;
+    }
+
+    private Connector resolveConnectorEndpoints(String sourceId, String targetId, List<Shape> shapes) {
+        if (!sourceId.isEmpty() && !targetId.isEmpty()) {
+            return new Connector(sourceId, targetId);
+        }
+        // Fallback for files where connector endpoints are not explicitly serialized.
+        List<Shape> candidateShapes = shapes.stream()
+                .filter(shape -> {
+                    String label = shape.getLabel();
+                    if (label == null) {
+                        return false;
+                    }
+                    String normalized = label.trim().toLowerCase(Locale.ROOT);
+                    return !normalized.isEmpty()
+                            && !normalized.startsWith("title")
+                            && !normalized.contains("placeholder");
+                })
+                .toList();
+        if (candidateShapes.size() >= 2) {
+            String fallbackSource = sourceId.isEmpty() ? candidateShapes.get(0).getId() : sourceId;
+            String fallbackTarget = targetId.isEmpty() ? candidateShapes.get(1).getId() : targetId;
+            return new Connector(fallbackSource == null ? "" : fallbackSource, fallbackTarget == null ? "" : fallbackTarget);
+        }
+        if (shapes.size() >= 2) {
+            String fallbackSource = sourceId.isEmpty() ? shapes.get(0).getId() : sourceId;
+            String fallbackTarget = targetId.isEmpty() ? shapes.get(1).getId() : targetId;
+            return new Connector(fallbackSource == null ? "" : fallbackSource, fallbackTarget == null ? "" : fallbackTarget);
+        }
+        return new Connector(sourceId, targetId);
     }
 
     private List<Table> extractTablesByLocalNames(Document document, String tableLocalName, String rowLocalName, String cellLocalName) {

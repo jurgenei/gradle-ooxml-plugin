@@ -27,10 +27,14 @@ class OoXmlCanonicalizerTest {
         assertEquals("DOCX", document.getMetadata().getDocumentType());
         assertFalse(document.getBody().getParagraphs().isEmpty());
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Benchmark Document")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "Benchmark Document".equals(p.getText()) && "h1".equals(p.getLabel())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "Section A".equals(p.getText()) && "h2".equals(p.getLabel())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "Section B".equals(p.getText()) && "h2".equals(p.getLabel())));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Section A")));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Section B")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Paragraph with bold")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Visit https://example.com")));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("[A] -> [B]")));
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "v1-benchmark.docx".equals(p.getSourceDocument())));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getSourcePath() != null && p.getSourcePath().startsWith("/word/document/")));
         assertEquals(2, document.getBody().getLists().size());
         assertTrue(document.getBody().getLists().stream().anyMatch(list -> list.isOrdered() && list.getItems().stream().anyMatch(item -> item.getText().contains("First item"))));
@@ -58,7 +62,7 @@ class OoXmlCanonicalizerTest {
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("App"))));
         assertFalse(document.getBody().getDiagrams().isEmpty());
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "Rounded Rectangle 2".equals(shape.getLabel()))));
-        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> !diagram.getConnectors().isEmpty()));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getConnectors().stream().anyMatch(connector -> "3".equals(connector.getSource()) && "4".equals(connector.getTarget()))));
     }
 
     @Test
@@ -88,7 +92,7 @@ class OoXmlCanonicalizerTest {
 
     @Test
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
-        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "First item", "<Table>"));
+        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "<Table>"));
         assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "Rounded Rectangle 2", "<Diagram>"));
         assertSerializedContains("v1-benchmark.xlsx", List.of("A1=Application", "NamedRange!A1:B2", "A4:B4"));
     }

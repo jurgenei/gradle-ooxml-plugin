@@ -7,10 +7,22 @@
     <c:DocumentType>DOCX</c:DocumentType>
   </c:Metadata>
   <c:Body>
-    <c:Paragraph source-document="v1-benchmark.docx" source-path="/word/document/p[1]">
+    <c:Paragraph source-path="/word/document/p[1]" label="h1">
       <c:Text>Benchmark Document</c:Text>
     </c:Paragraph>
-    <c:Paragraph source-document="v1-benchmark.docx" source-path="/word/document/p[9]">
+    <c:Paragraph source-path="/word/document/p[2]">
+      <c:Text>Paragraph with bold</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/word/document/p[3]">
+      <c:Text>Visit https://example.com</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/word/document/p[4]" label="h2">
+      <c:Text>Section A</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/word/document/p[10]" label="h2">
+      <c:Text>Section B</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/word/document/p[9]">
       <c:Text>[A] -&gt; [B]</c:Text>
     </c:Paragraph>
     <c:List ordered="true">

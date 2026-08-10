@@ -11,7 +11,7 @@ Current canonical output includes:
 - Paragraphs, lists, and tables
 - Links and references
 - Diagram topology (shapes and connectors)
-- Provenance attributes (`source-document`, `source-path`)
+- Provenance attribute (`source-path`) with optional paragraph labels (for example `h1`, `h2`)
 
 ## Benchmark v1
 

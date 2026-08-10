@@ -37,8 +37,11 @@ class OoXmlToCanonicalTaskTest {
         String docxXml = Files.readString(canonicalRoot.resolve("benchmark.xml"));
         assertTrue(docxXml.contains("Benchmark Document"));
         assertTrue(docxXml.contains("<DocumentType>DOCX</DocumentType>"));
-        assertTrue(docxXml.contains("source-document=\"benchmark.docx\""));
+        assertTrue(docxXml.contains("label=\"h1\""));
+        assertTrue(docxXml.contains("label=\"h2\""));
         assertTrue(docxXml.contains("source-path=\"/word/document/"));
+        assertTrue(docxXml.contains("Paragraph with bold"));
+        assertTrue(docxXml.contains("Visit https://example.com"));
         assertTrue(docxXml.contains("List"));
         assertTrue(docxXml.contains("Table"));
         assertTrue(docxXml.contains("First item"));

@@ -130,7 +130,7 @@ class OoXmlPluginFunctionalTest {
                     <c:DocumentType>DOCX</c:DocumentType>
                   </c:Metadata>
                   <c:Body>
-                    <c:Paragraph source-document='sample.docx' source-path='/word/document/p[1]'>
+                    <c:Paragraph source-path='/word/document/p[1]'>
                       <c:Text>Hello</c:Text>
                     </c:Paragraph>
                   </c:Body>

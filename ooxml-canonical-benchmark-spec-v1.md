@@ -39,15 +39,16 @@ The corpus is designed for fast unit tests and deterministic regression checks.
 1. Canonicalization is deterministic across repeated runs.
 2. Document order is preserved.
 3. Rich structures are emitted into structural elements when supported.
-4. Provenance attributes are populated where available (`source-document`, `source-path`).
+4. Provenance attributes are populated where available (`source-path`).
 
 ### DOCX requirements
 
 1. Heading and paragraph content is captured as `Paragraph` entries in source order.
-2. Numbered list items are emitted as `List ordered="true"`.
-3. Bullet list items are emitted as `List ordered="false"`.
-4. The 2x2 table is emitted as `Table -> Row -> Cell`.
-5. Diagram text `[A] -> [B]` is preserved in paragraph content.
+2. Heading paragraphs are labeled (`label="h1"`, `label="h2"`) for benchmark heading styles.
+3. Numbered list items are emitted as `List ordered="true"`.
+4. Bullet list items are emitted as `List ordered="false"`.
+5. The 2x2 table is emitted as `Table -> Row -> Cell`.
+6. Diagram text `[A] -> [B]` is preserved in paragraph content.
 
 Expected benchmark signals:
 

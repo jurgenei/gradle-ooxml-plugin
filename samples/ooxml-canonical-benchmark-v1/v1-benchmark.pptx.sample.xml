@@ -7,10 +7,10 @@
     <c:DocumentType>PPTX</c:DocumentType>
   </c:Metadata>
   <c:Body>
-    <c:Paragraph source-document="v1-benchmark.pptx" source-path="/ppt/slides/slide1.xml/p[1]">
+    <c:Paragraph source-path="/ppt/slides/slide1.xml/p[1]">
       <c:Text>Overview</c:Text>
     </c:Paragraph>
-    <c:Paragraph source-document="v1-benchmark.pptx" source-path="/ppt/slides/slide1.xml/p[2]">
+    <c:Paragraph source-path="/ppt/slides/slide1.xml/p[2]">
       <c:Text>System landscape overview</c:Text>
     </c:Paragraph>
     <c:Table>
@@ -26,7 +26,7 @@
     <c:Diagram>
       <c:Shape id="3"><c:Label>Rounded Rectangle 2</c:Label></c:Shape>
       <c:Shape id="4"><c:Label>Rounded Rectangle 3</c:Label></c:Shape>
-      <c:Connector source="" target=""/>
+      <c:Connector source="3" target="4"/>
     </c:Diagram>
   </c:Body>
 </c:Document>
