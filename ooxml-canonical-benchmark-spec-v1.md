@@ -84,9 +84,7 @@ Expected benchmark signals:
 
 Expected benchmark signals:
 
-- `A1=Application`
-- `B1=EU`
-- `A4=Merged Cell`
+- table cells include `Application`, `EU`, `Merged Cell`
 - `NamedRange!A1:B2` (named range target)
 - `A4:B4` (merge range)
 

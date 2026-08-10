@@ -72,11 +72,11 @@ class OoXmlCanonicalizerTest {
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
 
         assertEquals("XLSX", document.getMetadata().getDocumentType());
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("A1=Application")));
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("B1=EU")));
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("A4=Merged Cell")));
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getSourcePath() != null && p.getSourcePath().contains("/xl/worksheets/sheet1.xml/A1")));
+        assertTrue(document.getBody().getParagraphs().isEmpty());
         assertFalse(document.getBody().getTables().isEmpty());
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Application"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("EU"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Merged Cell"))));
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Finance"))));
         assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "NamedRange!A1:B2".equals(reference.getTarget())));
         assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "A4:B4".equals(reference.getTarget())));
@@ -94,7 +94,7 @@ class OoXmlCanonicalizerTest {
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
         assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "<Table>"));
         assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "Rounded Rectangle 2", "<Diagram>"));
-        assertSerializedContains("v1-benchmark.xlsx", List.of("A1=Application", "NamedRange!A1:B2", "A4:B4"));
+        assertSerializedContains("v1-benchmark.xlsx", List.of("<Table>", "Application", "NamedRange!A1:B2", "A4:B4"));
     }
 
     private void assertDeterministic(String fixtureName) throws Exception {

@@ -489,13 +489,8 @@ final class OoXmlCanonicalizer {
             }
         }
 
-        List<Paragraph> paragraphs = new ArrayList<>();
-        for (Map.Entry<String, String> cellEntry : orderedCells.entrySet()) {
-            paragraphs.add(new Paragraph(
-                    cellEntry.getKey() + "=" + cellEntry.getValue(),
-                    "/" + sheetPath + "/" + cellEntry.getKey()
-            ));
-        }
+        // XLSX canonical output keeps tabular values in Table/Row/Cell instead of duplicating as paragraphs.
+        List<Paragraph> paragraphs = List.of();
 
         List<Link> links = new ArrayList<>();
         List<Reference> references = new ArrayList<>();
