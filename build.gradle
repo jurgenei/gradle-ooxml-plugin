@@ -1,4 +1,5 @@
 plugins {
+    id 'com.gradle.plugin-publish' version '2.1.1'
     id 'java-gradle-plugin'
     id 'jacoco'
 }
@@ -55,13 +56,21 @@ sourceSets {
     main {
         java.srcDir(generatedJaxbDir)
     }
+
 }
 
 tasks.named('compileJava') {
     dependsOn tasks.named('generateCanonicalJaxb')
 }
 
+tasks.matching { it.name == 'sourcesJar' }.configureEach {
+    dependsOn tasks.named('generateCanonicalJaxb')
+}
+
 gradlePlugin {
+    website = 'https://github.com/jurgenei/gradle-ooxml-plugin'
+    vcsUrl = 'https://github.com/jurgenei/gradle-ooxml-plugin.git'
+
     plugins {
         ooxmlPlugin {
             id = 'name.jurgenei.gradle.ooxml'
@@ -90,4 +99,3 @@ tasks.named('jacocoTestReport') {
         csv.required = false
     }
 }
-
