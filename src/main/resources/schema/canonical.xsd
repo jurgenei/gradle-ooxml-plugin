@@ -24,14 +24,14 @@
     </xs:complexType>
 
     <xs:complexType name="BodyType">
-        <xs:sequence>
-            <xs:element name="Paragraph" type="c:ParagraphType" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="List" type="c:ListType" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="Table" type="c:TableType" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="Link" type="c:LinkType" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="Reference" type="c:ReferenceType" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="Diagram" type="c:DiagramType" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Paragraph" type="c:ParagraphType"/>
+            <xs:element name="List" type="c:ListType"/>
+            <xs:element name="Table" type="c:TableType"/>
+            <xs:element name="Link" type="c:LinkType"/>
+            <xs:element name="Reference" type="c:ReferenceType"/>
+            <xs:element name="Diagram" type="c:DiagramType"/>
+        </xs:choice>
     </xs:complexType>
 
     <xs:complexType name="ParagraphType">

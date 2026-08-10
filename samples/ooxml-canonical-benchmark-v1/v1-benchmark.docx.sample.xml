@@ -19,12 +19,6 @@
     <c:Paragraph source-path="/word/document/p[4]" label="h2">
       <c:Text>Section A</c:Text>
     </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[10]" label="h2">
-      <c:Text>Section B</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[9]">
-      <c:Text>[A] -&gt; [B]</c:Text>
-    </c:Paragraph>
     <c:List ordered="true">
       <c:Item><c:Text>First item</c:Text></c:Item>
       <c:Item><c:Text>Second item</c:Text></c:Item>
@@ -43,6 +37,15 @@
         <c:Cell><c:Text>Sales</c:Text></c:Cell>
       </c:Row>
     </c:Table>
+    <c:Paragraph source-path="/word/document/p[9]">
+      <c:Text>[A] -&gt; [B]</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/word/document/p[10]" label="h2">
+      <c:Text>Section B</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/word/document/p[11]">
+      <c:Text>Final paragraph</c:Text>
+    </c:Paragraph>
   </c:Body>
 </c:Document>
 

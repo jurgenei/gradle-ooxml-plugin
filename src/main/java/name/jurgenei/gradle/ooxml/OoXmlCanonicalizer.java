@@ -63,7 +63,7 @@ final class OoXmlCanonicalizer {
         try (ZipFile zipFile = new ZipFile(inputFile)) {
             ZipEntry entry = zipFile.getEntry("word/document.xml");
             if (entry == null) {
-                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
             }
             try (InputStream input = zipFile.getInputStream(entry)) {
                 Document document = parseXml(input);
@@ -73,7 +73,8 @@ final class OoXmlCanonicalizer {
                         extractDocxTables(document),
                         extractDocxLinks(document, readRelationships(zipFile, "word/_rels/document.xml.rels")),
                         extractDocxReferences(document),
-                        extractDocxDiagrams(document)
+                        extractDocxDiagrams(document),
+                        extractDocxOrderedContent(document)
                 );
             }
         }
@@ -104,7 +105,7 @@ final class OoXmlCanonicalizer {
                 }
             }
         }
-        return new Extraction(paragraphs, lists, tables, links, references, diagrams);
+        return new Extraction(paragraphs, lists, tables, links, references, diagrams, List.of());
     }
 
     private Extraction extractXlsx(File inputFile) throws IOException {
@@ -134,7 +135,7 @@ final class OoXmlCanonicalizer {
             }
             diagrams.addAll(extractDrawingDiagrams(zipFile));
         }
-        return new Extraction(paragraphs, List.of(), tables, links, references, diagrams);
+        return new Extraction(paragraphs, List.of(), tables, links, references, diagrams, List.of());
     }
 
     private List<String> readSharedStrings(ZipFile zipFile) throws IOException {
@@ -181,17 +182,24 @@ final class OoXmlCanonicalizer {
                 fileName,
                 documentType
         );
-        return new CanonicalDocument(
-                metadata,
-                new Body(
-                        extraction.paragraphs(),
-                        extraction.lists(),
-                        extraction.tables(),
-                        extraction.links(),
-                        extraction.references(),
-                        extraction.diagrams()
-                )
-        );
+        Body body;
+        if (!extraction.orderedContent().isEmpty()) {
+            List<Object> mergedContent = new ArrayList<>(extraction.orderedContent());
+            mergedContent.addAll(extraction.links());
+            mergedContent.addAll(extraction.references());
+            mergedContent.addAll(extraction.diagrams());
+            body = Body.ordered(mergedContent);
+        } else {
+            body = new Body(
+                    extraction.paragraphs(),
+                    extraction.lists(),
+                    extraction.tables(),
+                    extraction.links(),
+                    extraction.references(),
+                    extraction.diagrams()
+            );
+        }
+        return new CanonicalDocument(metadata, body);
     }
 
     private Extraction extractByFormat(File inputFile, String documentType, String sourceDocument) throws IOException {
@@ -214,6 +222,73 @@ final class OoXmlCanonicalizer {
             }
         }
         return paragraphs;
+    }
+
+    private List<Object> extractDocxOrderedContent(Document document) {
+        Element bodyElement = firstDescendant(document.getDocumentElement(), "body");
+        if (bodyElement == null) {
+            return List.of();
+        }
+
+        List<Object> ordered = new ArrayList<>();
+        List<ListItem> pendingListItems = new ArrayList<>();
+        Boolean pendingOrdered = null;
+        int paragraphIndex = 0;
+
+        NodeList bodyChildren = bodyElement.getChildNodes();
+        for (int i = 0; i < bodyChildren.getLength(); i++) {
+            Node node = bodyChildren.item(i);
+            if (!(node instanceof Element element)) {
+                continue;
+            }
+
+            String localName = element.getLocalName();
+            if ("p".equals(localName)) {
+                paragraphIndex++;
+                String text = extractNestedText(element);
+                if (!text.isEmpty()) {
+                    ordered.add(new Paragraph(text, "/word/document/p[" + paragraphIndex + "]", docxHeadingLabel(element)));
+                }
+
+                Boolean itemOrdering = docxListOrdering(element);
+                if (itemOrdering == null) {
+                    if (!pendingListItems.isEmpty() && pendingOrdered != null) {
+                        ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
+                        pendingListItems.clear();
+                        pendingOrdered = null;
+                    }
+                    continue;
+                }
+
+                if (pendingOrdered != null && !pendingOrdered.equals(itemOrdering) && !pendingListItems.isEmpty()) {
+                    ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
+                    pendingListItems.clear();
+                }
+                pendingOrdered = itemOrdering;
+                if (!text.isEmpty()) {
+                    pendingListItems.add(new ListItem(text));
+                }
+                continue;
+            }
+
+            if (!pendingListItems.isEmpty() && pendingOrdered != null) {
+                ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
+                pendingListItems.clear();
+                pendingOrdered = null;
+            }
+
+            if ("tbl".equals(localName)) {
+                Table table = extractTableFromElement(element, "tr", "tc");
+                if (table != null) {
+                    ordered.add(table);
+                }
+            }
+        }
+
+        if (!pendingListItems.isEmpty() && pendingOrdered != null) {
+            ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
+        }
+        return ordered;
     }
 
     private String docxHeadingLabel(Element paragraph) {
@@ -670,6 +745,27 @@ final class OoXmlCanonicalizer {
         return tables;
     }
 
+    private Table extractTableFromElement(Element tableElement, String rowLocalName, String cellLocalName) {
+        NodeList rowNodes = tableElement.getElementsByTagNameNS("*", rowLocalName);
+        List<Row> rows = new ArrayList<>();
+        for (int j = 0; j < rowNodes.getLength(); j++) {
+            Element rowElement = (Element) rowNodes.item(j);
+            NodeList cellNodes = rowElement.getElementsByTagNameNS("*", cellLocalName);
+            List<Cell> cells = new ArrayList<>();
+            for (int k = 0; k < cellNodes.getLength(); k++) {
+                Element cellElement = (Element) cellNodes.item(k);
+                String text = extractNestedText(cellElement);
+                if (!text.isEmpty()) {
+                    cells.add(new Cell(text));
+                }
+            }
+            if (!cells.isEmpty()) {
+                rows.add(new Row(cells));
+            }
+        }
+        return rows.isEmpty() ? null : new Table(rows);
+    }
+
     private Map<String, String> readRelationships(ZipFile zipFile, String relPartPath) throws IOException {
         ZipEntry relEntry = zipFile.getEntry(relPartPath);
         if (relEntry == null) {
@@ -800,7 +896,8 @@ final class OoXmlCanonicalizer {
                               List<Table> tables,
                               List<Link> links,
                               List<Reference> references,
-                              List<Diagram> diagrams) {
+                              List<Diagram> diagrams,
+                              List<Object> orderedContent) {
     }
 
     private record SheetExtraction(List<Paragraph> paragraphs,

@@ -35,6 +35,14 @@ class OoXmlCanonicalizerTest {
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Paragraph with bold")));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Visit https://example.com")));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("[A] -> [B]")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Final paragraph")));
+        List<String> paragraphTexts = document.getBody().getParagraphs().stream().map(p -> p.getText()).toList();
+        int sectionA = paragraphTexts.indexOf("Section A");
+        int diagram = paragraphTexts.indexOf("[A] -> [B]");
+        int sectionB = paragraphTexts.indexOf("Section B");
+        int finalParagraph = paragraphTexts.indexOf("Final paragraph");
+        assertTrue(sectionA >= 0 && diagram > sectionA && sectionB > diagram && finalParagraph > sectionB,
+                "DOCX paragraph order should follow source order");
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getSourcePath() != null && p.getSourcePath().startsWith("/word/document/")));
         assertEquals(2, document.getBody().getLists().size());
         assertTrue(document.getBody().getLists().stream().anyMatch(list -> list.isOrdered() && list.getItems().stream().anyMatch(item -> item.getText().contains("First item"))));
@@ -92,9 +100,24 @@ class OoXmlCanonicalizerTest {
 
     @Test
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
-        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "<Table>"));
+        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
         assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "Rounded Rectangle 2", "<Diagram>"));
         assertSerializedContains("v1-benchmark.xlsx", List.of("<Table>", "Application", "NamedRange!A1:B2", "A4:B4"));
+    }
+
+    @Test
+    void docxSerializedElementsPreserveSourceOrder() throws Exception {
+        Path file = copyFixture("v1-benchmark.docx");
+        String xml = serialize(canonicalizer.canonicalize(file.toFile()));
+
+        assertAppearsBefore(xml, "Section A", "First item");
+        assertAppearsBefore(xml, "First item", "Second item");
+        assertAppearsBefore(xml, "Second item", "Alpha");
+        assertAppearsBefore(xml, "Alpha", "Beta");
+        assertAppearsBefore(xml, "Beta", "<Table");
+        assertAppearsBefore(xml, "<Table", "[A] -&gt; [B]");
+        assertAppearsBefore(xml, "[A] -&gt; [B]", "Section B");
+        assertAppearsBefore(xml, "Section B", "Final paragraph");
     }
 
     private void assertDeterministic(String fixtureName) throws Exception {
@@ -116,6 +139,14 @@ class OoXmlCanonicalizerTest {
         Path output = Files.createTempFile("ooxml-benchmark-canonical-", ".xml");
         serializer.write(document, output);
         return Files.readString(output).replace("\r\n", "\n");
+    }
+
+    private void assertAppearsBefore(String text, String left, String right) {
+        int leftIndex = text.indexOf(left);
+        int rightIndex = text.indexOf(right);
+        assertTrue(leftIndex >= 0, "Missing token: " + left);
+        assertTrue(rightIndex >= 0, "Missing token: " + right);
+        assertTrue(leftIndex < rightIndex, "Expected order: " + left + " before " + right);
     }
 
     private Path copyFixture(String fixtureName) throws Exception {

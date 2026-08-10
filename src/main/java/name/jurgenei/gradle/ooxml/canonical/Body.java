@@ -3,6 +3,7 @@ package name.jurgenei.gradle.ooxml.canonical;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElements;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 import java.util.ArrayList;
@@ -13,35 +14,27 @@ import java.util.List;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Body {
-    @XmlElement(name = "Paragraph", namespace = CanonicalNamespace.URI)
-    private List<Paragraph> paragraphs = new ArrayList<>();
-
-    @XmlElement(name = "List", namespace = CanonicalNamespace.URI)
-    private List<CanonicalList> lists = new ArrayList<>();
-
-    @XmlElement(name = "Table", namespace = CanonicalNamespace.URI)
-    private List<Table> tables = new ArrayList<>();
-
-    @XmlElement(name = "Link", namespace = CanonicalNamespace.URI)
-    private List<Link> links = new ArrayList<>();
-
-    @XmlElement(name = "Reference", namespace = CanonicalNamespace.URI)
-    private List<Reference> references = new ArrayList<>();
-
-    @XmlElement(name = "Diagram", namespace = CanonicalNamespace.URI)
-    private List<Diagram> diagrams = new ArrayList<>();
+    @XmlElements({
+            @XmlElement(name = "Paragraph", namespace = CanonicalNamespace.URI, type = Paragraph.class),
+            @XmlElement(name = "List", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
+            @XmlElement(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
+            @XmlElement(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
+            @XmlElement(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
+            @XmlElement(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
+    })
+    private List<Object> content = new ArrayList<>();
 
     public Body() {
     }
 
     public Body(List<Paragraph> paragraphs) {
-        this.paragraphs = paragraphs;
+        this.content.addAll(paragraphs);
     }
 
     public Body(List<Paragraph> paragraphs, List<CanonicalList> lists, List<Table> tables) {
-        this.paragraphs = paragraphs;
-        this.lists = lists;
-        this.tables = tables;
+        this.content.addAll(paragraphs);
+        this.content.addAll(lists);
+        this.content.addAll(tables);
     }
 
     public Body(List<Paragraph> paragraphs,
@@ -50,36 +43,56 @@ public class Body {
                 List<Link> links,
                 List<Reference> references,
                 List<Diagram> diagrams) {
-        this.paragraphs = paragraphs;
-        this.lists = lists;
-        this.tables = tables;
-        this.links = links;
-        this.references = references;
-        this.diagrams = diagrams;
+        this.content.addAll(paragraphs);
+        this.content.addAll(lists);
+        this.content.addAll(tables);
+        this.content.addAll(links);
+        this.content.addAll(references);
+        this.content.addAll(diagrams);
+    }
+
+    public static Body ordered(List<Object> content) {
+        Body body = new Body();
+        body.content = content;
+        return body;
     }
 
     public List<Paragraph> getParagraphs() {
-        return paragraphs;
+        return filterByType(Paragraph.class);
     }
 
     public List<CanonicalList> getLists() {
-        return lists;
+        return filterByType(CanonicalList.class);
     }
 
     public List<Table> getTables() {
-        return tables;
+        return filterByType(Table.class);
     }
 
     public List<Link> getLinks() {
-        return links;
+        return filterByType(Link.class);
     }
 
     public List<Reference> getReferences() {
-        return references;
+        return filterByType(Reference.class);
     }
 
     public List<Diagram> getDiagrams() {
-        return diagrams;
+        return filterByType(Diagram.class);
+    }
+
+    public List<Object> getContent() {
+        return content;
+    }
+
+    private <T> List<T> filterByType(Class<T> type) {
+        List<T> values = new ArrayList<>();
+        for (Object element : content) {
+            if (type.isInstance(element)) {
+                values.add(type.cast(element));
+            }
+        }
+        return values;
     }
 }
 
