@@ -4,11 +4,42 @@ Gradle plugin that converts Office Open XML documents (`.docx`, `.pptx`, `.xlsx`
 
 The plugin is intentionally focused on canonicalization and package asset extraction.
 
+## What It Produces
+
 Current canonical output includes:
 
 - Paragraphs, lists, and tables
 - Links and references
 - Diagram topology (shapes and connectors)
+- Provenance attribute (`source-path`) with optional paragraph labels (for example `h1`, `h2`)
+
+## Benchmark v1
+
+The repository includes a compact benchmark corpus for canonicalization regression testing:
+
+- `src/test/resources/ooxml/v1-benchmark.docx`
+- `src/test/resources/ooxml/v1-benchmark.pptx`
+- `src/test/resources/ooxml/v1-benchmark.xlsx`
+
+Specification and acceptance criteria:
+
+- `ooxml-canonical-benchmark-spec-v1.md`
+
+Representative canonical samples:
+
+- `samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml`
+- `samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml`
+- `samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml`
+
+### Benchmark coverage highlights
+
+- DOCX: headings/paragraphs, ordered + unordered lists, 2x2 table, diagram text marker (`[A] -> [B]`)
+- PPTX: slide text, shape + connector topology, 2x2 table
+- XLSX: inline-string cells, sparse matrix coordinates, named range, merged-cell range metadata
+
+### Determinism checks
+
+`OoXmlCanonicalizerTest` runs each benchmark fixture more than once and verifies identical serialized XML.
 
 ## Plugin ID
 
@@ -113,9 +144,34 @@ Run tests:
 ./gradlew test
 ```
 
+Run only canonical benchmark tests:
+
+```bash
+./gradlew test --tests name.jurgenei.gradle.ooxml.OoXmlCanonicalizerTest
+```
+
+Run only task-level conversion benchmark coverage:
+
+```bash
+./gradlew test --tests name.jurgenei.gradle.ooxml.OoXmlToCanonicalTaskTest
+```
+
 Generate schema-first JAXB sources:
 
 ```bash
 ./gradlew generateCanonicalJaxb
 ```
+
+## Test Layout
+
+- Unit extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlCanonicalizerTest.java`
+- Task conversion tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlToCanonicalTaskTest.java`
+- Functional Gradle TestKit tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlPluginFunctionalTest.java`
+- Asset extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/ExtractAssetsTaskTest.java`
+
+## Known v1 Scope Limits
+
+- DOCX heading hierarchy is currently preserved as ordered paragraph content rather than explicit section nodes.
+- PPTX connector endpoint IDs may be unavailable depending on source connector metadata.
+- XLSX merged-cell semantics are emitted as references (`target=A4:B4`, `text=merge`) in v1.
 

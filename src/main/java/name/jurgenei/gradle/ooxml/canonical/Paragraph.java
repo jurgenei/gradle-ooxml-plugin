@@ -14,11 +14,11 @@ public class Paragraph {
     @XmlElement(name = "Text", namespace = CanonicalNamespace.URI, required = true)
     private String text;
 
-    @XmlAttribute(name = "source-document")
-    private String sourceDocument;
-
     @XmlAttribute(name = "source-path")
     private String sourcePath;
+
+    @XmlAttribute(name = "label")
+    private String label;
 
     public Paragraph() {
     }
@@ -27,22 +27,27 @@ public class Paragraph {
         this.text = text;
     }
 
-    public Paragraph(String text, String sourceDocument, String sourcePath) {
+    public Paragraph(String text, String sourcePath) {
         this.text = text;
-        this.sourceDocument = sourceDocument;
         this.sourcePath = sourcePath;
+    }
+
+    public Paragraph(String text, String sourcePath, String label) {
+        this.text = text;
+        this.sourcePath = sourcePath;
+        this.label = label;
     }
 
     public String getText() {
         return text;
     }
 
-    public String getSourceDocument() {
-        return sourceDocument;
-    }
-
     public String getSourcePath() {
         return sourcePath;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }
 

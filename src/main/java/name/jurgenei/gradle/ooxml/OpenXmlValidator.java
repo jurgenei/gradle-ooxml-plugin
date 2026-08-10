@@ -24,6 +24,11 @@ final class OpenXmlValidator {
             if (!looksLikeOpenXml(file)) {
                 throw docx4JException;
             }
+        } catch (RuntimeException runtimeException) {
+            // Some docx4j package types throw UnsupportedOperationException on reset; keep structural validation.
+            if (!looksLikeOpenXml(file)) {
+                throw runtimeException;
+            }
         }
     }
 

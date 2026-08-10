@@ -21,7 +21,7 @@ class OoXmlPluginFunctionalTest {
     void runsTaskInConsumerBuild() throws Exception {
         Path projectDir = tempDir.resolve("consumer");
         Files.createDirectories(projectDir.resolve("docs"));
-        copyFixture(projectDir.resolve("docs"), "sample_v3.docx", "sample_v3.docx");
+        copyFixture(projectDir.resolve("docs"), "v1-benchmark.docx", "v1-benchmark.docx");
 
         Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'ooxml-functional-test'\n", StandardCharsets.UTF_8);
         Files.writeString(projectDir.resolve("build.gradle"), """
@@ -43,16 +43,16 @@ class OoXmlPluginFunctionalTest {
                 .build();
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/sample_v3.xml")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark.xml")));
     }
 
     @Test
     void convertsAndValidatesAllFormatsEndToEnd() throws Exception {
         Path projectDir = tempDir.resolve("consumer-e2e");
         Files.createDirectories(projectDir.resolve("docs"));
-        copyFixture(projectDir.resolve("docs"), "sample_v3.docx", "sample_v3.docx");
-        copyFixture(projectDir.resolve("docs"), "sample.pptx", "slides.pptx");
-        copyFixture(projectDir.resolve("docs"), "sample.xlsx", "register.xlsx");
+        copyFixture(projectDir.resolve("docs"), "v1-benchmark.docx", "v1-benchmark.docx");
+        copyFixture(projectDir.resolve("docs"), "v1-benchmark.pptx", "slides.pptx");
+        copyFixture(projectDir.resolve("docs"), "v1-benchmark.xlsx", "register.xlsx");
 
         Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'ooxml-functional-e2e'\n", StandardCharsets.UTF_8);
         Files.writeString(projectDir.resolve("build.gradle"), """
@@ -79,7 +79,7 @@ class OoXmlPluginFunctionalTest {
                 .build();
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/sample_v3.xml")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark.xml")));
         assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/slides.xml")));
         assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/register.xml")));
     }
@@ -130,7 +130,7 @@ class OoXmlPluginFunctionalTest {
                     <c:DocumentType>DOCX</c:DocumentType>
                   </c:Metadata>
                   <c:Body>
-                    <c:Paragraph source-document='sample.docx' source-path='/word/document/p[1]'>
+                    <c:Paragraph source-path='/word/document/p[1]'>
                       <c:Text>Hello</c:Text>
                     </c:Paragraph>
                   </c:Body>

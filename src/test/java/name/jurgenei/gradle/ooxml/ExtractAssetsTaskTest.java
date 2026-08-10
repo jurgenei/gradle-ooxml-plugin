@@ -19,9 +19,9 @@ class ExtractAssetsTaskTest {
 
         Path docs = projectDir.toPath().resolve("docs");
         Files.createDirectories(docs);
-        copyFixture(docs, "sample_v3.docx", "contract_v3.docx");
-        copyFixture(docs, "sample.pptx", "slides.pptx");
-        copyFixture(docs, "sample.xlsx", "register.xlsx");
+        copyFixture(docs, "v1-benchmark.docx", "contract_v1.docx");
+        copyFixture(docs, "v1-benchmark.pptx", "slides.pptx");
+        copyFixture(docs, "v1-benchmark.xlsx", "register.xlsx");
 
         ExtractAssetsTask task = project.getTasks().create("extractAssets", ExtractAssetsTask.class);
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx", "**/*.pptx", "**/*.xlsx")));
@@ -30,9 +30,11 @@ class ExtractAssetsTaskTest {
         task.extract();
 
         Path assetsRoot = projectDir.toPath().resolve("build/ooxml/assets");
-        assertTrue(Files.exists(assetsRoot.resolve("contract_v3/word/media/image1.png")));
-        assertTrue(Files.exists(assetsRoot.resolve("slides/ppt/media/image1.png")));
-        assertTrue(Files.exists(assetsRoot.resolve("register/xl/media/image1.png")));
+        long extractedFiles;
+        try (java.util.stream.Stream<Path> stream = Files.walk(assetsRoot)) {
+            extractedFiles = stream.filter(Files::isRegularFile).count();
+        }
+        assertTrue(extractedFiles == 0, "v1 benchmark corpus should not contain media/embedding assets");
     }
 
     private void copyFixture(Path targetDirectory, String fixtureName, String targetName) throws Exception {

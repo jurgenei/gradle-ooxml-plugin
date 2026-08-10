@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:Document xmlns:c="http://jurgenei.name/canonical">
+  <c:Metadata>
+    <c:DocumentId>v1-benchmark</c:DocumentId>
+    <c:Version/>
+    <c:SourceFile>v1-benchmark.xlsx</c:SourceFile>
+    <c:DocumentType>XLSX</c:DocumentType>
+  </c:Metadata>
+  <c:Body>
+    <c:Table>
+      <c:Row>
+        <c:Cell><c:Text>Application</c:Text></c:Cell>
+        <c:Cell><c:Text>Owner</c:Text></c:Cell>
+      </c:Row>
+      <c:Row>
+        <c:Cell><c:Text>CRM</c:Text></c:Cell>
+        <c:Cell><c:Text>Sales</c:Text></c:Cell>
+      </c:Row>
+      <c:Row>
+        <c:Cell><c:Text>SAP</c:Text></c:Cell>
+        <c:Cell><c:Text>Finance</c:Text></c:Cell>
+      </c:Row>
+    </c:Table>
+    <c:Reference target="NamedRange!A1:B2">
+      <c:Text>SampleRange</c:Text>
+    </c:Reference>
+    <c:Reference target="A4:B4">
+      <c:Text>merge</c:Text>
+    </c:Reference>
+  </c:Body>
+</c:Document>
+

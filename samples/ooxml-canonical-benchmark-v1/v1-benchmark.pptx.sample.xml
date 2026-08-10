@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:Document xmlns:c="http://jurgenei.name/canonical">
+  <c:Metadata>
+    <c:DocumentId>v1-benchmark</c:DocumentId>
+    <c:Version/>
+    <c:SourceFile>v1-benchmark.pptx</c:SourceFile>
+    <c:DocumentType>PPTX</c:DocumentType>
+  </c:Metadata>
+  <c:Body>
+    <c:Paragraph source-path="/ppt/slides/slide1.xml/p[1]">
+      <c:Text>Overview</c:Text>
+    </c:Paragraph>
+    <c:Paragraph source-path="/ppt/slides/slide1.xml/p[2]">
+      <c:Text>System landscape overview</c:Text>
+    </c:Paragraph>
+    <c:Table>
+      <c:Row>
+        <c:Cell><c:Text>App</c:Text></c:Cell>
+        <c:Cell><c:Text>Team</c:Text></c:Cell>
+      </c:Row>
+      <c:Row>
+        <c:Cell><c:Text>CRM</c:Text></c:Cell>
+        <c:Cell><c:Text>Sales</c:Text></c:Cell>
+      </c:Row>
+    </c:Table>
+    <c:Diagram>
+      <c:Shape id="3"><c:Label>Rounded Rectangle 2</c:Label></c:Shape>
+      <c:Shape id="4"><c:Label>Rounded Rectangle 3</c:Label></c:Shape>
+      <c:Connector source="3" target="4"/>
+    </c:Diagram>
+  </c:Body>
+</c:Document>
+

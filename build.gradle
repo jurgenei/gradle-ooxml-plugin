@@ -1,4 +1,5 @@
 plugins {
+    id 'com.gradle.plugin-publish' version '2.1.1'
     id 'java-gradle-plugin'
     id 'jacoco'
 }
@@ -8,7 +9,7 @@ configurations {
 }
 
 group = 'name.jurgenei.gradle'
-version = '0.1.0'
+version = '0.1.1'
 
 repositories {
     mavenCentral()
@@ -55,13 +56,21 @@ sourceSets {
     main {
         java.srcDir(generatedJaxbDir)
     }
+
 }
 
 tasks.named('compileJava') {
     dependsOn tasks.named('generateCanonicalJaxb')
 }
 
+tasks.matching { it.name == 'sourcesJar' }.configureEach {
+    dependsOn tasks.named('generateCanonicalJaxb')
+}
+
 gradlePlugin {
+    website = 'https://github.com/jurgenei/gradle-ooxml-plugin'
+    vcsUrl = 'https://github.com/jurgenei/gradle-ooxml-plugin.git'
+
     plugins {
         ooxmlPlugin {
             id = 'name.jurgenei.gradle.ooxml'
@@ -78,6 +87,11 @@ tasks.withType(Test).configureEach {
     finalizedBy tasks.named('jacocoTestReport')
 }
 
+tasks.withType(Javadoc).configureEach {
+    // Generated JAXB sources and data-model POJOs intentionally keep minimal docs.
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
 jacoco {
     toolVersion = '0.8.12'
 }
@@ -90,4 +104,3 @@ tasks.named('jacocoTestReport') {
         csv.required = false
     }
 }
-

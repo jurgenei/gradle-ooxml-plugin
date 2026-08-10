@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,64 +14,139 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OoXmlCanonicalizerTest {
     private final OoXmlCanonicalizer canonicalizer = new OoXmlCanonicalizer();
+    private final CanonicalXmlSerializer serializer = new CanonicalXmlSerializer();
 
     @Test
-    void canonicalizesDocx() throws Exception {
-        Path file = copyFixture("sample_v3.docx");
+    void canonicalizesDocxBenchmark() throws Exception {
+        Path file = copyFixture("v1-benchmark.docx");
 
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
 
-        assertEquals("sample", document.getMetadata().getDocumentId());
-        assertEquals("3", document.getMetadata().getVersion());
+        assertEquals("v1-benchmark", document.getMetadata().getDocumentId());
+        assertEquals("", document.getMetadata().getVersion());
         assertEquals("DOCX", document.getMetadata().getDocumentType());
         assertFalse(document.getBody().getParagraphs().isEmpty());
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Hello from DOCX")));
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "sample_v3.docx".equals(p.getSourceDocument())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Benchmark Document")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "Benchmark Document".equals(p.getText()) && "h1".equals(p.getLabel())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "Section A".equals(p.getText()) && "h2".equals(p.getLabel())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> "Section B".equals(p.getText()) && "h2".equals(p.getLabel())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Section A")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Section B")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Paragraph with bold")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Visit https://example.com")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("[A] -> [B]")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Final paragraph")));
+        List<String> paragraphTexts = document.getBody().getParagraphs().stream().map(p -> p.getText()).toList();
+        int sectionA = paragraphTexts.indexOf("Section A");
+        int diagram = paragraphTexts.indexOf("[A] -> [B]");
+        int sectionB = paragraphTexts.indexOf("Section B");
+        int finalParagraph = paragraphTexts.indexOf("Final paragraph");
+        assertTrue(sectionA >= 0 && diagram > sectionA && sectionB > diagram && finalParagraph > sectionB,
+                "DOCX paragraph order should follow source order");
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getSourcePath() != null && p.getSourcePath().startsWith("/word/document/")));
-        assertFalse(document.getBody().getLists().isEmpty());
-        assertTrue(document.getBody().getLists().stream().anyMatch(list -> list.getItems().stream().anyMatch(item -> item.getText().contains("List item"))));
+        assertEquals(2, document.getBody().getLists().size());
+        assertTrue(document.getBody().getLists().stream().anyMatch(list -> list.isOrdered() && list.getItems().stream().anyMatch(item -> item.getText().contains("First item"))));
+        assertTrue(document.getBody().getLists().stream().anyMatch(list -> !list.isOrdered() && list.getItems().stream().anyMatch(item -> item.getText().contains("Alpha"))));
         assertFalse(document.getBody().getTables().isEmpty());
-        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("R1C1"))));
-        assertTrue(document.getBody().getLinks().stream().anyMatch(link -> "https://example.com/docx".equals(link.getTarget())));
-        assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "bookmark-1".equals(reference.getTarget())));
-        assertFalse(document.getBody().getDiagrams().isEmpty());
-        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "Docx Shape A".equals(shape.getLabel()))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("App"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Sales"))));
+        assertEquals(0, document.getBody().getLinks().size());
     }
 
     @Test
-    void canonicalizesPptx() throws Exception {
-        Path file = copyFixture("sample.pptx");
+    void canonicalizesPptxBenchmark() throws Exception {
+        Path file = copyFixture("v1-benchmark.pptx");
 
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
 
         assertEquals("PPTX", document.getMetadata().getDocumentType());
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Slide 1 Title")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Overview")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("System landscape overview")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Architecture")));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Responsibilities")));
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getSourcePath() != null && p.getSourcePath().startsWith("/ppt/slides/")));
-        assertFalse(document.getBody().getLists().isEmpty());
-        assertTrue(document.getBody().getLists().stream().anyMatch(list -> list.getItems().stream().anyMatch(item -> item.getText().contains("Bullet"))));
+        assertTrue(document.getBody().getLists().isEmpty());
         assertFalse(document.getBody().getTables().isEmpty());
-        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("P11"))));
-        assertTrue(document.getBody().getLinks().stream().anyMatch(link -> "https://example.com/pptx".equals(link.getTarget())));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("App"))));
         assertFalse(document.getBody().getDiagrams().isEmpty());
-        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "Ppt Shape A".equals(shape.getLabel()))));
-        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getConnectors().stream().anyMatch(connector -> "201".equals(connector.getSource()) && "202".equals(connector.getTarget()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "Rounded Rectangle 2".equals(shape.getLabel()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getConnectors().stream().anyMatch(connector -> "3".equals(connector.getSource()) && "4".equals(connector.getTarget()))));
     }
 
     @Test
-    void canonicalizesXlsx() throws Exception {
-        Path file = copyFixture("sample.xlsx");
+    void canonicalizesXlsxBenchmark() throws Exception {
+        Path file = copyFixture("v1-benchmark.xlsx");
 
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
 
         assertEquals("XLSX", document.getMetadata().getDocumentType());
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("A1=Cell From XLSX")));
-        assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getSourcePath() != null && p.getSourcePath().contains("/A1")));
+        assertTrue(document.getBody().getParagraphs().isEmpty());
         assertFalse(document.getBody().getTables().isEmpty());
-        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Cell From XLSX"))));
-        assertTrue(document.getBody().getLinks().stream().anyMatch(link -> "https://example.com/xlsx".equals(link.getTarget())));
-        assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "Sheet1!A2".equals(reference.getTarget())));
-        assertFalse(document.getBody().getDiagrams().isEmpty());
-        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "Sheet Shape A".equals(shape.getLabel()))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Application"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("EU"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Merged Cell"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Finance"))));
+        assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "NamedRange!A1:B2".equals(reference.getTarget())));
+        assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "A4:B4".equals(reference.getTarget())));
+        assertTrue(document.getBody().getDiagrams().isEmpty());
+    }
+
+    @Test
+    void canonicalizationIsDeterministicForBenchmarkFixtures() throws Exception {
+        assertDeterministic("v1-benchmark.docx");
+        assertDeterministic("v1-benchmark.pptx");
+        assertDeterministic("v1-benchmark.xlsx");
+    }
+
+    @Test
+    void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
+        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
+        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "Rounded Rectangle 2", "<Diagram>"));
+        assertSerializedContains("v1-benchmark.xlsx", List.of("<Table>", "Application", "NamedRange!A1:B2", "A4:B4"));
+    }
+
+    @Test
+    void docxSerializedElementsPreserveSourceOrder() throws Exception {
+        Path file = copyFixture("v1-benchmark.docx");
+        String xml = serialize(canonicalizer.canonicalize(file.toFile()));
+
+        assertAppearsBefore(xml, "Section A", "First item");
+        assertAppearsBefore(xml, "First item", "Second item");
+        assertAppearsBefore(xml, "Second item", "Alpha");
+        assertAppearsBefore(xml, "Alpha", "Beta");
+        assertAppearsBefore(xml, "Beta", "<Table");
+        assertAppearsBefore(xml, "<Table", "[A] -&gt; [B]");
+        assertAppearsBefore(xml, "[A] -&gt; [B]", "Section B");
+        assertAppearsBefore(xml, "Section B", "Final paragraph");
+    }
+
+    private void assertDeterministic(String fixtureName) throws Exception {
+        Path file = copyFixture(fixtureName);
+        String first = serialize(canonicalizer.canonicalize(file.toFile()));
+        String second = serialize(canonicalizer.canonicalize(file.toFile()));
+        assertEquals(first, second);
+    }
+
+    private void assertSerializedContains(String fixtureName, java.util.List<String> tokens) throws Exception {
+        Path file = copyFixture(fixtureName);
+        String actual = serialize(canonicalizer.canonicalize(file.toFile()));
+        for (String token : tokens) {
+            assertTrue(actual.contains(token), "Serialized XML for " + fixtureName + " should include: " + token);
+        }
+    }
+
+    private String serialize(CanonicalDocument document) throws Exception {
+        Path output = Files.createTempFile("ooxml-benchmark-canonical-", ".xml");
+        serializer.write(document, output);
+        return Files.readString(output).replace("\r\n", "\n");
+    }
+
+    private void assertAppearsBefore(String text, String left, String right) {
+        int leftIndex = text.indexOf(left);
+        int rightIndex = text.indexOf(right);
+        assertTrue(leftIndex >= 0, "Missing token: " + left);
+        assertTrue(rightIndex >= 0, "Missing token: " + right);
+        assertTrue(leftIndex < rightIndex, "Expected order: " + left + " before " + right);
     }
 
     private Path copyFixture(String fixtureName) throws Exception {
