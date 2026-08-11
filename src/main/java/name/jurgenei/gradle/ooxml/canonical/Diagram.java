@@ -2,6 +2,7 @@ package name.jurgenei.gradle.ooxml.canonical;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
@@ -13,6 +14,9 @@ import java.util.List;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Diagram {
+    @XmlAttribute(name = "source-path")
+    private String sourcePath;
+
     @XmlElement(name = "Shape", namespace = CanonicalNamespace.URI)
     private List<Shape> shapes = new ArrayList<>();
 
@@ -31,6 +35,22 @@ public class Diagram {
     public Diagram(List<Shape> shapes, List<Connector> connectors) {
         this.shapes = shapes;
         this.connectors = connectors;
+    }
+
+    /**
+     * @return source provenance path.
+     */
+    public String getSourcePath() {
+        return sourcePath;
+    }
+
+    /**
+     * Sets source provenance path after extraction.
+     *
+     * @param sourcePath source provenance path.
+     */
+    public void setSourcePath(String sourcePath) {
+        this.sourcePath = sourcePath;
     }
 
     /**

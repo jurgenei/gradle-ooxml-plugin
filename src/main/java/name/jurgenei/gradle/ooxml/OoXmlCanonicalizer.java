@@ -100,10 +100,10 @@ final class OoXmlCanonicalizer {
                     Map<String, String> relationships = readRelationships(zipFile, relationshipPartPath(normalize(slide.getName())));
                     paragraphs.addAll(extractSlideParagraphs(document, sourceDocument, sourcePath));
                     lists.addAll(extractSlideLists(document));
-                    tables.addAll(extractSlideTables(document));
+                    tables.addAll(extractSlideTables(document, sourcePath));
                     links.addAll(extractSlideLinks(document, relationships));
                     references.addAll(extractSlideReferences(document));
-                    diagrams.addAll(extractSlideDiagrams(document));
+                    diagrams.addAll(extractSlideDiagrams(document, sourcePath));
                 }
             }
         }
@@ -489,8 +489,19 @@ final class OoXmlCanonicalizer {
         return List.of(new CanonicalList(ordered, items));
     }
 
-    private List<Table> extractSlideTables(Document document) {
-        return extractTablesByLocalNames(document, "tbl", "tr", "tc");
+    private List<Table> extractSlideTables(Document document, String sourcePathPrefix) {
+        NodeList tableNodes = document.getElementsByTagNameNS("*", "tbl");
+        List<Table> tables = new ArrayList<>();
+        for (int i = 0; i < tableNodes.getLength(); i++) {
+            Element tableElement = (Element) tableNodes.item(i);
+            Table table = extractTableFromElement(tableElement, "tr", "tc");
+            if (table == null) {
+                continue;
+            }
+            table.setSourcePath(sourcePathPrefix + "/tbl[" + (i + 1) + "]");
+            tables.add(table);
+        }
+        return tables;
     }
 
     private List<Link> extractDocxLinks(Document document, Map<String, String> relationships) {
@@ -580,7 +591,7 @@ final class OoXmlCanonicalizer {
         return references;
     }
 
-    private List<Diagram> extractSlideDiagrams(Document document) {
+    private List<Diagram> extractSlideDiagrams(Document document, String sourcePathPrefix) {
         List<Shape> shapes = new ArrayList<>();
         List<Connector> connectors = new ArrayList<>();
 
@@ -591,7 +602,12 @@ final class OoXmlCanonicalizer {
             if (cNvPr == null) {
                 continue;
             }
-            shapes.add(new Shape(attributeAny(cNvPr, "id"), attributeAny(cNvPr, "name")));
+            String shapeName = attributeAny(cNvPr, "name");
+            String label = extractNestedText(shapeNode);
+            if (label.isEmpty() || isPlaceholderOrTitleShapeName(shapeName)) {
+                label = shapeName;
+            }
+            shapes.add(new Shape(attributeAny(cNvPr, "id"), label));
         }
 
         NodeList connectorNodes = document.getElementsByTagNameNS("*", "cxnSp");
@@ -607,7 +623,9 @@ final class OoXmlCanonicalizer {
         if (shapes.isEmpty() && connectors.isEmpty()) {
             return List.of();
         }
-        return List.of(new Diagram(shapes, connectors));
+        Diagram diagram = new Diagram(shapes, connectors);
+        diagram.setSourcePath(sourcePathPrefix + "/diagram[1]");
+        return List.of(diagram);
     }
 
     private SheetExtraction extractSheet(Document document,
@@ -873,6 +891,14 @@ final class OoXmlCanonicalizer {
 
     private boolean containsDescendant(Element element, String localName) {
         return element.getElementsByTagNameNS("*", localName).getLength() > 0;
+    }
+
+    private boolean isPlaceholderOrTitleShapeName(String shapeName) {
+        if (shapeName == null) {
+            return false;
+        }
+        String normalized = shapeName.trim().toLowerCase(Locale.ROOT);
+        return normalized.startsWith("title") || normalized.contains("placeholder");
     }
 
     private Element firstDescendant(Element element, String localName) {

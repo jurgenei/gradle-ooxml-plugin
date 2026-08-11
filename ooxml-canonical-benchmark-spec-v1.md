@@ -64,7 +64,8 @@ Expected benchmark signals:
 
 1. Slide text is emitted as `Paragraph` entries with slide provenance paths.
 2. Connector diagrams are emitted as `Diagram` with `Shape` and `Connector` entries.
-3. Slide 3 table is emitted as canonical table rows/cells.
+3. Slide tables are emitted as canonical table rows/cells.
+4. Body-level `Table` and `Diagram` elements include `source-path` provenance.
 
 Expected benchmark signals:
 
@@ -72,7 +73,7 @@ Expected benchmark signals:
 - `System landscape overview`
 - `Architecture`
 - `Responsibilities`
-- Diagram shape labels including `Rounded Rectangle 2`, `Rounded Rectangle 3`
+- Diagram shape labels including `CRM`, `SAP`
 - Connector element present
 
 ### XLSX requirements

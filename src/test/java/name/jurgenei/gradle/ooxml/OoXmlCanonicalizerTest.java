@@ -68,8 +68,11 @@ class OoXmlCanonicalizerTest {
         assertTrue(document.getBody().getLists().isEmpty());
         assertFalse(document.getBody().getTables().isEmpty());
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("App"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getSourcePath() != null && table.getSourcePath().startsWith("/ppt/slides/")));
         assertFalse(document.getBody().getDiagrams().isEmpty());
-        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "Rounded Rectangle 2".equals(shape.getLabel()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "CRM".equals(shape.getLabel()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getShapes().stream().anyMatch(shape -> "SAP".equals(shape.getLabel()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getSourcePath() != null && diagram.getSourcePath().startsWith("/ppt/slides/")));
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> diagram.getConnectors().stream().anyMatch(connector -> "3".equals(connector.getSource()) && "4".equals(connector.getTarget()))));
     }
 
@@ -105,7 +108,7 @@ class OoXmlCanonicalizerTest {
     @Test
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
         assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
-        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "Rounded Rectangle 2", "<Diagram>"));
+        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<Table source-path=\"/ppt/slides/slide", "<Diagram source-path=\"/ppt/slides/slide", "<Diagram"));
         assertSerializedContains("v1-benchmark.xlsx", List.of("id=\"Applications\"", "id=\"Matrix\"", "id=\"NamedRange\"", "Application", "NamedRange!A1:B2", "A4:B4"));
     }
 

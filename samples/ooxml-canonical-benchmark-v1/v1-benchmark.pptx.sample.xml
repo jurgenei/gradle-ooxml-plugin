@@ -13,7 +13,7 @@
     <c:Paragraph source-path="/ppt/slides/slide1.xml/p[2]">
       <c:Text>System landscape overview</c:Text>
     </c:Paragraph>
-    <c:Table>
+    <c:Table source-path="/ppt/slides/slide1.xml/tbl[1]">
       <c:Row>
         <c:Cell><c:Text>App</c:Text></c:Cell>
         <c:Cell><c:Text>Team</c:Text></c:Cell>
@@ -23,9 +23,9 @@
         <c:Cell><c:Text>Sales</c:Text></c:Cell>
       </c:Row>
     </c:Table>
-    <c:Diagram>
-      <c:Shape id="3"><c:Label>Rounded Rectangle 2</c:Label></c:Shape>
-      <c:Shape id="4"><c:Label>Rounded Rectangle 3</c:Label></c:Shape>
+    <c:Diagram source-path="/ppt/slides/slide1.xml/diagram[1]">
+      <c:Shape id="3"><c:Label>CRM</c:Label></c:Shape>
+      <c:Shape id="4"><c:Label>SAP</c:Label></c:Shape>
       <c:Connector source="3" target="4"/>
     </c:Diagram>
   </c:Body>
