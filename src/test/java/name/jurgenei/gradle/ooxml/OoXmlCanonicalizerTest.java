@@ -50,7 +50,8 @@ class OoXmlCanonicalizerTest {
         assertFalse(document.getBody().getTables().isEmpty());
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("App"))));
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Sales"))));
-        assertEquals(0, document.getBody().getLinks().size());
+        assertEquals(1, document.getBody().getLinks().size());
+        assertTrue(document.getBody().getLinks().stream().anyMatch(link -> "https://example.com".equals(link.getTarget()) && "https://example.com".equals(link.getText())));
     }
 
     @Test
@@ -121,8 +122,9 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "First item", "Second item");
         assertAppearsBefore(xml, "Second item", "Alpha");
         assertAppearsBefore(xml, "Alpha", "Beta");
-        assertAppearsBefore(xml, "Beta", "<Table");
-        assertAppearsBefore(xml, "<Table", "[A] -&gt; [B]");
+        assertAppearsBefore(xml, "Visit https://example.com", "<Table");
+        assertAppearsBefore(xml, "Beta", "App");
+        assertAppearsBefore(xml, "App", "[A] -&gt; [B]");
         assertAppearsBefore(xml, "[A] -&gt; [B]", "Section B");
         assertAppearsBefore(xml, "Section B", "Final paragraph");
     }
