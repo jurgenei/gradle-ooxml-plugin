@@ -81,9 +81,13 @@ class OoXmlCanonicalizerTest {
 
         assertEquals("XLSX", document.getMetadata().getDocumentType());
         assertTrue(document.getBody().getParagraphs().isEmpty());
-        assertFalse(document.getBody().getTables().isEmpty());
+        assertTrue(document.getBody().getTables().size() >= 3);
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> "Applications".equals(table.getId())));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> "Matrix".equals(table.getId())));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> "NamedRange".equals(table.getId())));
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Application"))));
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("EU"))));
+        assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Key"))));
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Merged Cell"))));
         assertTrue(document.getBody().getTables().stream().anyMatch(table -> table.getRows().stream().flatMap(row -> row.getCells().stream()).anyMatch(cell -> cell.getText().contains("Finance"))));
         assertTrue(document.getBody().getReferences().stream().anyMatch(reference -> "NamedRange!A1:B2".equals(reference.getTarget())));
@@ -102,7 +106,7 @@ class OoXmlCanonicalizerTest {
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
         assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
         assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "Rounded Rectangle 2", "<Diagram>"));
-        assertSerializedContains("v1-benchmark.xlsx", List.of("<Table>", "Application", "NamedRange!A1:B2", "A4:B4"));
+        assertSerializedContains("v1-benchmark.xlsx", List.of("id=\"Applications\"", "id=\"Matrix\"", "id=\"NamedRange\"", "Application", "NamedRange!A1:B2", "A4:B4"));
     }
 
     @Test

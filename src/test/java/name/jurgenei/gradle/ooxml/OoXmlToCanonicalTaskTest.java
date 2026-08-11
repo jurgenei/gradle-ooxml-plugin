@@ -48,8 +48,25 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(docxXml.contains("Alpha"));
 
         String xlsxXml = Files.readString(canonicalRoot.resolve("register.xml"));
+        assertTrue(countOccurrences(xlsxXml, "<Table id=") >= 3);
+        assertTrue(xlsxXml.contains("id=\"Applications\""));
+        assertTrue(xlsxXml.contains("id=\"Matrix\""));
+        assertTrue(xlsxXml.contains("id=\"NamedRange\""));
+        assertTrue(xlsxXml.contains("Application"));
+        assertTrue(xlsxXml.contains("EU"));
+        assertTrue(xlsxXml.contains("Key"));
         assertTrue(xlsxXml.contains("NamedRange!A1:B2"));
         assertTrue(xlsxXml.contains("A4:B4"));
+    }
+
+    private int countOccurrences(String text, String token) {
+        int count = 0;
+        int index = 0;
+        while ((index = text.indexOf(token, index)) >= 0) {
+            count++;
+            index += token.length();
+        }
+        return count;
     }
 
     private void copyFixture(Path targetDirectory, String fixtureName, String targetName) throws Exception {

@@ -23,7 +23,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -118,13 +120,17 @@ final class OoXmlCanonicalizer {
         try (ZipFile zipFile = new ZipFile(inputFile)) {
             List<String> shared = readSharedStrings(zipFile);
             references.addAll(extractWorkbookDefinedNames(zipFile));
-            List<ZipEntry> sheets = findEntries(zipFile, "xl/worksheets/sheet", ".xml");
-            for (ZipEntry sheet : sheets) {
+            List<WorkbookSheet> sheets = resolveWorkbookSheets(zipFile);
+            for (WorkbookSheet sheetMeta : sheets) {
+                String sheetPath = sheetMeta.path();
+                ZipEntry sheet = zipFile.getEntry(sheetPath);
+                if (sheet == null) {
+                    continue;
+                }
                 try (InputStream input = zipFile.getInputStream(sheet)) {
                     Document document = parseXml(input);
-                    String sheetPath = normalize(sheet.getName());
                     Map<String, String> relationships = readRelationships(zipFile, relationshipPartPath(sheetPath));
-                    SheetExtraction sheetExtraction = extractSheet(document, shared, sourceDocument, sheetPath, relationships);
+                    SheetExtraction sheetExtraction = extractSheet(document, shared, sourceDocument, sheetPath, sheetMeta.name(), relationships);
                     paragraphs.addAll(sheetExtraction.paragraphs());
                     if (!sheetExtraction.table().getRows().isEmpty()) {
                         tables.add(sheetExtraction.table());
@@ -136,6 +142,75 @@ final class OoXmlCanonicalizer {
             diagrams.addAll(extractDrawingDiagrams(zipFile));
         }
         return new Extraction(paragraphs, List.of(), tables, links, references, diagrams, List.of());
+    }
+
+    private List<WorkbookSheet> resolveWorkbookSheets(ZipFile zipFile) throws IOException {
+        ZipEntry workbookEntry = zipFile.getEntry("xl/workbook.xml");
+        if (workbookEntry == null) {
+            return findEntries(zipFile, "xl/worksheets/sheet", ".xml").stream()
+                    .map(entry -> new WorkbookSheet("", normalize(entry.getName())))
+                    .toList();
+        }
+
+        try (InputStream input = zipFile.getInputStream(workbookEntry)) {
+            Document workbook = parseXml(input);
+            Map<String, String> workbookRelationships = readRelationships(zipFile, "xl/_rels/workbook.xml.rels");
+            NodeList sheetNodes = workbook.getElementsByTagNameNS("*", "sheet");
+            List<WorkbookSheet> sheets = new ArrayList<>();
+            for (int i = 0; i < sheetNodes.getLength(); i++) {
+                Element sheet = (Element) sheetNodes.item(i);
+                String sheetName = attributeAny(sheet, "name");
+                String relationshipId = relationshipId(sheet);
+                if (relationshipId.isEmpty()) {
+                    continue;
+                }
+                String target = workbookRelationships.getOrDefault(relationshipId, "");
+                if (target.isEmpty()) {
+                    continue;
+                }
+                String sheetPath = normalize(resolvePartTarget("xl/workbook.xml", target));
+                if (sheetPath.startsWith("xl/worksheets/")
+                        && sheetPath.endsWith(".xml")
+                        && sheets.stream().noneMatch(existing -> existing.path().equals(sheetPath))) {
+                    sheets.add(new WorkbookSheet(sheetName, sheetPath));
+                }
+            }
+            if (!sheets.isEmpty()) {
+                return sheets;
+            }
+        }
+
+        return findEntries(zipFile, "xl/worksheets/sheet", ".xml").stream()
+                .map(entry -> new WorkbookSheet("", normalize(entry.getName())))
+                .toList();
+    }
+
+    private String resolvePartTarget(String partPath, String target) {
+        String normalizedTarget = normalize(target);
+        if (target.startsWith("/")) {
+            return normalizedTarget;
+        }
+        int slash = partPath.lastIndexOf('/');
+        String base = slash < 0 ? "" : partPath.substring(0, slash + 1);
+        return collapsePath(base + normalizedTarget);
+    }
+
+    private String collapsePath(String path) {
+        Deque<String> stack = new ArrayDeque<>();
+        String[] parts = normalize(path).split("/");
+        for (String part : parts) {
+            if (part.isEmpty() || ".".equals(part)) {
+                continue;
+            }
+            if ("..".equals(part)) {
+                if (!stack.isEmpty()) {
+                    stack.removeLast();
+                }
+                continue;
+            }
+            stack.addLast(part);
+        }
+        return String.join("/", stack);
     }
 
     private List<String> readSharedStrings(ZipFile zipFile) throws IOException {
@@ -539,6 +614,7 @@ final class OoXmlCanonicalizer {
                                          List<String> sharedStrings,
                                          String sourceDocument,
                                          String sheetPath,
+                                         String sheetName,
                                          Map<String, String> relationships) {
         NodeList rowNodes = document.getElementsByTagNameNS("*", "row");
         List<Row> rows = new ArrayList<>();
@@ -593,7 +669,7 @@ final class OoXmlCanonicalizer {
             }
         }
 
-        return new SheetExtraction(paragraphs, new Table(rows), links, references);
+        return new SheetExtraction(paragraphs, new Table(sheetName, rows), links, references);
     }
 
     private List<Reference> extractWorkbookDefinedNames(ZipFile zipFile) throws IOException {
@@ -904,6 +980,9 @@ final class OoXmlCanonicalizer {
                                    Table table,
                                    List<Link> links,
                                    List<Reference> references) {
+    }
+
+    private record WorkbookSheet(String name, String path) {
     }
 }
 
