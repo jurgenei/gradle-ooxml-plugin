@@ -59,6 +59,7 @@
         <xs:sequence>
             <xs:element name="Row" type="c:RowType" minOccurs="1" maxOccurs="unbounded"/>
         </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="optional"/>
     </xs:complexType>
 
     <xs:complexType name="RowType">
