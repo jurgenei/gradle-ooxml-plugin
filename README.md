@@ -17,9 +17,9 @@ Current canonical output includes:
 
 The repository includes a compact benchmark corpus for canonicalization regression testing:
 
-- `src/test/resources/ooxml/v1-benchmark.docx`
-- `src/test/resources/ooxml/v1-benchmark.pptx`
-- `src/test/resources/ooxml/v1-benchmark.xlsx`
+- [src/test/resources/ooxml/v1-benchmark.docx](src/test/resources/ooxml/v1-benchmark.docx)
+- [src/test/resources/ooxml/v1-benchmark.pptx](src/test/resources/ooxml/v1-benchmark.pptx)
+- [src/test/resources/ooxml/v1-benchmark.xlsx](src/test/resources/ooxml/v1-benchmark.xlsx)
 
 Specification and acceptance criteria:
 
@@ -27,9 +27,9 @@ Specification and acceptance criteria:
 
 Representative canonical samples:
 
-- `samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml`
-- `samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml`
-- `samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml`
+- [samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml)  
+- [samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml)
+- [samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml)
 
 ### Benchmark coverage highlights
 
