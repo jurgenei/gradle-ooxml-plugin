@@ -17,6 +17,9 @@ public class Table {
     @XmlAttribute(name = "id")
     private String id;
 
+    @XmlAttribute(name = "source-path")
+    private String sourcePath;
+
     @XmlElement(name = "Row", namespace = CanonicalNamespace.URI)
     private List<Row> rows = new ArrayList<>();
 
@@ -43,8 +46,37 @@ public class Table {
         this.rows = rows;
     }
 
+    /**
+     * Creates a table with a logical identifier and extraction source path.
+     *
+     * @param id logical table identifier.
+     * @param sourcePath source provenance path.
+     * @param rows canonical rows.
+     */
+    public Table(String id, String sourcePath, List<Row> rows) {
+        this.id = id;
+        this.sourcePath = sourcePath;
+        this.rows = rows;
+    }
+
     public String getId() {
         return id;
+    }
+
+    /**
+     * @return source provenance path.
+     */
+    public String getSourcePath() {
+        return sourcePath;
+    }
+
+    /**
+     * Sets source provenance path after extraction.
+     *
+     * @param sourcePath source provenance path.
+     */
+    public void setSourcePath(String sourcePath) {
+        this.sourcePath = sourcePath;
     }
 
     /**
