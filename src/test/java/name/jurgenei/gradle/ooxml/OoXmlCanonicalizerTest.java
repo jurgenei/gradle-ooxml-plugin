@@ -3,6 +3,10 @@ package name.jurgenei.gradle.ooxml;
 import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
 import org.w3c.dom.Element;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -137,15 +141,17 @@ class OoXmlCanonicalizerTest {
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
         assertEquals("DOCX", document.getMetadata().getDocumentType());
 
-        List<Element> math = document.getBody().getMath();
-        assertFalse(math.isEmpty());
-        assertTrue(math.stream().allMatch(node -> OmmlMathTransformer.MATHML_NS.equals(node.getNamespaceURI())));
-        assertTrue(math.stream().allMatch(node -> "math".equals(node.getLocalName())));
-
         String xml = serialize(document);
         assertTrue(xml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
         assertTrue(xml.contains(OmmlMathTransformer.MATHML_NS));
         assertFalse(xml.contains("<mrow/>"), "MathML should not contain empty mrow noise");
+
+        org.w3c.dom.Document parsed = parseXml(xml);
+        Element body = (Element) parsed.getElementsByTagNameNS(CanonicalNamespace.URI, "Body").item(0);
+        assertFalse(hasDirectMathChild(body), "MathML must not be a direct Body child");
+        assertTrue(hasParagraphWithMath(parsed), "At least one Paragraph should contain nested MathML");
+        assertTrue(hasCellWithMath(parsed), "At least one Cell should contain nested MathML");
+        assertFalse(xml.contains("<Text>CoverAmt Cov Perc"), "Flattened formula text should be removed from Paragraph payload");
 
         int bodyIndex = xml.indexOf("<Body>");
         int mathIndex = firstMathTagIndex(xml);
@@ -197,6 +203,46 @@ class OoXmlCanonicalizerTest {
             return explicitPrefix;
         }
         return xml.indexOf(":math");
+    }
+
+    private org.w3c.dom.Document parseXml(String xml) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        return factory.newDocumentBuilder().parse(new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    }
+
+    private boolean hasDirectMathChild(Element parent) {
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node instanceof Element element
+                    && OmmlMathTransformer.MATHML_NS.equals(element.getNamespaceURI())
+                    && "math".equals(element.getLocalName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasParagraphWithMath(org.w3c.dom.Document document) {
+        NodeList paragraphs = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Paragraph");
+        for (int i = 0; i < paragraphs.getLength(); i++) {
+            if (hasDirectMathChild((Element) paragraphs.item(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasCellWithMath(org.w3c.dom.Document document) {
+        NodeList cells = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Cell");
+        for (int i = 0; i < cells.getLength(); i++) {
+            if (hasDirectMathChild((Element) cells.item(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Path copyFixture(String fixtureName) throws Exception {

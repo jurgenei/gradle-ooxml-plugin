@@ -53,6 +53,10 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(formulaXml.contains("http://www.w3.org/1998/Math/MathML"));
         assertTrue(formulaXml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
         assertTrue(!formulaXml.contains("<mrow/>"));
+        assertTrue(formulaXml.contains("</Paragraph>\n        <Paragraph") || formulaXml.contains("</Paragraph>\r\n        <Paragraph"));
+        assertTrue(!formulaXml.contains("</Paragraph>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertTrue(!formulaXml.contains("</Table>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertTrue(!formulaXml.contains("<Text>CoverAmt Cov Perc"));
 
         String xlsxXml = Files.readString(canonicalRoot.resolve("register.xml"));
         assertTrue(countOccurrences(xlsxXml, "<Table id=") >= 3);

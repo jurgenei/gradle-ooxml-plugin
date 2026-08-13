@@ -2,11 +2,9 @@ package name.jurgenei.gradle.ooxml.canonical;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlAnyElement;
 import jakarta.xml.bind.annotation.XmlElementRef;
 import jakarta.xml.bind.annotation.XmlElementRefs;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
-import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +22,6 @@ public class Body {
             @XmlElementRef(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
             @XmlElementRef(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
     })
-    @XmlAnyElement
     private List<Object> content = new ArrayList<>();
 
     public Body() {
@@ -43,14 +40,12 @@ public class Body {
     public Body(List<Paragraph> paragraphs,
                 List<CanonicalList> lists,
                 List<Table> tables,
-                List<Element> formulas,
                 List<Link> links,
                 List<Reference> references,
                 List<Diagram> diagrams) {
         this.content.addAll(paragraphs);
         this.content.addAll(lists);
         this.content.addAll(tables);
-        this.content.addAll(formulas);
         this.content.addAll(links);
         this.content.addAll(references);
         this.content.addAll(diagrams);
@@ -86,11 +81,6 @@ public class Body {
         return filterByType(Diagram.class);
     }
 
-    public List<Element> getMath() {
-        return filterByType(Element.class).stream()
-                .filter(element -> "http://www.w3.org/1998/Math/MathML".equals(element.getNamespaceURI()))
-                .toList();
-    }
 
     public List<Object> getContent() {
         return content;

@@ -8,140 +8,136 @@
     </Metadata>
     <Body>
         <Paragraph source-path="/word/document/p[2]">
-            <Text>CoverAmt Cov Perc = CoverPerc Cov CR * ExpAmt ExpEvent when OSGID Cov j = null and New Cover Alloc Ind&lt; &gt; ' Y '</Text>
-        </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msubsup>
-                    <mi>CoverAmt</mi>
-                    <mi>Cov</mi>
-                    <mi>Perc</mi>
-                </msubsup>
-                <mi>=</mi>
-                <msubsup>
-                    <mi>CoverPerc</mi>
-                    <mi>Cov</mi>
-                    <mi>CR</mi>
-                </msubsup>
-                <mi>*</mi>
-                <msub>
-                    <mi>ExpAmt</mi>
-                    <mi>ExpEvent</mi>
-                </msub>
-                <mi>when</mi>
-                <msub>
-                    <mi>OSGID</mi>
-                    <mi>Cov</mi>
-                    <mi>j</mi>
-                </msub>
-                <mi>=</mi>
-                <mi>null and New Cover Alloc Ind&lt;</mi>
-                <msup>
-                    <mi>&gt;</mi>
-                    <mi>'</mi>
-                </msup>
-                <msup>
-                    <mi>Y</mi>
-                    <mi>'</mi>
-                </msup>
-            </mrow>
-        </math>
-        <Paragraph source-path="/word/document/p[4]">
-            <Text>CoverAmt Cov Perc = CoverPerc Cov CR * CoverAllocReferenceAmt OSG when OSGID Cov j = null and New Cover Alloc Ind='Y'</Text>
-        </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msubsup>
-                    <mi>CoverAmt</mi>
-                    <mi>Cov</mi>
-                    <mi>Perc</mi>
-                </msubsup>
-                <mi>=</mi>
-                <msubsup>
-                    <mi>CoverPerc</mi>
-                    <mi>Cov</mi>
-                    <mi>CR</mi>
-                </msubsup>
-                <mi>*</mi>
-                <msub>
-                    <mi>CoverAllocReferenceAmt</mi>
-                    <mi>OSG</mi>
-                </msub>
-                <mi>when</mi>
-                <msub>
-                    <mi>OSGID</mi>
-                    <mi>Cov</mi>
-                    <mi>j</mi>
-                </msub>
-                <mi>=</mi>
-                <mi>null and New Cover Alloc Ind='Y'</mi>
-            </mrow>
-        </math>
-        <Paragraph source-path="/word/document/p[6]">
-            <Text>PriceIndexFactor Cov = PriceIndex ReportingDate PriceIndex AppraiselDate if PriceIndex AppraiselDate =0 than 1</Text>
-        </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>PriceIndexFactor</mi>
-                    <mi>Cov</mi>
-                </msub>
-                <mi>=</mi>
-                <mfrac>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msubsup>
+                        <mi>CoverAmt</mi>
+                        <mi>Cov</mi>
+                        <mi>Perc</mi>
+                    </msubsup>
+                    <mi>=</mi>
+                    <msubsup>
+                        <mi>CoverPerc</mi>
+                        <mi>Cov</mi>
+                        <mi>CR</mi>
+                    </msubsup>
+                    <mi>*</mi>
                     <msub>
-                        <mi>PriceIndex</mi>
-                        <mi>ReportingDate</mi>
+                        <mi>ExpAmt</mi>
+                        <mi>ExpEvent</mi>
                     </msub>
+                    <mi>when</mi>
+                    <msub>
+                        <mi>OSGID</mi>
+                        <mi>Cov</mi>
+                        <mi>j</mi>
+                    </msub>
+                    <mi>=</mi>
+                    <mi>null and New Cover Alloc Ind&lt;</mi>
+                    <msup>
+                        <mi>&gt;</mi>
+                        <mi>'</mi>
+                    </msup>
+                    <msup>
+                        <mi>Y</mi>
+                        <mi>'</mi>
+                    </msup>
+                </mrow>
+            </math>
+        </Paragraph>
+        <Paragraph source-path="/word/document/p[4]">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msubsup>
+                        <mi>CoverAmt</mi>
+                        <mi>Cov</mi>
+                        <mi>Perc</mi>
+                    </msubsup>
+                    <mi>=</mi>
+                    <msubsup>
+                        <mi>CoverPerc</mi>
+                        <mi>Cov</mi>
+                        <mi>CR</mi>
+                    </msubsup>
+                    <mi>*</mi>
+                    <msub>
+                        <mi>CoverAllocReferenceAmt</mi>
+                        <mi>OSG</mi>
+                    </msub>
+                    <mi>when</mi>
+                    <msub>
+                        <mi>OSGID</mi>
+                        <mi>Cov</mi>
+                        <mi>j</mi>
+                    </msub>
+                    <mi>=</mi>
+                    <mi>null and New Cover Alloc Ind='Y'</mi>
+                </mrow>
+            </math>
+        </Paragraph>
+        <Paragraph source-path="/word/document/p[6]">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msub>
+                        <mi>PriceIndexFactor</mi>
+                        <mi>Cov</mi>
+                    </msub>
+                    <mi>=</mi>
+                    <mfrac>
+                        <msub>
+                            <mi>PriceIndex</mi>
+                            <mi>ReportingDate</mi>
+                        </msub>
+                        <msub>
+                            <mi>PriceIndex</mi>
+                            <mi>AppraiselDate</mi>
+                        </msub>
+                    </mfrac>
+                    <mi>if</mi>
                     <msub>
                         <mi>PriceIndex</mi>
                         <mi>AppraiselDate</mi>
                     </msub>
-                </mfrac>
-                <mi>if</mi>
-                <msub>
-                    <mi>PriceIndex</mi>
-                    <mi>AppraiselDate</mi>
-                </msub>
-                <mi>=0 than 1</mi>
-            </mrow>
-        </math>
-        <Paragraph source-path="/word/document/p[8]">
-            <Text>AvailableAmt Cov Indexed = CoverAmt Cov Perc if ( CoverAmt Cov Perc &lt; AbsoluteAmt Cov Indexed/Revalued ) Absolute Cov Indexed/Revalued Otherwise</Text>
+                    <mi>=0 than 1</mi>
+                </mrow>
+            </math>
         </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msubsup>
-                    <mi>AvailableAmt</mi>
-                    <mi>Cov</mi>
-                    <mi>Indexed</mi>
-                </msubsup>
-                <mi>=</mi>
-                <msubsup>
-                    <mi>CoverAmt</mi>
-                    <mi>Cov</mi>
-                    <mi>Perc</mi>
-                </msubsup>
-                <mi>if (</mi>
-                <msubsup>
-                    <mi>CoverAmt</mi>
-                    <mi>Cov</mi>
-                    <mi>Perc</mi>
-                </msubsup>
-                <mi>&lt;</mi>
-                <msubsup>
-                    <mi>AbsoluteAmt</mi>
-                    <mi>Cov</mi>
-                    <mi>Indexed/Revalued</mi>
-                </msubsup>
-                <mi>)</mi>
-                <msubsup>
-                    <mi>Absolute</mi>
-                    <mi>Cov</mi>
-                    <mi>Indexed/Revalued</mi>
-                </msubsup>
-                <mi>Otherwise</mi>
-            </mrow>
-        </math>
+        <Paragraph source-path="/word/document/p[8]">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msubsup>
+                        <mi>AvailableAmt</mi>
+                        <mi>Cov</mi>
+                        <mi>Indexed</mi>
+                    </msubsup>
+                    <mi>=</mi>
+                    <msubsup>
+                        <mi>CoverAmt</mi>
+                        <mi>Cov</mi>
+                        <mi>Perc</mi>
+                    </msubsup>
+                    <mi>if (</mi>
+                    <msubsup>
+                        <mi>CoverAmt</mi>
+                        <mi>Cov</mi>
+                        <mi>Perc</mi>
+                    </msubsup>
+                    <mi>&lt;</mi>
+                    <msubsup>
+                        <mi>AbsoluteAmt</mi>
+                        <mi>Cov</mi>
+                        <mi>Indexed/Revalued</mi>
+                    </msubsup>
+                    <mi>)</mi>
+                    <msubsup>
+                        <mi>Absolute</mi>
+                        <mi>Cov</mi>
+                        <mi>Indexed/Revalued</mi>
+                    </msubsup>
+                    <mi>Otherwise</mi>
+                </mrow>
+            </math>
+        </Paragraph>
         <Paragraph source-path="/word/document/p[10]">
             <Text>The cover priority for country risk is based on the outstanding group ID and the transfer priority class</Text>
         </Paragraph>
@@ -169,77 +165,80 @@
             </Item>
         </List>
         <Paragraph source-path="/word/document/p[16]">
-            <Text>CAEventRegCov I = Cov j</Text>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msub>
+                        <mi>CAEventRegCov</mi>
+                        <mi>I</mi>
+                    </msub>
+                    <mi>=</mi>
+                    <msub>
+                        <mi>Cov</mi>
+                        <mi>j</mi>
+                    </msub>
+                </mrow>
+            </math>
         </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>CAEventRegCov</mi>
-                    <mi>I</mi>
-                </msub>
-                <mi>=</mi>
-                <msub>
-                    <mi>Cov</mi>
-                    <mi>j</mi>
-                </msub>
-            </mrow>
-        </math>
         <Paragraph source-path="/word/document/p[17]">
-            <Text>order by OSGID Cov j OSGID exists →OSGID not exists     desc</Text>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <mi>order by</mi>
+                    <msub>
+                        <mi>OSGID</mi>
+                        <mi>Cov j</mi>
+                    </msub>
+                    <mi>OSGID exists →OSGID not exists desc</mi>
+                </mrow>
+            </math>
         </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <mi>order by</mi>
-                <msub>
-                    <mi>OSGID</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>OSGID exists →OSGID not exists desc</mi>
-            </mrow>
-        </math>
         <Paragraph source-path="/word/document/p[18]">
-            <Text>TransferPriorityClass Cov j asc</Text>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msub>
+                        <mi>TransferPriorityClass</mi>
+                        <mi>Cov j</mi>
+                    </msub>
+                    <mi>asc</mi>
+                </mrow>
+            </math>
         </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>TransferPriorityClass</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>asc</mi>
-            </mrow>
-        </math>
         <Paragraph source-path="/word/document/p[19]">
-            <Text>CountryRating Cov j asc</Text>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msub>
+                        <mi>CountryRating</mi>
+                        <mi>Cov j</mi>
+                    </msub>
+                    <mi>asc</mi>
+                </mrow>
+            </math>
         </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>CountryRating</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>asc</mi>
-            </mrow>
-        </math>
         <Paragraph source-path="/word/document/p[20]">
-            <Text>ID Cov j desc</Text>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mrow>
+                    <msub>
+                        <mi>ID</mi>
+                        <mi>Cov j</mi>
+                    </msub>
+                    <mi>desc</mi>
+                </mrow>
+            </math>
         </Paragraph>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>ID</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>desc</mi>
-            </mrow>
-        </math>
         <Paragraph source-path="/word/document/p[22]">
             <Text>Where:</Text>
         </Paragraph>
         <Table>
             <Row>
                 <Cell>
-                    <Text>CAEventRegCov I =</Text>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>CAEventRegCov</mi>
+<mi>I</mi>
+                            </msub>
+                            <mi>=</mi>
+                        </mrow>
+                    </math>
                 </Cell>
                 <Cell>
                     <Text>Represents the list of covers related with the limit Tree</Text>
@@ -247,7 +246,15 @@
             </Row>
             <Row>
                 <Cell>
-                    <Text>TransferPriorityClass Cov j =</Text>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>TransferPriorityClass</mi>
+<mi>Cov j</mi>
+                            </msub>
+                            <mi>=</mi>
+                        </mrow>
+                    </math>
                 </Cell>
                 <Cell>
                     <Text>Property of the cover type, looked up in Cover Type table</Text>
@@ -255,83 +262,62 @@
             </Row>
             <Row>
                 <Cell>
-                    <Text>CountryRating Cov j =</Text>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>CountryRating</mi>
+<mi>Cov j</mi>
+                            </msub>
+                            <mi>=</mi>
+                        </mrow>
+                    </math>
                 </Cell>
                 <Cell>
-                    <Text>CountryRating GRID if exists otherwise SovereignRating GRID if exists otherwise LocalCCYRating Country if exists otherwise YZ17</Text>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>CountryRating</mi>
+<mi>GRID</mi>
+                            </msub>
+                            <mi>if exists otherwise</mi>
+                        </mrow>
+                    </math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>SovereignRating</mi>
+<mi>GRID</mi>
+                            </msub>
+                            <mi>if exists otherwise</mi>
+                        </mrow>
+                    </math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>LocalCCYRating</mi>
+<mi>Country</mi>
+                            </msub>
+                            <mi>if exists otherwise YZ17</mi>
+                        </mrow>
+                    </math>
                 </Cell>
             </Row>
             <Row>
                 <Cell>
-                    <Text>ID Cov j =</Text>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <mrow>
+                            <msub>
+<mi>ID</mi>
+<mi>Cov j</mi>
+                            </msub>
+                            <mi>=</mi>
+                        </mrow>
+                    </math>
                 </Cell>
                 <Cell>
                     <Text>Cover ID</Text>
                 </Cell>
             </Row>
         </Table>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>CAEventRegCov</mi>
-                    <mi>I</mi>
-                </msub>
-                <mi>=</mi>
-            </mrow>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>TransferPriorityClass</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>=</mi>
-            </mrow>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>CountryRating</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>=</mi>
-            </mrow>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>CountryRating</mi>
-                    <mi>GRID</mi>
-                </msub>
-                <mi>if exists otherwise</mi>
-            </mrow>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>SovereignRating</mi>
-                    <mi>GRID</mi>
-                </msub>
-                <mi>if exists otherwise</mi>
-            </mrow>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>LocalCCYRating</mi>
-                    <mi>Country</mi>
-                </msub>
-                <mi>if exists otherwise YZ17</mi>
-            </mrow>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <mrow>
-                <msub>
-                    <mi>ID</mi>
-                    <mi>Cov j</mi>
-                </msub>
-                <mi>=</mi>
-            </mrow>
-        </math>
     </Body>
 </Document>

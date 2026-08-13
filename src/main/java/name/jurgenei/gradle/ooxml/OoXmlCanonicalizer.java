@@ -67,7 +67,7 @@ final class OoXmlCanonicalizer {
         try (ZipFile zipFile = new ZipFile(inputFile)) {
             ZipEntry entry = zipFile.getEntry("word/document.xml");
             if (entry == null) {
-                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
             }
             try (InputStream input = zipFile.getInputStream(entry)) {
                 Document document = parseXml(input);
@@ -75,7 +75,6 @@ final class OoXmlCanonicalizer {
                         extractDocxParagraphs(document, sourceDocument),
                         extractDocxLists(document),
                         extractDocxTables(document),
-                        extractDocxFormulaFragments(document.getDocumentElement()),
                         extractDocxLinks(document, readRelationships(zipFile, "word/_rels/document.xml.rels")),
                         extractDocxReferences(document),
                         extractDocxDiagrams(document),
@@ -110,7 +109,7 @@ final class OoXmlCanonicalizer {
                 }
             }
         }
-        return new Extraction(paragraphs, lists, tables, List.of(), links, references, diagrams, List.of());
+        return new Extraction(paragraphs, lists, tables, links, references, diagrams, List.of());
     }
 
     private Extraction extractXlsx(File inputFile) throws IOException {
@@ -144,7 +143,7 @@ final class OoXmlCanonicalizer {
             }
             diagrams.addAll(extractDrawingDiagrams(zipFile));
         }
-        return new Extraction(paragraphs, List.of(), tables, List.of(), links, references, diagrams, List.of());
+        return new Extraction(paragraphs, List.of(), tables, links, references, diagrams, List.of());
     }
 
     private List<WorkbookSheet> resolveWorkbookSheets(ZipFile zipFile) throws IOException {
@@ -272,7 +271,6 @@ final class OoXmlCanonicalizer {
                     extraction.paragraphs(),
                     extraction.lists(),
                     extraction.tables(),
-                    extraction.formulas(),
                     extraction.links(),
                     extraction.references(),
                     extraction.diagrams()
@@ -290,14 +288,14 @@ final class OoXmlCanonicalizer {
         };
     }
 
-    private List<Paragraph> extractDocxParagraphs(Document document, String sourceDocument) {
+    private List<Paragraph> extractDocxParagraphs(Document document, String sourceDocument) throws IOException {
         NodeList paragraphNodes = document.getElementsByTagNameNS("*", "p");
         List<Paragraph> paragraphs = new ArrayList<>();
         for (int i = 0; i < paragraphNodes.getLength(); i++) {
             Element paragraph = (Element) paragraphNodes.item(i);
-            String text = extractNestedText(paragraph);
-            if (!text.isEmpty()) {
-                paragraphs.add(new Paragraph(text, "/word/document/p[" + (i + 1) + "]", docxHeadingLabel(paragraph)));
+            Paragraph contentParagraph = extractDocxParagraphContent(paragraph, "/word/document/p[" + (i + 1) + "]");
+            if (contentParagraph != null) {
+                paragraphs.add(contentParagraph);
             }
         }
         return paragraphs;
@@ -324,13 +322,13 @@ final class OoXmlCanonicalizer {
             String localName = element.getLocalName();
             if ("p".equals(localName)) {
                 paragraphIndex++;
-                String text = extractNestedText(element);
-                if (!text.isEmpty()) {
-                    ordered.add(new Paragraph(text, "/word/document/p[" + paragraphIndex + "]", docxHeadingLabel(element)));
+                Paragraph paragraph = extractDocxParagraphContent(element, "/word/document/p[" + paragraphIndex + "]");
+                if (paragraph != null) {
+                    ordered.add(paragraph);
                 }
-                ordered.addAll(extractFormulaFragments("DOCX", element));
 
                 Boolean itemOrdering = docxListOrdering(element);
+                String text = paragraph == null ? "" : paragraph.getText();
                 if (itemOrdering == null) {
                     if (!pendingListItems.isEmpty() && pendingOrdered != null) {
                         ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
@@ -358,11 +356,10 @@ final class OoXmlCanonicalizer {
             }
 
             if ("tbl".equals(localName)) {
-                Table table = extractTableFromElement(element, "tr", "tc");
+                Table table = extractDocxTableFromElement(element);
                 if (table != null) {
                     ordered.add(table);
                 }
-                ordered.addAll(extractFormulaFragments("DOCX", element));
             }
         }
 
@@ -372,13 +369,20 @@ final class OoXmlCanonicalizer {
         return ordered;
     }
 
-    private List<Element> extractFormulaFragments(String format, Element sourceElement) throws IOException {
-        return switch (format) {
-            case "DOCX" -> extractDocxFormulaFragments(sourceElement);
-            case "PPTX" -> extractPptxFormulaFragments(sourceElement);
-            case "XLSX" -> extractXlsxFormulaFragments(sourceElement);
-            default -> List.of();
-        };
+    private Paragraph extractDocxParagraphContent(Element paragraphElement, String sourcePath) throws IOException {
+        String text = extractNestedText(paragraphElement);
+        List<Element> formulas = extractDocxFormulaFragments(paragraphElement);
+        if (text.isEmpty() && formulas.isEmpty()) {
+            return null;
+        }
+        Paragraph paragraph = new Paragraph();
+        paragraph.setSourcePath(sourcePath);
+        paragraph.setLabel(docxHeadingLabel(paragraphElement));
+        paragraph.addText(text);
+        for (Element formula : formulas) {
+            paragraph.addMath(formula);
+        }
+        return paragraph.hasContent() ? paragraph : null;
     }
 
     private List<Element> extractDocxFormulaFragments(Element sourceElement) throws IOException {
@@ -498,8 +502,41 @@ final class OoXmlCanonicalizer {
         return null;
     }
 
-    private List<Table> extractDocxTables(Document document) {
-        return extractTablesByLocalNames(document, "tbl", "tr", "tc");
+    private List<Table> extractDocxTables(Document document) throws IOException {
+        NodeList tableNodes = document.getElementsByTagNameNS("*", "tbl");
+        List<Table> tables = new ArrayList<>();
+        for (int i = 0; i < tableNodes.getLength(); i++) {
+            Table table = extractDocxTableFromElement((Element) tableNodes.item(i));
+            if (table != null) {
+                tables.add(table);
+            }
+        }
+        return tables;
+    }
+
+    private Table extractDocxTableFromElement(Element tableElement) throws IOException {
+        NodeList rowNodes = tableElement.getElementsByTagNameNS("*", "tr");
+        List<Row> rows = new ArrayList<>();
+        for (int j = 0; j < rowNodes.getLength(); j++) {
+            Element rowElement = (Element) rowNodes.item(j);
+            NodeList cellNodes = rowElement.getElementsByTagNameNS("*", "tc");
+            List<Cell> cells = new ArrayList<>();
+            for (int k = 0; k < cellNodes.getLength(); k++) {
+                Element cellElement = (Element) cellNodes.item(k);
+                Cell cell = new Cell();
+                cell.addText(extractNestedText(cellElement));
+                for (Element formula : extractDocxFormulaFragments(cellElement)) {
+                    cell.addMath(formula);
+                }
+                if (cell.hasContent()) {
+                    cells.add(cell);
+                }
+            }
+            if (!cells.isEmpty()) {
+                rows.add(new Row(cells));
+            }
+        }
+        return rows.isEmpty() ? null : new Table(rows);
     }
 
     private List<Paragraph> extractSlideParagraphs(Document document, String sourceDocument, String sourcePathPrefix) {
@@ -958,22 +995,33 @@ final class OoXmlCanonicalizer {
     }
 
     private String extractNestedText(Element element) {
-        NodeList texts = element.getElementsByTagNameNS("*", "t");
-        if (texts.getLength() == 0) {
-            return "";
-        }
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < texts.getLength(); i++) {
-            String value = texts.item(i).getTextContent();
-            if (value == null || value.isBlank()) {
-                continue;
-            }
-            if (!builder.isEmpty()) {
-                builder.append(' ');
-            }
-            builder.append(value.trim());
-        }
+        appendTextExcludingOmml(element, builder);
         return builder.toString();
+    }
+
+    private void appendTextExcludingOmml(Node node, StringBuilder builder) {
+        if (!(node instanceof Element element)) {
+            return;
+        }
+        String localName = element.getLocalName();
+        if ("oMath".equals(localName) || "oMathPara".equals(localName)) {
+            return;
+        }
+        if ("t".equals(localName)) {
+            String value = element.getTextContent();
+            if (value != null && !value.isBlank()) {
+                if (!builder.isEmpty()) {
+                    builder.append(' ');
+                }
+                builder.append(value.trim());
+            }
+            return;
+        }
+        NodeList children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            appendTextExcludingOmml(children.item(i), builder);
+        }
     }
 
     private String relationshipId(Element element) {
@@ -1044,7 +1092,6 @@ final class OoXmlCanonicalizer {
     private record Extraction(List<Paragraph> paragraphs,
                               List<CanonicalList> lists,
                               List<Table> tables,
-                              List<Element> formulas,
                               List<Link> links,
                               List<Reference> references,
                               List<Diagram> diagrams,

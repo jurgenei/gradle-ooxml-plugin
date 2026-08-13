@@ -31,14 +31,14 @@
             <xs:element name="Link" type="c:LinkType"/>
             <xs:element name="Reference" type="c:ReferenceType"/>
             <xs:element name="Diagram" type="c:DiagramType"/>
-            <xs:any namespace="http://www.w3.org/1998/Math/MathML" processContents="lax"/>
         </xs:choice>
     </xs:complexType>
 
     <xs:complexType name="ParagraphType">
-        <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
             <xs:element name="Text" type="xs:string"/>
-        </xs:sequence>
+            <xs:any namespace="http://www.w3.org/1998/Math/MathML" processContents="lax"/>
+        </xs:choice>
         <xs:attribute name="source-path" type="xs:string" use="optional"/>
         <xs:attribute name="label" type="xs:string" use="optional"/>
     </xs:complexType>
@@ -71,9 +71,10 @@
     </xs:complexType>
 
     <xs:complexType name="CellType">
-        <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
             <xs:element name="Text" type="xs:string"/>
-        </xs:sequence>
+            <xs:any namespace="http://www.w3.org/1998/Math/MathML" processContents="lax"/>
+        </xs:choice>
     </xs:complexType>
 
     <xs:complexType name="LinkType">
