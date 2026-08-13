@@ -4,12 +4,14 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 /**
  * Canonical paragraph with source provenance attributes.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "Paragraph", namespace = CanonicalNamespace.URI)
 public class Paragraph {
     @XmlElement(name = "Text", namespace = CanonicalNamespace.URI, required = true)
     private String text;

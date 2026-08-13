@@ -4,12 +4,14 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 /**
  * Canonical internal/document-local reference.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "Reference", namespace = CanonicalNamespace.URI)
 public class Reference {
     @XmlAttribute(name = "target")
     private String target;

@@ -31,6 +31,13 @@ Representative canonical samples:
 - [samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml)
 - [samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml)
 
+## Benchmark v2
+
+Formula-focused DOCX fixture and generated canonical sample:
+
+- [src/test/resources/ooxml/v2-formulas.docx](src/test/resources/ooxml/v2-formulas.docx)
+- [samples/ooxml-canonical-benchmark-v2/v2-formulas.xml](samples/ooxml-canonical-benchmark-v2/v2-formulas.xml)
+
 ### Benchmark coverage highlights
 
 - DOCX: headings/paragraphs, ordered + unordered lists, 2x2 table, diagram text marker (`[A] -> [B]`)

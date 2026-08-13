@@ -44,6 +44,8 @@ import java.util.zip.ZipFile;
 final class OoXmlCanonicalizer {
     private static final String REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
+    private final OmmlMathTransformer ommlMathTransformer = new OmmlMathTransformer();
+
     /**
      * Canonicalizes a single OOXML package.
      *
@@ -65,7 +67,7 @@ final class OoXmlCanonicalizer {
         try (ZipFile zipFile = new ZipFile(inputFile)) {
             ZipEntry entry = zipFile.getEntry("word/document.xml");
             if (entry == null) {
-                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                return new Extraction(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
             }
             try (InputStream input = zipFile.getInputStream(entry)) {
                 Document document = parseXml(input);
@@ -73,6 +75,7 @@ final class OoXmlCanonicalizer {
                         extractDocxParagraphs(document, sourceDocument),
                         extractDocxLists(document),
                         extractDocxTables(document),
+                        extractDocxFormulaFragments(document.getDocumentElement()),
                         extractDocxLinks(document, readRelationships(zipFile, "word/_rels/document.xml.rels")),
                         extractDocxReferences(document),
                         extractDocxDiagrams(document),
@@ -107,7 +110,7 @@ final class OoXmlCanonicalizer {
                 }
             }
         }
-        return new Extraction(paragraphs, lists, tables, links, references, diagrams, List.of());
+        return new Extraction(paragraphs, lists, tables, List.of(), links, references, diagrams, List.of());
     }
 
     private Extraction extractXlsx(File inputFile) throws IOException {
@@ -141,7 +144,7 @@ final class OoXmlCanonicalizer {
             }
             diagrams.addAll(extractDrawingDiagrams(zipFile));
         }
-        return new Extraction(paragraphs, List.of(), tables, links, references, diagrams, List.of());
+        return new Extraction(paragraphs, List.of(), tables, List.of(), links, references, diagrams, List.of());
     }
 
     private List<WorkbookSheet> resolveWorkbookSheets(ZipFile zipFile) throws IOException {
@@ -269,6 +272,7 @@ final class OoXmlCanonicalizer {
                     extraction.paragraphs(),
                     extraction.lists(),
                     extraction.tables(),
+                    extraction.formulas(),
                     extraction.links(),
                     extraction.references(),
                     extraction.diagrams()
@@ -299,7 +303,7 @@ final class OoXmlCanonicalizer {
         return paragraphs;
     }
 
-    private List<Object> extractDocxOrderedContent(Document document) {
+    private List<Object> extractDocxOrderedContent(Document document) throws IOException {
         Element bodyElement = firstDescendant(document.getDocumentElement(), "body");
         if (bodyElement == null) {
             return List.of();
@@ -324,6 +328,7 @@ final class OoXmlCanonicalizer {
                 if (!text.isEmpty()) {
                     ordered.add(new Paragraph(text, "/word/document/p[" + paragraphIndex + "]", docxHeadingLabel(element)));
                 }
+                ordered.addAll(extractFormulaFragments("DOCX", element));
 
                 Boolean itemOrdering = docxListOrdering(element);
                 if (itemOrdering == null) {
@@ -357,6 +362,7 @@ final class OoXmlCanonicalizer {
                 if (table != null) {
                     ordered.add(table);
                 }
+                ordered.addAll(extractFormulaFragments("DOCX", element));
             }
         }
 
@@ -364,6 +370,48 @@ final class OoXmlCanonicalizer {
             ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
         }
         return ordered;
+    }
+
+    private List<Element> extractFormulaFragments(String format, Element sourceElement) throws IOException {
+        return switch (format) {
+            case "DOCX" -> extractDocxFormulaFragments(sourceElement);
+            case "PPTX" -> extractPptxFormulaFragments(sourceElement);
+            case "XLSX" -> extractXlsxFormulaFragments(sourceElement);
+            default -> List.of();
+        };
+    }
+
+    private List<Element> extractDocxFormulaFragments(Element sourceElement) throws IOException {
+        List<Element> formulas = new ArrayList<>();
+        collectDocxFormulas(sourceElement, formulas);
+        return formulas.isEmpty() ? List.of() : formulas;
+    }
+
+    // Hook for future PowerPoint equation extraction.
+    private List<Element> extractPptxFormulaFragments(Element sourceElement) {
+        return List.of();
+    }
+
+    // Hook for future spreadsheet formula rendering extraction.
+    private List<Element> extractXlsxFormulaFragments(Element sourceElement) {
+        return List.of();
+    }
+
+    private void collectDocxFormulas(Element current, List<Element> formulas) throws IOException {
+        NodeList children = current.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (!(node instanceof Element element)) {
+                continue;
+            }
+            String localName = element.getLocalName();
+            if ("oMathPara".equals(localName) || "oMath".equals(localName)) {
+                formulas.add(ommlMathTransformer.transform(element));
+                // Avoid duplicate conversion of nested oMath within oMathPara.
+                continue;
+            }
+            collectDocxFormulas(element, formulas);
+        }
     }
 
     private String docxHeadingLabel(Element paragraph) {
@@ -996,6 +1044,7 @@ final class OoXmlCanonicalizer {
     private record Extraction(List<Paragraph> paragraphs,
                               List<CanonicalList> lists,
                               List<Table> tables,
+                              List<Element> formulas,
                               List<Link> links,
                               List<Reference> references,
                               List<Diagram> diagrams,

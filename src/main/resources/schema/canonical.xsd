@@ -31,6 +31,7 @@
             <xs:element name="Link" type="c:LinkType"/>
             <xs:element name="Reference" type="c:ReferenceType"/>
             <xs:element name="Diagram" type="c:DiagramType"/>
+            <xs:any namespace="http://www.w3.org/1998/Math/MathML" processContents="lax"/>
         </xs:choice>
     </xs:complexType>
 

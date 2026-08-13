@@ -1,6 +1,7 @@
 package name.jurgenei.gradle.ooxml;
 
 import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
+import org.w3c.dom.Element;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -129,6 +130,34 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "Section B", "Final paragraph");
     }
 
+    @Test
+    void canonicalizesDocxFormulasAsMathMlAndPreservesOrder() throws Exception {
+        Path file = copyFixture("v2-formulas.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+
+        List<Element> math = document.getBody().getMath();
+        assertFalse(math.isEmpty());
+        assertTrue(math.stream().allMatch(node -> OmmlMathTransformer.MATHML_NS.equals(node.getNamespaceURI())));
+        assertTrue(math.stream().allMatch(node -> "math".equals(node.getLocalName())));
+
+        String xml = serialize(document);
+        assertTrue(xml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertTrue(xml.contains(OmmlMathTransformer.MATHML_NS));
+        assertFalse(xml.contains("<mrow/>"), "MathML should not contain empty mrow noise");
+
+        int bodyIndex = xml.indexOf("<Body>");
+        int mathIndex = firstMathTagIndex(xml);
+        int proseIndex = xml.indexOf("The cover priority for country risk");
+        assertTrue(bodyIndex >= 0, "Missing token: <Body>");
+        assertTrue(mathIndex >= 0, "Missing token: :math");
+        assertTrue(proseIndex >= 0, "Missing token: The cover priority for country risk");
+        assertTrue(bodyIndex < mathIndex && mathIndex < proseIndex,
+                "Expected first MathML fragment to appear before narrative prose");
+        assertAppearsBefore(xml, "Where:", "<Table");
+    }
+
     private void assertDeterministic(String fixtureName) throws Exception {
         Path file = copyFixture(fixtureName);
         String first = serialize(canonicalizer.canonicalize(file.toFile()));
@@ -156,6 +185,18 @@ class OoXmlCanonicalizerTest {
         assertTrue(leftIndex >= 0, "Missing token: " + left);
         assertTrue(rightIndex >= 0, "Missing token: " + right);
         assertTrue(leftIndex < rightIndex, "Expected order: " + left + " before " + right);
+    }
+
+    private int firstMathTagIndex(String xml) {
+        int defaultNamespaceMath = xml.indexOf("<math xmlns=\"http://www.w3.org/1998/Math/MathML\"");
+        if (defaultNamespaceMath >= 0) {
+            return defaultNamespaceMath;
+        }
+        int explicitPrefix = xml.indexOf("<m:math");
+        if (explicitPrefix >= 0) {
+            return explicitPrefix;
+        }
+        return xml.indexOf(":math");
     }
 
     private Path copyFixture(String fixtureName) throws Exception {

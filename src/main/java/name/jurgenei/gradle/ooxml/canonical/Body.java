@@ -2,9 +2,11 @@ package name.jurgenei.gradle.ooxml.canonical;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElements;
+import jakarta.xml.bind.annotation.XmlAnyElement;
+import jakarta.xml.bind.annotation.XmlElementRef;
+import jakarta.xml.bind.annotation.XmlElementRefs;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
+import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +16,15 @@ import java.util.List;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Body {
-    @XmlElements({
-            @XmlElement(name = "Paragraph", namespace = CanonicalNamespace.URI, type = Paragraph.class),
-            @XmlElement(name = "List", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
-            @XmlElement(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
-            @XmlElement(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
-            @XmlElement(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
-            @XmlElement(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
+    @XmlElementRefs({
+            @XmlElementRef(name = "Paragraph", namespace = CanonicalNamespace.URI, type = Paragraph.class),
+            @XmlElementRef(name = "List", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
+            @XmlElementRef(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
+            @XmlElementRef(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
+            @XmlElementRef(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
+            @XmlElementRef(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
     })
+    @XmlAnyElement
     private List<Object> content = new ArrayList<>();
 
     public Body() {
@@ -40,12 +43,14 @@ public class Body {
     public Body(List<Paragraph> paragraphs,
                 List<CanonicalList> lists,
                 List<Table> tables,
+                List<Element> formulas,
                 List<Link> links,
                 List<Reference> references,
                 List<Diagram> diagrams) {
         this.content.addAll(paragraphs);
         this.content.addAll(lists);
         this.content.addAll(tables);
+        this.content.addAll(formulas);
         this.content.addAll(links);
         this.content.addAll(references);
         this.content.addAll(diagrams);
@@ -79,6 +84,12 @@ public class Body {
 
     public List<Diagram> getDiagrams() {
         return filterByType(Diagram.class);
+    }
+
+    public List<Element> getMath() {
+        return filterByType(Element.class).stream()
+                .filter(element -> "http://www.w3.org/1998/Math/MathML".equals(element.getNamespaceURI()))
+                .toList();
     }
 
     public List<Object> getContent() {

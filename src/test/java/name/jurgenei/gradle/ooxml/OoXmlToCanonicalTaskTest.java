@@ -20,6 +20,7 @@ class OoXmlToCanonicalTaskTest {
         Path docs = projectDir.toPath().resolve("docs");
         Files.createDirectories(docs);
         copyFixture(docs, "v1-benchmark.docx", "benchmark.docx");
+        copyFixture(docs, "v2-formulas.docx", "formulas.docx");
         copyFixture(docs, "v1-benchmark.pptx", "slides.pptx");
         copyFixture(docs, "v1-benchmark.xlsx", "register.xlsx");
 
@@ -31,6 +32,7 @@ class OoXmlToCanonicalTaskTest {
 
         Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
         assertTrue(Files.exists(canonicalRoot.resolve("benchmark.xml")));
+        assertTrue(Files.exists(canonicalRoot.resolve("formulas.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("slides.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("register.xml")));
 
@@ -46,6 +48,11 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(docxXml.contains("Table"));
         assertTrue(docxXml.contains("First item"));
         assertTrue(docxXml.contains("Alpha"));
+
+        String formulaXml = Files.readString(canonicalRoot.resolve("formulas.xml"));
+        assertTrue(formulaXml.contains("http://www.w3.org/1998/Math/MathML"));
+        assertTrue(formulaXml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertTrue(!formulaXml.contains("<mrow/>"));
 
         String xlsxXml = Files.readString(canonicalRoot.resolve("register.xml"));
         assertTrue(countOccurrences(xlsxXml, "<Table id=") >= 3);

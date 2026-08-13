@@ -4,12 +4,14 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 /**
  * Canonical external or relationship-based link.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "Link", namespace = CanonicalNamespace.URI)
 public class Link {
     @XmlAttribute(name = "target")
     private String target;

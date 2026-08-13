@@ -4,6 +4,7 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
  * Canonical diagram topology container.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "Diagram", namespace = CanonicalNamespace.URI)
 public class Diagram {
     @XmlAttribute(name = "source-path")
     private String sourcePath;
