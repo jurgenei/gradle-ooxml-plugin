@@ -11,12 +11,6 @@
             <Text>Image78.emf</Text>
         </Paragraph>
         <Diagram source-path="/word/document/p[2]/drawing[1]">
-            <Shape id="469179847">
-                <Label>Picture 5</Label>
-            </Shape>
-            <Node id="469179847" geometry="image" semantic="diagram-artifact" confidence="0.45">
-                <Label>Picture 5</Label>
-            </Node>
             <Node id="469179847-start" geometry="ellipse" semantic="root" confidence="0.82">
                 <Label>Start</Label>
             </Node>
@@ -42,12 +36,6 @@
             <Text>image81.emf</Text>
         </Paragraph>
         <Diagram source-path="/word/document/p[3]/drawing[1]">
-            <Shape id="25">
-                <Label>Picture 25</Label>
-            </Shape>
-            <Node id="25" geometry="image" semantic="diagram-artifact" confidence="0.45">
-                <Label>Picture 25</Label>
-            </Node>
             <Node id="25-start" geometry="ellipse" semantic="root" confidence="0.82">
                 <Label>Start</Label>
             </Node>

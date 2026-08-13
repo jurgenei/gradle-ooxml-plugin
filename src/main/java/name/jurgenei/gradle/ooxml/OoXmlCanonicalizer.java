@@ -7,6 +7,8 @@ import name.jurgenei.gradle.ooxml.canonical.Cell;
 import name.jurgenei.gradle.ooxml.canonical.Connector;
 import name.jurgenei.gradle.ooxml.canonical.DiagramAnnotation;
 import name.jurgenei.gradle.ooxml.canonical.DiagramEdge;
+import name.jurgenei.gradle.ooxml.canonical.DiagramGroup;
+import name.jurgenei.gradle.ooxml.canonical.DiagramGroupMember;
 import name.jurgenei.gradle.ooxml.canonical.DiagramNode;
 import name.jurgenei.gradle.ooxml.canonical.Diagram;
 import name.jurgenei.gradle.ooxml.canonical.Link;
@@ -415,18 +417,29 @@ final class OoXmlCanonicalizer {
             String target = relationshipId.isEmpty() ? "" : relationships.getOrDefault(relationshipId, "");
             String assetPath = target.isEmpty() ? "" : normalize(resolvePartTarget("word/document.xml", target));
 
-            List<Shape> shapes = List.of(new Shape(id, label));
-            List<DiagramNode> nodes = List.of(new DiagramNode(id, label, "image", "diagram-artifact", 0.45));
+            List<Shape> shapes = List.of();
+            List<DiagramNode> nodes = new ArrayList<>();
+            List<DiagramEdge> edges = new ArrayList<>();
+            List<DiagramGroup> groups = new ArrayList<>();
             List<DiagramAnnotation> annotations = new ArrayList<>();
             if (!assetPath.isEmpty()) {
                 annotations.add(new DiagramAnnotation("asset", id, 0.95, assetPath));
                 String extractedText = extractAssetText(zipFile, assetPath);
                 if (!extractedText.isEmpty()) {
                     annotations.add(new DiagramAnnotation("asset-text", id, 0.65, extractedText));
+                    DiagramInference inference = inferDiagramFromAssetText(id, extractedText);
+                    nodes.addAll(inference.nodes());
+                    edges.addAll(inference.edges());
+                    groups.addAll(inference.groups());
+                    if (!inference.nodes().isEmpty()) {
+                        annotations.add(new DiagramAnnotation("inferred-flow", id, 0.70,
+                                "generated " + inference.nodes().size() + " nodes, "
+                                        + inference.edges().size() + " edges"));
+                    }
                 }
             }
 
-            Diagram diagram = new Diagram(shapes, List.of(), nodes, List.of(), annotations);
+            Diagram diagram = new Diagram(shapes, List.of(), nodes, edges, groups, annotations);
             diagram.setSourcePath("/word/document/p[" + paragraphIndex + "]/drawing[" + (i + 1) + "]");
             diagramSemanticAnalyzer.infer(diagram);
             diagrams.add(diagram);
@@ -479,6 +492,129 @@ final class OoXmlCanonicalizer {
             return "";
         }
         return String.join(" | ", snippets);
+    }
+
+    private DiagramInference inferDiagramFromAssetText(String imageNodeId, String extractedText) {
+        List<String> tokens = tokenizeAssetText(extractedText);
+        if (tokens.isEmpty()) {
+            return DiagramInference.empty();
+        }
+
+        String normalized = String.join(" ", tokens).replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+        List<DiagramNode> nodes = new ArrayList<>();
+        List<DiagramEdge> edges = new ArrayList<>();
+        List<DiagramGroup> groups = new ArrayList<>();
+
+        String startId = null;
+        if (containsToken(tokens, "start")) {
+            startId = imageNodeId + "-start";
+            nodes.add(new DiagramNode(startId, "Start", "ellipse", "root", 0.82));
+        }
+
+        List<String> processNodeIds = new ArrayList<>();
+        if (normalized.contains("calculate uncovered")) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "a-calculate-uncovered",
+                    "Calculate Uncovered Amount (see section a)"));
+        }
+        if (containsBeforeHaircut(normalized)) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "b-alloc-before-haircut",
+                    "Calculate Allocated Cover Amount without excess before haircut (see section b)"));
+        }
+        if (containsAfterHaircut(normalized)) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "c-alloc-after-haircut",
+                    "Calculate Allocated Cover Amount without excess after haircut (see section c)"));
+        }
+        if (processNodeIds.isEmpty() && normalized.contains("allocated cover") && normalized.contains("without excess")) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "b-alloc-without-excess",
+                    "Calculate Allocated Cover Amount without excess (see section b)"));
+        }
+
+        String endId = null;
+        if (containsToken(tokens, "end")) {
+            endId = imageNodeId + "-end";
+            nodes.add(new DiagramNode(endId, "End", "ellipse", "leaf", 0.82));
+        } else if (startId != null && processNodeIds.size() >= 2) {
+            // Image extractions often miss trailing labels; synthesize End when the flow is clearly sequential.
+            endId = imageNodeId + "-end-inferred";
+            nodes.add(new DiagramNode(endId, "End", "ellipse", "leaf", 0.58));
+        }
+
+        List<String> chain = new ArrayList<>();
+        if (startId != null) {
+            chain.add(startId);
+        }
+        chain.addAll(processNodeIds);
+        if (endId != null) {
+            chain.add(endId);
+        }
+        for (int i = 0; i + 1 < chain.size(); i++) {
+            edges.add(new DiagramEdge(chain.get(i), chain.get(i + 1), true, "flow", 0.74, null));
+        }
+
+        String groupLabel = inferGroupLabel(tokens);
+        if (!groupLabel.isEmpty() && !processNodeIds.isEmpty()) {
+            List<DiagramGroupMember> members = processNodeIds.stream()
+                    .map(DiagramGroupMember::new)
+                    .toList();
+            groups.add(new DiagramGroup(imageNodeId + "-group-1", "process-group", groupLabel, members));
+        }
+
+        return new DiagramInference(nodes, edges, groups);
+    }
+
+    private List<String> tokenizeAssetText(String extractedText) {
+        if (extractedText == null || extractedText.isBlank()) {
+            return List.of();
+        }
+        List<String> tokens = new ArrayList<>();
+        for (String raw : extractedText.split("\\|")) {
+            String cleaned = raw.trim().replaceAll("\\s+", " ");
+            if (!cleaned.isEmpty()) {
+                tokens.add(cleaned);
+            }
+        }
+        return tokens;
+    }
+
+    private boolean containsToken(List<String> tokens, String value) {
+        String needle = value.toLowerCase(Locale.ROOT);
+        return tokens.stream().anyMatch(token -> token.toLowerCase(Locale.ROOT).equals(needle));
+    }
+
+    private boolean containsBeforeHaircut(String normalized) {
+        return normalized.contains("without excess before haircut")
+                || normalized.contains("without excess before hc")
+                || (normalized.contains("without excess") && normalized.contains("before") && normalized.contains("haircut"));
+    }
+
+    private boolean containsAfterHaircut(String normalized) {
+        return normalized.contains("without excess after haircut")
+                || normalized.contains("without excess after hc")
+                || (normalized.contains("without excess") && normalized.contains("after") && normalized.contains("haircut"));
+    }
+
+    private String addProcessNode(List<DiagramNode> nodes, String imageNodeId, String suffix, String label) {
+        String id = imageNodeId + "-" + suffix;
+        nodes.add(new DiagramNode(id, label, "rectangle", "process", 0.76));
+        return id;
+    }
+
+    private String inferGroupLabel(List<String> tokens) {
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            String lower = token.toLowerCase(Locale.ROOT);
+            if (!lower.contains("group")) {
+                continue;
+            }
+            if (i > 0) {
+                String combined = (tokens.get(i - 1) + " " + token).replaceAll("\\s+", " ").trim();
+                if (!combined.isEmpty()) {
+                    return combined;
+                }
+            }
+            return token;
+        }
+        return "";
     }
 
     private List<Element> extractDocxFormulaFragments(Element sourceElement) throws IOException {
@@ -1260,6 +1396,14 @@ final class OoXmlCanonicalizer {
                                    Table table,
                                    List<Link> links,
                                    List<Reference> references) {
+    }
+
+    private record DiagramInference(List<DiagramNode> nodes,
+                                    List<DiagramEdge> edges,
+                                    List<DiagramGroup> groups) {
+        private static DiagramInference empty() {
+            return new DiagramInference(List.of(), List.of(), List.of());
+        }
     }
 
     private record WorkbookSheet(String name, String path) {

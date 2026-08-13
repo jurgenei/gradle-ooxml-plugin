@@ -63,11 +63,15 @@ class OoXmlToCanonicalTaskTest {
         String diagramsXml = Files.readString(canonicalRoot.resolve("diagrams.xml"));
         assertTrue(diagramsXml.contains("<Diagram"));
         assertTrue(diagramsXml.contains("<Node"));
-        assertTrue(diagramsXml.contains("geometry=\"image\""));
+        assertTrue(diagramsXml.contains("semantic=\"process\""));
+        assertTrue(diagramsXml.contains("semantic=\"flow\""));
+        assertTrue(diagramsXml.contains("<Group"));
         assertTrue(diagramsXml.contains("<Annotation kind=\"asset\""));
         assertTrue(diagramsXml.contains("source-path=\"/word/document/p[2]/drawing[1]\""));
         assertTrue(diagramsXml.contains("source-path=\"/word/document/p[3]/drawing[1]\""));
         assertTrue(diagramsXml.contains("kind=\"asset-text\""));
+        assertTrue(diagramsXml.contains("kind=\"inferred-flow\""));
+        assertTrue(diagramsXml.contains("see section a") || diagramsXml.contains("see section b") || diagramsXml.contains("see section c"));
 
         String xlsxXml = Files.readString(canonicalRoot.resolve("register.xml"));
         assertTrue(countOccurrences(xlsxXml, "<Table id=") >= 3);

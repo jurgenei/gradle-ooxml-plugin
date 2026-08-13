@@ -173,14 +173,22 @@ class OoXmlCanonicalizerTest {
         assertFalse(document.getBody().getDiagrams().isEmpty());
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> !diagram.getNodes().isEmpty()));
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
-                diagram.getNodes().stream().anyMatch(node -> "image".equals(node.getGeometry()))));
+                diagram.getNodes().stream().anyMatch(node -> "process".equals(node.getSemantic()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                diagram.getEdges().stream().anyMatch(edge -> "flow".equals(edge.getSemantic()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                !diagram.getGroups().isEmpty()));
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
                 diagram.getAnnotations().stream().anyMatch(annotation -> "asset".equals(annotation.getKind()))));
 
         String xml = serialize(document);
-        assertAppearsBefore(xml, "Title 1", "<Diagram source-path=\"/word/document/p[2]/drawing[1]\"");
-        assertAppearsBefore(xml, "<Diagram source-path=\"/word/document/p[2]/drawing[1]\"", "Title 2");
-        assertAppearsBefore(xml, "Title 2", "<Diagram source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertAppearsBefore(xml, "source-path=\"/word/document/p[2]/drawing[1]\"", "source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertTrue(xml.contains("<Group"), "Expected canonical group structure for inferred subgraph");
+        assertTrue(xml.contains("semantic=\"process\""), "Expected inferred process nodes");
+        assertTrue(xml.contains("semantic=\"flow\""), "Expected inferred flow edges");
+        assertTrue(xml.contains("see section a") || xml.contains("see section b") || xml.contains("see section c"),
+                "Expected inferred section-aware process labels");
+        assertTrue(xml.contains(">End<"), "Expected end-node approximation in inferred flow");
         assertTrue(xml.contains("kind=\"asset-text\""), "Expected extracted diagram text annotation");
         assertTrue(xml.contains("Start") || xml.contains("Calculate"),
                 "Expected recovered EMF text content in canonical diagram annotations");

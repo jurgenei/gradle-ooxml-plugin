@@ -97,9 +97,23 @@
             <xs:element name="Connector" type="c:ConnectorType" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="Node" type="c:NodeType" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="Edge" type="c:EdgeType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="Group" type="c:GroupType" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="Annotation" type="c:AnnotationType" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="source-path" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="GroupType">
+        <xs:sequence>
+            <xs:element name="Label" type="xs:string" minOccurs="0"/>
+            <xs:element name="Member" type="c:GroupMemberType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="optional"/>
+        <xs:attribute name="semantic" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="GroupMemberType">
+        <xs:attribute name="node" type="xs:string" use="optional"/>
     </xs:complexType>
 
     <xs:complexType name="ShapeType">
