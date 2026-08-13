@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns="http://jurgenei.name/canonical">
+    <Metadata>
+        <DocumentId>v2-diagrams</DocumentId>
+        <Version></Version>
+        <SourceFile>v2-diagrams.docx</SourceFile>
+        <DocumentType>DOCX</DocumentType>
+    </Metadata>
+    <Body>
+        <Paragraph source-path="/word/document/p[1]">
+            <Text>Title 1</Text>
+        </Paragraph>
+        <Diagram source-path="/word/document/p[2]/drawing[1]">
+            <Shape id="469179847">
+                <Label>Picture 5</Label>
+            </Shape>
+            <Node id="469179847" geometry="image" semantic="diagram-artifact" confidence="0.45">
+                <Label>Picture 5</Label>
+            </Node>
+            <Annotation kind="asset" target="469179847" confidence="0.95">
+                <Text>word/media/image1.emf</Text>
+            </Annotation>
+            <Annotation kind="asset-text" target="469179847" confidence="0.65">
+                <Text>Allocate Cover to | Outstanding Group | Start | Calculate Uncovered | Amount | see section | Calculate Allocated Cover | amount without excess</Text>
+            </Annotation>
+        </Diagram>
+        <Paragraph source-path="/word/document/p[3]">
+            <Text>Title 2</Text>
+        </Paragraph>
+        <Diagram source-path="/word/document/p[3]/drawing[1]">
+            <Shape id="25">
+                <Label>Picture 25</Label>
+            </Shape>
+            <Node id="25" geometry="image" semantic="diagram-artifact" confidence="0.45">
+                <Label>Picture 25</Label>
+            </Node>
+            <Annotation kind="asset" target="25" confidence="0.95">
+                <Text>word/media/image2.emf</Text>
+            </Annotation>
+            <Annotation kind="asset-text" target="25" confidence="0.65">
+                <Text>Calculate Allocated Cover Amount | Without Excess After Haircut | Start | Alloc Cover No Excess After HC | Cov,Osg | Alloc Cover No Excess Before HC | Effective HC</Text>
+            </Annotation>
+        </Diagram>
+    </Body>
+</Document>

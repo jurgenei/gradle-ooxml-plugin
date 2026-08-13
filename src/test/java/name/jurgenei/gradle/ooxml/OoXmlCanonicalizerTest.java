@@ -164,6 +164,28 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "Where:", "<Table");
     }
 
+    @Test
+    void canonicalizesDocxDiagramFixtureToSemanticDiagramNodes() throws Exception {
+        Path file = copyFixture("v2-diagrams.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertFalse(document.getBody().getDiagrams().isEmpty());
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> !diagram.getNodes().isEmpty()));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                diagram.getNodes().stream().anyMatch(node -> "image".equals(node.getGeometry()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "asset".equals(annotation.getKind()))));
+
+        String xml = serialize(document);
+        assertAppearsBefore(xml, "Title 1", "<Diagram source-path=\"/word/document/p[2]/drawing[1]\"");
+        assertAppearsBefore(xml, "<Diagram source-path=\"/word/document/p[2]/drawing[1]\"", "Title 2");
+        assertAppearsBefore(xml, "Title 2", "<Diagram source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertTrue(xml.contains("kind=\"asset-text\""), "Expected extracted diagram text annotation");
+        assertTrue(xml.contains("Start") || xml.contains("Calculate"),
+                "Expected recovered EMF text content in canonical diagram annotations");
+    }
+
     private void assertDeterministic(String fixtureName) throws Exception {
         Path file = copyFixture(fixtureName);
         String first = serialize(canonicalizer.canonicalize(file.toFile()));

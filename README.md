@@ -37,6 +37,8 @@ Formula-focused DOCX fixture and generated canonical sample:
 
 - [src/test/resources/ooxml/v2-formulas.docx](src/test/resources/ooxml/v2-formulas.docx)
 - [samples/ooxml-canonical-benchmark-v2/v2-formulas.xml](samples/ooxml-canonical-benchmark-v2/v2-formulas.xml)
+- [src/test/resources/ooxml/v2-diagrams.docx](src/test/resources/ooxml/v2-diagrams.docx)
+- [samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml](samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml)
 
 ### Benchmark coverage highlights
 

@@ -5,10 +5,12 @@ This folder contains canonical XML samples for the benchmark corpus in `src/test
 ## Files
 
 - `v2-formulas.xml`
+- `v2-diagrams.xml`
 
 ## Source fixture
 
 - `src/test/resources/ooxml/v2-formulas.docx`
+- `src/test/resources/ooxml/v2-diagrams.docx`
 
 ## Regeneration workflow
 

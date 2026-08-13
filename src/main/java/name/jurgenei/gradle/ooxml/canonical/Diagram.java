@@ -25,6 +25,15 @@ public class Diagram {
     @XmlElement(name = "Connector", namespace = CanonicalNamespace.URI)
     private List<Connector> connectors = new ArrayList<>();
 
+    @XmlElement(name = "Node", namespace = CanonicalNamespace.URI)
+    private List<DiagramNode> nodes = new ArrayList<>();
+
+    @XmlElement(name = "Edge", namespace = CanonicalNamespace.URI)
+    private List<DiagramEdge> edges = new ArrayList<>();
+
+    @XmlElement(name = "Annotation", namespace = CanonicalNamespace.URI)
+    private List<DiagramAnnotation> annotations = new ArrayList<>();
+
     public Diagram() {
     }
 
@@ -37,6 +46,18 @@ public class Diagram {
     public Diagram(List<Shape> shapes, List<Connector> connectors) {
         this.shapes = shapes;
         this.connectors = connectors;
+    }
+
+    public Diagram(List<Shape> shapes,
+                   List<Connector> connectors,
+                   List<DiagramNode> nodes,
+                   List<DiagramEdge> edges,
+                   List<DiagramAnnotation> annotations) {
+        this.shapes = shapes;
+        this.connectors = connectors;
+        this.nodes = nodes;
+        this.edges = edges;
+        this.annotations = annotations;
     }
 
     /**
@@ -67,6 +88,18 @@ public class Diagram {
      */
     public List<Connector> getConnectors() {
         return connectors;
+    }
+
+    public List<DiagramNode> getNodes() {
+        return nodes;
+    }
+
+    public List<DiagramEdge> getEdges() {
+        return edges;
+    }
+
+    public List<DiagramAnnotation> getAnnotations() {
+        return annotations;
     }
 }
 

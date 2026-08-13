@@ -21,6 +21,7 @@ class OoXmlToCanonicalTaskTest {
         Files.createDirectories(docs);
         copyFixture(docs, "v1-benchmark.docx", "benchmark.docx");
         copyFixture(docs, "v2-formulas.docx", "formulas.docx");
+        copyFixture(docs, "v2-diagrams.docx", "diagrams.docx");
         copyFixture(docs, "v1-benchmark.pptx", "slides.pptx");
         copyFixture(docs, "v1-benchmark.xlsx", "register.xlsx");
 
@@ -33,6 +34,7 @@ class OoXmlToCanonicalTaskTest {
         Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
         assertTrue(Files.exists(canonicalRoot.resolve("benchmark.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("formulas.xml")));
+        assertTrue(Files.exists(canonicalRoot.resolve("diagrams.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("slides.xml")));
         assertTrue(Files.exists(canonicalRoot.resolve("register.xml")));
 
@@ -57,6 +59,15 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(!formulaXml.contains("</Paragraph>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
         assertTrue(!formulaXml.contains("</Table>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
         assertTrue(!formulaXml.contains("<Text>CoverAmt Cov Perc"));
+
+        String diagramsXml = Files.readString(canonicalRoot.resolve("diagrams.xml"));
+        assertTrue(diagramsXml.contains("<Diagram"));
+        assertTrue(diagramsXml.contains("<Node"));
+        assertTrue(diagramsXml.contains("geometry=\"image\""));
+        assertTrue(diagramsXml.contains("<Annotation kind=\"asset\""));
+        assertTrue(diagramsXml.contains("source-path=\"/word/document/p[2]/drawing[1]\""));
+        assertTrue(diagramsXml.contains("source-path=\"/word/document/p[3]/drawing[1]\""));
+        assertTrue(diagramsXml.contains("kind=\"asset-text\""));
 
         String xlsxXml = Files.readString(canonicalRoot.resolve("register.xml"));
         assertTrue(countOccurrences(xlsxXml, "<Table id=") >= 3);
