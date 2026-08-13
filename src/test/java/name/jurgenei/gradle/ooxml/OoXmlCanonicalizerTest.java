@@ -1,7 +1,12 @@
 package name.jurgenei.gradle.ooxml;
 
 import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
+import org.w3c.dom.Element;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -129,6 +134,66 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "Section B", "Final paragraph");
     }
 
+    @Test
+    void canonicalizesDocxFormulasAsMathMlAndPreservesOrder() throws Exception {
+        Path file = copyFixture("v2-formulas.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+
+        String xml = serialize(document);
+        assertTrue(xml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertTrue(xml.contains(OmmlMathTransformer.MATHML_NS));
+        assertFalse(xml.contains("<mrow/>"), "MathML should not contain empty mrow noise");
+
+        org.w3c.dom.Document parsed = parseXml(xml);
+        Element body = (Element) parsed.getElementsByTagNameNS(CanonicalNamespace.URI, "Body").item(0);
+        assertFalse(hasDirectMathChild(body), "MathML must not be a direct Body child");
+        assertTrue(hasParagraphWithMath(parsed), "At least one Paragraph should contain nested MathML");
+        assertTrue(hasCellWithMath(parsed), "At least one Cell should contain nested MathML");
+        assertFalse(xml.contains("<Text>CoverAmt Cov Perc"), "Flattened formula text should be removed from Paragraph payload");
+
+        int bodyIndex = xml.indexOf("<Body>");
+        int mathIndex = firstMathTagIndex(xml);
+        int proseIndex = xml.indexOf("The cover priority for country risk");
+        assertTrue(bodyIndex >= 0, "Missing token: <Body>");
+        assertTrue(mathIndex >= 0, "Missing token: :math");
+        assertTrue(proseIndex >= 0, "Missing token: The cover priority for country risk");
+        assertTrue(bodyIndex < mathIndex && mathIndex < proseIndex,
+                "Expected first MathML fragment to appear before narrative prose");
+        assertAppearsBefore(xml, "Where:", "<Table");
+    }
+
+    @Test
+    void canonicalizesDocxDiagramFixtureToSemanticDiagramNodes() throws Exception {
+        Path file = copyFixture("v2-diagrams.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertFalse(document.getBody().getDiagrams().isEmpty());
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> !diagram.getNodes().isEmpty()));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                diagram.getNodes().stream().anyMatch(node -> "process".equals(node.getSemantic()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                diagram.getEdges().stream().anyMatch(edge -> "flow".equals(edge.getSemantic()))));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                !diagram.getGroups().isEmpty()));
+        assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "asset".equals(annotation.getKind()))));
+
+        String xml = serialize(document);
+        assertAppearsBefore(xml, "source-path=\"/word/document/p[2]/drawing[1]\"", "source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertTrue(xml.contains("<Group"), "Expected canonical group structure for inferred subgraph");
+        assertTrue(xml.contains("semantic=\"process\""), "Expected inferred process nodes");
+        assertTrue(xml.contains("semantic=\"flow\""), "Expected inferred flow edges");
+        assertTrue(xml.contains("see section a") || xml.contains("see section b") || xml.contains("see section c"),
+                "Expected inferred section-aware process labels");
+        assertTrue(xml.contains(">End<"), "Expected end-node approximation in inferred flow");
+        assertTrue(xml.contains("kind=\"asset-text\""), "Expected extracted diagram text annotation");
+        assertTrue(xml.contains("Start") || xml.contains("Calculate"),
+                "Expected recovered EMF text content in canonical diagram annotations");
+    }
+
     private void assertDeterministic(String fixtureName) throws Exception {
         Path file = copyFixture(fixtureName);
         String first = serialize(canonicalizer.canonicalize(file.toFile()));
@@ -156,6 +221,58 @@ class OoXmlCanonicalizerTest {
         assertTrue(leftIndex >= 0, "Missing token: " + left);
         assertTrue(rightIndex >= 0, "Missing token: " + right);
         assertTrue(leftIndex < rightIndex, "Expected order: " + left + " before " + right);
+    }
+
+    private int firstMathTagIndex(String xml) {
+        int defaultNamespaceMath = xml.indexOf("<math xmlns=\"http://www.w3.org/1998/Math/MathML\"");
+        if (defaultNamespaceMath >= 0) {
+            return defaultNamespaceMath;
+        }
+        int explicitPrefix = xml.indexOf("<m:math");
+        if (explicitPrefix >= 0) {
+            return explicitPrefix;
+        }
+        return xml.indexOf(":math");
+    }
+
+    private org.w3c.dom.Document parseXml(String xml) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        return factory.newDocumentBuilder().parse(new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    }
+
+    private boolean hasDirectMathChild(Element parent) {
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node instanceof Element element
+                    && OmmlMathTransformer.MATHML_NS.equals(element.getNamespaceURI())
+                    && "math".equals(element.getLocalName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasParagraphWithMath(org.w3c.dom.Document document) {
+        NodeList paragraphs = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Paragraph");
+        for (int i = 0; i < paragraphs.getLength(); i++) {
+            if (hasDirectMathChild((Element) paragraphs.item(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasCellWithMath(org.w3c.dom.Document document) {
+        NodeList cells = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Cell");
+        for (int i = 0; i < cells.getLength(); i++) {
+            if (hasDirectMathChild((Element) cells.item(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Path copyFixture(String fixtureName) throws Exception {

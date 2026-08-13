@@ -4,45 +4,47 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 /**
- * Canonical external or relationship-based link.
+ * Additional semantic evidence attached to a canonical diagram.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "Link", namespace = CanonicalNamespace.URI)
-public class Link {
+public class DiagramAnnotation {
+    @XmlAttribute(name = "kind")
+    private String kind;
+
     @XmlAttribute(name = "target")
     private String target;
+
+    @XmlAttribute(name = "confidence")
+    private Double confidence;
 
     @XmlElement(name = "Text", namespace = CanonicalNamespace.URI)
     private String text;
 
-    public Link() {
+    public DiagramAnnotation() {
     }
 
-    /**
-     * Creates a canonical link.
-     *
-     * @param target resolved link target.
-     * @param text optional link label.
-     */
-    public Link(String target, String text) {
+    public DiagramAnnotation(String kind, String target, Double confidence, String text) {
+        this.kind = kind;
         this.target = target;
+        this.confidence = confidence;
         this.text = text;
     }
 
-    /**
-     * @return resolved link target.
-     */
+    public String getKind() {
+        return kind;
+    }
+
     public String getTarget() {
         return target;
     }
 
-    /**
-     * @return optional link text/label.
-     */
+    public Double getConfidence() {
+        return confidence;
+    }
+
     public String getText() {
         return text;
     }

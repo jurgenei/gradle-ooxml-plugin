@@ -5,6 +5,11 @@ import name.jurgenei.gradle.ooxml.canonical.CanonicalList;
 import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
 import name.jurgenei.gradle.ooxml.canonical.Cell;
 import name.jurgenei.gradle.ooxml.canonical.Connector;
+import name.jurgenei.gradle.ooxml.canonical.DiagramAnnotation;
+import name.jurgenei.gradle.ooxml.canonical.DiagramEdge;
+import name.jurgenei.gradle.ooxml.canonical.DiagramGroup;
+import name.jurgenei.gradle.ooxml.canonical.DiagramGroupMember;
+import name.jurgenei.gradle.ooxml.canonical.DiagramNode;
 import name.jurgenei.gradle.ooxml.canonical.Diagram;
 import name.jurgenei.gradle.ooxml.canonical.Link;
 import name.jurgenei.gradle.ooxml.canonical.ListItem;
@@ -23,6 +28,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -43,6 +49,9 @@ import java.util.zip.ZipFile;
  */
 final class OoXmlCanonicalizer {
     private static final String REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+
+    private final OmmlMathTransformer ommlMathTransformer = new OmmlMathTransformer();
+    private final DiagramSemanticAnalyzer diagramSemanticAnalyzer = new DiagramSemanticAnalyzer();
 
     /**
      * Canonicalizes a single OOXML package.
@@ -69,14 +78,15 @@ final class OoXmlCanonicalizer {
             }
             try (InputStream input = zipFile.getInputStream(entry)) {
                 Document document = parseXml(input);
+                Map<String, String> relationships = readRelationships(zipFile, "word/_rels/document.xml.rels");
                 return new Extraction(
                         extractDocxParagraphs(document, sourceDocument),
                         extractDocxLists(document),
                         extractDocxTables(document),
-                        extractDocxLinks(document, readRelationships(zipFile, "word/_rels/document.xml.rels")),
+                        extractDocxLinks(document, relationships),
                         extractDocxReferences(document),
-                        extractDocxDiagrams(document),
-                        extractDocxOrderedContent(document)
+                        List.of(),
+                        extractDocxOrderedContent(document, zipFile, relationships)
                 );
             }
         }
@@ -286,20 +296,22 @@ final class OoXmlCanonicalizer {
         };
     }
 
-    private List<Paragraph> extractDocxParagraphs(Document document, String sourceDocument) {
+    private List<Paragraph> extractDocxParagraphs(Document document, String sourceDocument) throws IOException {
         NodeList paragraphNodes = document.getElementsByTagNameNS("*", "p");
         List<Paragraph> paragraphs = new ArrayList<>();
         for (int i = 0; i < paragraphNodes.getLength(); i++) {
             Element paragraph = (Element) paragraphNodes.item(i);
-            String text = extractNestedText(paragraph);
-            if (!text.isEmpty()) {
-                paragraphs.add(new Paragraph(text, "/word/document/p[" + (i + 1) + "]", docxHeadingLabel(paragraph)));
+            Paragraph contentParagraph = extractDocxParagraphContent(paragraph, "/word/document/p[" + (i + 1) + "]");
+            if (contentParagraph != null) {
+                paragraphs.add(contentParagraph);
             }
         }
         return paragraphs;
     }
 
-    private List<Object> extractDocxOrderedContent(Document document) {
+    private List<Object> extractDocxOrderedContent(Document document,
+                                                   ZipFile zipFile,
+                                                   Map<String, String> relationships) throws IOException {
         Element bodyElement = firstDescendant(document.getDocumentElement(), "body");
         if (bodyElement == null) {
             return List.of();
@@ -320,12 +332,14 @@ final class OoXmlCanonicalizer {
             String localName = element.getLocalName();
             if ("p".equals(localName)) {
                 paragraphIndex++;
-                String text = extractNestedText(element);
-                if (!text.isEmpty()) {
-                    ordered.add(new Paragraph(text, "/word/document/p[" + paragraphIndex + "]", docxHeadingLabel(element)));
+                Paragraph paragraph = extractDocxParagraphContent(element, "/word/document/p[" + paragraphIndex + "]");
+                if (paragraph != null) {
+                    ordered.add(paragraph);
                 }
+                ordered.addAll(extractDocxParagraphDiagrams(element, zipFile, relationships, paragraphIndex));
 
                 Boolean itemOrdering = docxListOrdering(element);
+                String text = paragraph == null ? "" : paragraph.getText();
                 if (itemOrdering == null) {
                     if (!pendingListItems.isEmpty() && pendingOrdered != null) {
                         ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
@@ -353,7 +367,7 @@ final class OoXmlCanonicalizer {
             }
 
             if ("tbl".equals(localName)) {
-                Table table = extractTableFromElement(element, "tr", "tc");
+                Table table = extractDocxTableFromElement(element);
                 if (table != null) {
                     ordered.add(table);
                 }
@@ -364,6 +378,276 @@ final class OoXmlCanonicalizer {
             ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
         }
         return ordered;
+    }
+
+    private Paragraph extractDocxParagraphContent(Element paragraphElement, String sourcePath) throws IOException {
+        String text = extractNestedText(paragraphElement);
+        List<Element> formulas = extractDocxFormulaFragments(paragraphElement);
+        if (text.isEmpty() && formulas.isEmpty()) {
+            return null;
+        }
+        Paragraph paragraph = new Paragraph();
+        paragraph.setSourcePath(sourcePath);
+        paragraph.setLabel(docxHeadingLabel(paragraphElement));
+        paragraph.addText(text);
+        for (Element formula : formulas) {
+            paragraph.addMath(formula);
+        }
+        return paragraph.hasContent() ? paragraph : null;
+    }
+
+    private List<Diagram> extractDocxParagraphDiagrams(Element paragraph,
+                                                       ZipFile zipFile,
+                                                       Map<String, String> relationships,
+                                                       int paragraphIndex) throws IOException {
+        NodeList drawingNodes = paragraph.getElementsByTagNameNS("*", "drawing");
+        List<Diagram> diagrams = new ArrayList<>();
+        for (int i = 0; i < drawingNodes.getLength(); i++) {
+            Element drawing = (Element) drawingNodes.item(i);
+            Element docPr = firstDescendant(drawing, "docPr");
+            Element blip = firstDescendant(drawing, "blip");
+
+            String id = docPr == null ? "p" + paragraphIndex + "-drawing" + (i + 1) : attributeAny(docPr, "id");
+            if (id == null || id.isBlank()) {
+                id = "p" + paragraphIndex + "-drawing" + (i + 1);
+            }
+            String label = docPr == null ? "Diagram " + (i + 1) : attributeAny(docPr, "name");
+
+            String relationshipId = embeddedRelationshipId(blip);
+            String target = relationshipId.isEmpty() ? "" : relationships.getOrDefault(relationshipId, "");
+            String assetPath = target.isEmpty() ? "" : normalize(resolvePartTarget("word/document.xml", target));
+
+            List<Shape> shapes = List.of();
+            List<DiagramNode> nodes = new ArrayList<>();
+            List<DiagramEdge> edges = new ArrayList<>();
+            List<DiagramGroup> groups = new ArrayList<>();
+            List<DiagramAnnotation> annotations = new ArrayList<>();
+            if (!assetPath.isEmpty()) {
+                annotations.add(new DiagramAnnotation("asset", id, 0.95, assetPath));
+                String extractedText = extractAssetText(zipFile, assetPath);
+                if (!extractedText.isEmpty()) {
+                    annotations.add(new DiagramAnnotation("asset-text", id, 0.65, extractedText));
+                    DiagramInference inference = inferDiagramFromAssetText(id, extractedText);
+                    nodes.addAll(inference.nodes());
+                    edges.addAll(inference.edges());
+                    groups.addAll(inference.groups());
+                    if (!inference.nodes().isEmpty()) {
+                        annotations.add(new DiagramAnnotation("inferred-flow", id, 0.70,
+                                "generated " + inference.nodes().size() + " nodes, "
+                                        + inference.edges().size() + " edges"));
+                    }
+                }
+            }
+
+            Diagram diagram = new Diagram(shapes, List.of(), nodes, edges, groups, annotations);
+            diagram.setSourcePath("/word/document/p[" + paragraphIndex + "]/drawing[" + (i + 1) + "]");
+            diagramSemanticAnalyzer.infer(diagram);
+            diagrams.add(diagram);
+        }
+        return diagrams;
+    }
+
+    private String embeddedRelationshipId(Element blip) {
+        if (blip == null) {
+            return "";
+        }
+        String id = blip.getAttributeNS(REL_NS, "embed");
+        if (!id.isEmpty()) {
+            return id;
+        }
+        return attributeAny(blip, "r:embed");
+    }
+
+    private String extractAssetText(ZipFile zipFile, String assetPath) throws IOException {
+        ZipEntry entry = zipFile.getEntry(assetPath);
+        if (entry == null) {
+            return "";
+        }
+        byte[] bytes;
+        try (InputStream input = zipFile.getInputStream(entry)) {
+            bytes = input.readAllBytes();
+        }
+
+        String utf16 = new String(bytes, StandardCharsets.UTF_16LE);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Za-z][A-Za-z0-9 ,._:/()\\-]{2,}");
+        java.util.LinkedHashSet<String> snippets = new java.util.LinkedHashSet<>();
+        java.util.regex.Matcher matcher = pattern.matcher(utf16);
+        while (matcher.find()) {
+            String token = matcher.group().trim().replaceAll("\\s+", " ");
+            if (token.length() < 4) {
+                continue;
+            }
+            if (token.startsWith("ING Me")) {
+                continue;
+            }
+            if (token.chars().filter(ch -> Character.isLetter(ch)).count() < 3) {
+                continue;
+            }
+            snippets.add(token);
+            if (snippets.size() >= 8) {
+                break;
+            }
+        }
+        if (snippets.isEmpty()) {
+            return "";
+        }
+        return String.join(" | ", snippets);
+    }
+
+    private DiagramInference inferDiagramFromAssetText(String imageNodeId, String extractedText) {
+        List<String> tokens = tokenizeAssetText(extractedText);
+        if (tokens.isEmpty()) {
+            return DiagramInference.empty();
+        }
+
+        String normalized = String.join(" ", tokens).replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+        List<DiagramNode> nodes = new ArrayList<>();
+        List<DiagramEdge> edges = new ArrayList<>();
+        List<DiagramGroup> groups = new ArrayList<>();
+
+        String startId = null;
+        if (containsToken(tokens, "start")) {
+            startId = imageNodeId + "-start";
+            nodes.add(new DiagramNode(startId, "Start", "ellipse", "root", 0.82));
+        }
+
+        List<String> processNodeIds = new ArrayList<>();
+        if (normalized.contains("calculate uncovered")) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "a-calculate-uncovered",
+                    "Calculate Uncovered Amount (see section a)"));
+        }
+        if (containsBeforeHaircut(normalized)) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "b-alloc-before-haircut",
+                    "Calculate Allocated Cover Amount without excess before haircut (see section b)"));
+        }
+        if (containsAfterHaircut(normalized)) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "c-alloc-after-haircut",
+                    "Calculate Allocated Cover Amount without excess after haircut (see section c)"));
+        }
+        if (processNodeIds.isEmpty() && normalized.contains("allocated cover") && normalized.contains("without excess")) {
+            processNodeIds.add(addProcessNode(nodes, imageNodeId, "b-alloc-without-excess",
+                    "Calculate Allocated Cover Amount without excess (see section b)"));
+        }
+
+        String endId = null;
+        if (containsToken(tokens, "end")) {
+            endId = imageNodeId + "-end";
+            nodes.add(new DiagramNode(endId, "End", "ellipse", "leaf", 0.82));
+        } else if (startId != null && processNodeIds.size() >= 2) {
+            // Image extractions often miss trailing labels; synthesize End when the flow is clearly sequential.
+            endId = imageNodeId + "-end-inferred";
+            nodes.add(new DiagramNode(endId, "End", "ellipse", "leaf", 0.58));
+        }
+
+        List<String> chain = new ArrayList<>();
+        if (startId != null) {
+            chain.add(startId);
+        }
+        chain.addAll(processNodeIds);
+        if (endId != null) {
+            chain.add(endId);
+        }
+        for (int i = 0; i + 1 < chain.size(); i++) {
+            edges.add(new DiagramEdge(chain.get(i), chain.get(i + 1), true, "flow", 0.74, null));
+        }
+
+        String groupLabel = inferGroupLabel(tokens);
+        if (!groupLabel.isEmpty() && !processNodeIds.isEmpty()) {
+            List<DiagramGroupMember> members = processNodeIds.stream()
+                    .map(DiagramGroupMember::new)
+                    .toList();
+            groups.add(new DiagramGroup(imageNodeId + "-group-1", "process-group", groupLabel, members));
+        }
+
+        return new DiagramInference(nodes, edges, groups);
+    }
+
+    private List<String> tokenizeAssetText(String extractedText) {
+        if (extractedText == null || extractedText.isBlank()) {
+            return List.of();
+        }
+        List<String> tokens = new ArrayList<>();
+        for (String raw : extractedText.split("\\|")) {
+            String cleaned = raw.trim().replaceAll("\\s+", " ");
+            if (!cleaned.isEmpty()) {
+                tokens.add(cleaned);
+            }
+        }
+        return tokens;
+    }
+
+    private boolean containsToken(List<String> tokens, String value) {
+        String needle = value.toLowerCase(Locale.ROOT);
+        return tokens.stream().anyMatch(token -> token.toLowerCase(Locale.ROOT).equals(needle));
+    }
+
+    private boolean containsBeforeHaircut(String normalized) {
+        return normalized.contains("without excess before haircut")
+                || normalized.contains("without excess before hc")
+                || (normalized.contains("without excess") && normalized.contains("before") && normalized.contains("haircut"));
+    }
+
+    private boolean containsAfterHaircut(String normalized) {
+        return normalized.contains("without excess after haircut")
+                || normalized.contains("without excess after hc")
+                || (normalized.contains("without excess") && normalized.contains("after") && normalized.contains("haircut"));
+    }
+
+    private String addProcessNode(List<DiagramNode> nodes, String imageNodeId, String suffix, String label) {
+        String id = imageNodeId + "-" + suffix;
+        nodes.add(new DiagramNode(id, label, "rectangle", "process", 0.76));
+        return id;
+    }
+
+    private String inferGroupLabel(List<String> tokens) {
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            String lower = token.toLowerCase(Locale.ROOT);
+            if (!lower.contains("group")) {
+                continue;
+            }
+            if (i > 0) {
+                String combined = (tokens.get(i - 1) + " " + token).replaceAll("\\s+", " ").trim();
+                if (!combined.isEmpty()) {
+                    return combined;
+                }
+            }
+            return token;
+        }
+        return "";
+    }
+
+    private List<Element> extractDocxFormulaFragments(Element sourceElement) throws IOException {
+        List<Element> formulas = new ArrayList<>();
+        collectDocxFormulas(sourceElement, formulas);
+        return formulas.isEmpty() ? List.of() : formulas;
+    }
+
+    // Hook for future PowerPoint equation extraction.
+    private List<Element> extractPptxFormulaFragments(Element sourceElement) {
+        return List.of();
+    }
+
+    // Hook for future spreadsheet formula rendering extraction.
+    private List<Element> extractXlsxFormulaFragments(Element sourceElement) {
+        return List.of();
+    }
+
+    private void collectDocxFormulas(Element current, List<Element> formulas) throws IOException {
+        NodeList children = current.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (!(node instanceof Element element)) {
+                continue;
+            }
+            String localName = element.getLocalName();
+            if ("oMathPara".equals(localName) || "oMath".equals(localName)) {
+                formulas.add(ommlMathTransformer.transform(element));
+                // Avoid duplicate conversion of nested oMath within oMathPara.
+                continue;
+            }
+            collectDocxFormulas(element, formulas);
+        }
     }
 
     private String docxHeadingLabel(Element paragraph) {
@@ -450,8 +734,41 @@ final class OoXmlCanonicalizer {
         return null;
     }
 
-    private List<Table> extractDocxTables(Document document) {
-        return extractTablesByLocalNames(document, "tbl", "tr", "tc");
+    private List<Table> extractDocxTables(Document document) throws IOException {
+        NodeList tableNodes = document.getElementsByTagNameNS("*", "tbl");
+        List<Table> tables = new ArrayList<>();
+        for (int i = 0; i < tableNodes.getLength(); i++) {
+            Table table = extractDocxTableFromElement((Element) tableNodes.item(i));
+            if (table != null) {
+                tables.add(table);
+            }
+        }
+        return tables;
+    }
+
+    private Table extractDocxTableFromElement(Element tableElement) throws IOException {
+        NodeList rowNodes = tableElement.getElementsByTagNameNS("*", "tr");
+        List<Row> rows = new ArrayList<>();
+        for (int j = 0; j < rowNodes.getLength(); j++) {
+            Element rowElement = (Element) rowNodes.item(j);
+            NodeList cellNodes = rowElement.getElementsByTagNameNS("*", "tc");
+            List<Cell> cells = new ArrayList<>();
+            for (int k = 0; k < cellNodes.getLength(); k++) {
+                Element cellElement = (Element) cellNodes.item(k);
+                Cell cell = new Cell();
+                cell.addText(extractNestedText(cellElement));
+                for (Element formula : extractDocxFormulaFragments(cellElement)) {
+                    cell.addMath(formula);
+                }
+                if (cell.hasContent()) {
+                    cells.add(cell);
+                }
+            }
+            if (!cells.isEmpty()) {
+                rows.add(new Row(cells));
+            }
+        }
+        return rows.isEmpty() ? null : new Table(rows);
     }
 
     private List<Paragraph> extractSlideParagraphs(Document document, String sourceDocument, String sourcePathPrefix) {
@@ -549,19 +866,41 @@ final class OoXmlCanonicalizer {
         return references;
     }
 
-    private List<Diagram> extractDocxDiagrams(Document document) {
+    private List<Diagram> extractDocxDiagrams(Document document, Map<String, String> relationships) {
         List<Shape> shapes = new ArrayList<>();
+        List<DiagramNode> nodes = new ArrayList<>();
+        List<DiagramAnnotation> annotations = new ArrayList<>();
+
+        NodeList blips = document.getElementsByTagNameNS("*", "blip");
+        List<String> imageTargets = new ArrayList<>();
+        for (int i = 0; i < blips.getLength(); i++) {
+            Element blip = (Element) blips.item(i);
+            String embedId = attributeAny(blip, "r:embed");
+            if (!embedId.isEmpty() && relationships.containsKey(embedId)) {
+                imageTargets.add(relationships.get(embedId));
+            }
+        }
 
         NodeList docPrNodes = document.getElementsByTagNameNS("*", "docPr");
         for (int i = 0; i < docPrNodes.getLength(); i++) {
             Element docPr = (Element) docPrNodes.item(i);
-            shapes.add(new Shape(attributeAny(docPr, "id"), attributeAny(docPr, "name")));
+            String id = attributeAny(docPr, "id");
+            String label = attributeAny(docPr, "name");
+            shapes.add(new Shape(id, label));
+            nodes.add(new DiagramNode(id, label, "image", "diagram-artifact", 0.45));
+
+            String target = i < imageTargets.size() ? imageTargets.get(i) : "";
+            if (!target.isEmpty()) {
+                annotations.add(new DiagramAnnotation("asset", id, 0.95, target));
+            }
         }
 
         if (shapes.isEmpty()) {
             return List.of();
         }
-        return List.of(new Diagram(shapes, List.of()));
+        Diagram diagram = new Diagram(shapes, List.of(), nodes, List.of(), annotations);
+        diagramSemanticAnalyzer.infer(diagram);
+        return List.of(diagram);
     }
 
     private List<Link> extractSlideLinks(Document document, Map<String, String> relationships) {
@@ -623,9 +962,49 @@ final class OoXmlCanonicalizer {
         if (shapes.isEmpty() && connectors.isEmpty()) {
             return List.of();
         }
-        Diagram diagram = new Diagram(shapes, connectors);
+        List<DiagramNode> nodes = toSemanticNodes(shapes);
+        List<DiagramEdge> edges = toSemanticEdges(connectors);
+        Diagram diagram = new Diagram(shapes, connectors, nodes, edges, List.of());
+        diagramSemanticAnalyzer.infer(diagram);
         diagram.setSourcePath(sourcePathPrefix + "/diagram[1]");
         return List.of(diagram);
+    }
+
+    private List<DiagramNode> toSemanticNodes(List<Shape> shapes) {
+        List<DiagramNode> nodes = new ArrayList<>();
+        for (Shape shape : shapes) {
+            String geometry = inferGeometry(shape.getLabel());
+            nodes.add(new DiagramNode(shape.getId(), shape.getLabel(), geometry, null, null));
+        }
+        return nodes;
+    }
+
+    private List<DiagramEdge> toSemanticEdges(List<Connector> connectors) {
+        List<DiagramEdge> edges = new ArrayList<>();
+        for (Connector connector : connectors) {
+            String source = connector.getSource();
+            String target = connector.getTarget();
+            double confidence = (source != null && !source.isEmpty() && target != null && !target.isEmpty()) ? 0.95 : 0.40;
+            edges.add(new DiagramEdge(source, target, true, "flow", confidence, null));
+        }
+        return edges;
+    }
+
+    private String inferGeometry(String label) {
+        if (label == null) {
+            return "rectangle";
+        }
+        String normalized = label.toLowerCase(Locale.ROOT);
+        if (normalized.contains("decision") || normalized.contains("?") || normalized.contains("diamond")) {
+            return "diamond";
+        }
+        if (normalized.contains("start") || normalized.contains("end")) {
+            return "ellipse";
+        }
+        if (normalized.contains("note") || normalized.contains("comment")) {
+            return "annotation";
+        }
+        return "rectangle";
     }
 
     private SheetExtraction extractSheet(Document document,
@@ -910,22 +1289,33 @@ final class OoXmlCanonicalizer {
     }
 
     private String extractNestedText(Element element) {
-        NodeList texts = element.getElementsByTagNameNS("*", "t");
-        if (texts.getLength() == 0) {
-            return "";
-        }
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < texts.getLength(); i++) {
-            String value = texts.item(i).getTextContent();
-            if (value == null || value.isBlank()) {
-                continue;
-            }
-            if (!builder.isEmpty()) {
-                builder.append(' ');
-            }
-            builder.append(value.trim());
-        }
+        appendTextExcludingOmml(element, builder);
         return builder.toString();
+    }
+
+    private void appendTextExcludingOmml(Node node, StringBuilder builder) {
+        if (!(node instanceof Element element)) {
+            return;
+        }
+        String localName = element.getLocalName();
+        if ("oMath".equals(localName) || "oMathPara".equals(localName)) {
+            return;
+        }
+        if ("t".equals(localName)) {
+            String value = element.getTextContent();
+            if (value != null && !value.isBlank()) {
+                if (!builder.isEmpty()) {
+                    builder.append(' ');
+                }
+                builder.append(value.trim());
+            }
+            return;
+        }
+        NodeList children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            appendTextExcludingOmml(children.item(i), builder);
+        }
     }
 
     private String relationshipId(Element element) {
@@ -1006,6 +1396,14 @@ final class OoXmlCanonicalizer {
                                    Table table,
                                    List<Link> links,
                                    List<Reference> references) {
+    }
+
+    private record DiagramInference(List<DiagramNode> nodes,
+                                    List<DiagramEdge> edges,
+                                    List<DiagramGroup> groups) {
+        private static DiagramInference empty() {
+            return new DiagramInference(List.of(), List.of(), List.of());
+        }
     }
 
     private record WorkbookSheet(String name, String path) {

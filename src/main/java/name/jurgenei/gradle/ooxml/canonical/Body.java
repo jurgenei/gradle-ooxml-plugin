@@ -2,8 +2,8 @@ package name.jurgenei.gradle.ooxml.canonical;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlElements;
+import jakarta.xml.bind.annotation.XmlElementRef;
+import jakarta.xml.bind.annotation.XmlElementRefs;
 import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 
 import java.util.ArrayList;
@@ -14,13 +14,13 @@ import java.util.List;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Body {
-    @XmlElements({
-            @XmlElement(name = "Paragraph", namespace = CanonicalNamespace.URI, type = Paragraph.class),
-            @XmlElement(name = "List", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
-            @XmlElement(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
-            @XmlElement(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
-            @XmlElement(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
-            @XmlElement(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
+    @XmlElementRefs({
+            @XmlElementRef(name = "Paragraph", namespace = CanonicalNamespace.URI, type = Paragraph.class),
+            @XmlElementRef(name = "List", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
+            @XmlElementRef(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
+            @XmlElementRef(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
+            @XmlElementRef(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
+            @XmlElementRef(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
     })
     private List<Object> content = new ArrayList<>();
 
@@ -80,6 +80,7 @@ public class Body {
     public List<Diagram> getDiagrams() {
         return filterByType(Diagram.class);
     }
+
 
     public List<Object> getContent() {
         return content;
