@@ -2,7 +2,7 @@
 <Document xmlns="http://jurgenei.name/canonical">
     <Metadata>
         <DocumentId>v2-diagrams</DocumentId>
-        <Version></Version>
+        <Version>v2</Version>
         <SourceFile>v2-diagrams.docx</SourceFile>
         <DocumentType>DOCX</DocumentType>
     </Metadata>
@@ -10,7 +10,7 @@
         <Paragraph source-path="/word/document/p[1]">
             <Text>Image78.emf</Text>
         </Paragraph>
-        <Diagram source-path="/word/document/p[2]/drawing[1]">
+        <Diagram source-path="/word/document/p[2]/drawing[1]" href="media/image1.emf">
             <Node id="469179847-start" geometry="ellipse" semantic="root" confidence="0.82">
                 <Label>Start</Label>
             </Node>
@@ -35,7 +35,7 @@
         <Paragraph source-path="/word/document/p[3]">
             <Text>image81.emf</Text>
         </Paragraph>
-        <Diagram source-path="/word/document/p[3]/drawing[1]">
+        <Diagram source-path="/word/document/p[3]/drawing[1]" href="media/image2.emf">
             <Node id="25-start" geometry="ellipse" semantic="root" confidence="0.82">
                 <Label>Start</Label>
             </Node>

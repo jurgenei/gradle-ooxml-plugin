@@ -28,7 +28,7 @@ class OoXmlCanonicalizerTest {
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
 
         assertEquals("v1-benchmark", document.getMetadata().getDocumentId());
-        assertEquals("", document.getMetadata().getVersion());
+        assertEquals("v1", document.getMetadata().getVersion());
         assertEquals("DOCX", document.getMetadata().getDocumentType());
         assertFalse(document.getBody().getParagraphs().isEmpty());
         assertTrue(document.getBody().getParagraphs().stream().anyMatch(p -> p.getText().contains("Benchmark Document")));
@@ -170,6 +170,7 @@ class OoXmlCanonicalizerTest {
 
         CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
         assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertEquals("v2", document.getMetadata().getVersion());
         assertFalse(document.getBody().getDiagrams().isEmpty());
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram -> !diagram.getNodes().isEmpty()));
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
@@ -180,9 +181,12 @@ class OoXmlCanonicalizerTest {
                 !diagram.getGroups().isEmpty()));
         assertTrue(document.getBody().getDiagrams().stream().anyMatch(diagram ->
                 diagram.getAnnotations().stream().anyMatch(annotation -> "asset".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getHref() == null || diagram.getHref().startsWith("media/")));
 
         String xml = serialize(document);
         assertAppearsBefore(xml, "source-path=\"/word/document/p[2]/drawing[1]\"", "source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertTrue(xml.contains("href=\"media/image1.emf\"") || xml.contains("href=\"media/image2.emf\""));
         assertTrue(xml.contains("<Group"), "Expected canonical group structure for inferred subgraph");
         assertTrue(xml.contains("semantic=\"process\""), "Expected inferred process nodes");
         assertTrue(xml.contains("semantic=\"flow\""), "Expected inferred flow edges");

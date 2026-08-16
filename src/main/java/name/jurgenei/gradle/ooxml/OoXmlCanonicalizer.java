@@ -441,6 +441,9 @@ final class OoXmlCanonicalizer {
 
             Diagram diagram = new Diagram(shapes, List.of(), nodes, edges, groups, annotations);
             diagram.setSourcePath("/word/document/p[" + paragraphIndex + "]/drawing[" + (i + 1) + "]");
+            if (!assetPath.isEmpty()) {
+                diagram.setHref("media/" + fileName(assetPath));
+            }
             diagramSemanticAnalyzer.infer(diagram);
             diagrams.add(diagram);
         }
@@ -1381,6 +1384,11 @@ final class OoXmlCanonicalizer {
     private String extension(String fileName) {
         int dot = fileName.lastIndexOf('.');
         return dot > 0 ? fileName.substring(dot + 1) : "";
+    }
+
+    private String fileName(String path) {
+        int slash = path.lastIndexOf('/');
+        return slash >= 0 ? path.substring(slash + 1) : path;
     }
 
     private record Extraction(List<Paragraph> paragraphs,

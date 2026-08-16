@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Validates canonical XML documents against bundled {@code canonical.xsd}.
@@ -52,11 +54,22 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
             Schema schema = loadSchema();
             Validator validator = schema.newValidator();
             try (Stream<Path> files = Files.walk(inputDir)) {
-                files.filter(path -> path.toString().endsWith(".xml"))
-                        .forEach(path -> validateFile(validator, path));
+                files.filter(Files::isRegularFile)
+                        .forEach(path -> validatePath(validator, path));
             }
         } catch (IOException | SAXException e) {
             throw new GradleException("Failed to validate canonical XML files", e);
+        }
+    }
+
+    private void validatePath(Validator validator, Path path) {
+        String fileName = path.getFileName().toString().toLowerCase();
+        if (fileName.endsWith(".xml")) {
+            validateFile(validator, path);
+            return;
+        }
+        if (fileName.endsWith(".zip")) {
+            validateZipCanonical(validator, path);
         }
     }
 
@@ -75,6 +88,22 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
             validator.validate(new StreamSource(input));
         } catch (Exception e) {
             throw new GradleException("Canonical XML does not validate: " + xmlFile, e);
+        }
+    }
+
+    private void validateZipCanonical(Validator validator, Path zipFilePath) {
+        try (ZipFile zipFile = new ZipFile(zipFilePath.toFile())) {
+            ZipEntry canonical = zipFile.getEntry("canonical.xml");
+            if (canonical == null) {
+                throw new GradleException("Missing canonical.xml in package: " + zipFilePath);
+            }
+            try (InputStream input = zipFile.getInputStream(canonical)) {
+                validator.validate(new StreamSource(input));
+            }
+        } catch (GradleException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GradleException("Canonical package does not validate: " + zipFilePath, e);
         }
     }
 }

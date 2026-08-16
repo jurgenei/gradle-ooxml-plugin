@@ -13,32 +13,98 @@ Current canonical output includes:
 - Diagram topology (shapes and connectors)
 - Provenance attribute (`source-path`) with optional paragraph labels (for example `h1`, `h2`)
 
-## Benchmark v1
-
-The repository includes a compact benchmark corpus for canonicalization regression testing:
-
-- [src/test/resources/ooxml/v1-benchmark.docx](src/test/resources/ooxml/v1-benchmark.docx)
-- [src/test/resources/ooxml/v1-benchmark.pptx](src/test/resources/ooxml/v1-benchmark.pptx)
-- [src/test/resources/ooxml/v1-benchmark.xlsx](src/test/resources/ooxml/v1-benchmark.xlsx)
-
 Specification and acceptance criteria:
 
-- `ooxml-canonical-benchmark-spec-v1.md`
+[ooxml-canonical-benchmark-spec-v1.md](ooxml-canonical-benchmark-spec-v1.md)
 
-Representative canonical samples:
+## What Canonicalization Means Here
 
-- [samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml)  
-- [samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml)
-- [samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml)
+Short version for non-technical readers: [CANONICALIZATION_EXECUTIVE_OVERVIEW.md](CANONICALIZATION_EXECUTIVE_OVERVIEW.md).
+
+In this plugin, **canonicalization** means converting different OOXML formats (`.docx`, `.pptx`, `.xlsx`) into one stable, normalized representation so downstream tools can process all inputs in a consistent way.
+
+For this project, canonicalization is not only text extraction. It means:
+
+- preserving structure (paragraphs, lists, tables, links, references, diagrams)
+- preserving provenance (`source-path`) and media linkage (`Diagram@href`)
+- producing deterministic output (same input -> same canonical shape)
+- hiding OOXML package complexity behind one schema-driven contract (`canonical.xml`)
+
+This lets validation and transformation services operate against one canonical schema instead of format-specific XML dialects.
+
+## Why docx4j + Canonical Model First
+
+`gradle-ooxml-plugin` prioritizes deterministic, schema-valid canonical output with provenance.
+That requirement favors a controlled OOXML-to-canonical mapping layer.
+
+Why this path was selected:
+
+- `docx4j` provides strong OOXML package/model handling for XML-first extraction.
+- the canonical model keeps behavior explicit, testable, and stable across releases.
+- the output contract (`*_ext.zip` with `canonical.xml` + referenced `media/*`) is relationship-aware and deterministic.
+
+Why not switch directly to Apache POI/Tika as the core engine:
+
+- **Apache POI** is strong for Office object models (especially XLSX), but replacing the current foundation now would add migration risk and can destabilize canonical determinism.
+- **Apache Tika** is strong for broad extraction/detection, but too coarse as the source of truth for strict structural canonicalization.
+
+Current strategy:
+
+- keep the canonical pipeline as the default foundation
+- introduce POI/Tika only for narrow, high-value extraction gaps
+- gate enrichments behind feature flags and deterministic regression tests before changing defaults
+
+## Forward Path for Diagram and Asset Enrichment
+
+### VSDX -> Visio XML
+
+- parse VSDX package parts and map shapes/connectors/text into canonical `Diagram` nodes/edges
+- retain provenance and package extracted artifacts into canonical zip media entries
+- start with topology and labels; defer advanced layout semantics
+
+### SVG -> DOM/Batik
+
+- parse SVG through DOM/Batik for robust vector traversal
+- map text, groups, paths, and marker-based connectors to canonical diagram structures
+- keep mapping deterministic and confidence-scored where inference is required
+
+### EMF -> FreeHEP
+
+- decode EMF/WMF primitives and embedded text
+- infer basic node/edge topology from vector instructions
+- prioritize stable text + simple flow inference before advanced geometry modeling
+
+### PNG -> OpenCV + Tesseract
+
+- use OpenCV for preprocessing and segmentation (line/region detection)
+- use Tesseract for OCR text extraction
+- infer canonical graph hints with confidence scores; keep as fallback due to OCR variability
+
+### Implementation Sequence
+
+1. add an `AssetAnalyzer` extension point by media type
+2. keep current extraction as baseline fallback
+3. onboard one analyzer at a time with fixture-based deterministic tests
+4. promote analyzers to default only after benchmark quality and stability thresholds are met
+
+## Benchmark v1
+
+compact benchmark corpus for canonicalization regression testing:
+
+| Source Document                                                                          | Canonical result |
+|------------------------------------------------------------------------------------------| ---------------- |
+| [src/test/resources/ooxml/v1-benchmark.docx](src/test/resources/ooxml/v1-benchmark.docx) | [samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml) |
+| [src/test/resources/ooxml/v1-benchmark.pptx](src/test/resources/ooxml/v1-benchmark.pptx) | [samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml) |
+| [src/test/resources/ooxml/v1-benchmark.xlsx](src/test/resources/ooxml/v1-benchmark.xlsx) | [samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml) |
 
 ## Benchmark v2
 
-Formula-focused DOCX fixture and generated canonical sample:
+Formulas and diagram topology benchmark corpus for canonicalization regression testing:
 
-- [src/test/resources/ooxml/v2-formulas.docx](src/test/resources/ooxml/v2-formulas.docx)
-- [samples/ooxml-canonical-benchmark-v2/v2-formulas.xml](samples/ooxml-canonical-benchmark-v2/v2-formulas.xml)
-- [src/test/resources/ooxml/v2-diagrams.docx](src/test/resources/ooxml/v2-diagrams.docx)
-- [samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml](samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml)
+| Source Document                                                                        | Canonical result |
+|----------------------------------------------------------------------------------------| ---------------- |
+| [src/test/resources/ooxml/v2-formulas.docx](src/test/resources/ooxml/v2-formulas.docx) | [samples/ooxml-canonical-benchmark-v2/v2-formulas.xml](samples/ooxml-canonical-benchmark-v2/v2-formulas.xml) |
+| [src/test/resources/ooxml/v2-diagrams.docx](src/test/resources/ooxml/v2-diagrams.docx) | [samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml](samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml) |
 
 ### Benchmark coverage highlights
 
@@ -79,17 +145,18 @@ Those belong to downstream tooling (for example `gradle-xml-plugin`).
 ## Tasks
 
 - `ooxmlToCanonical` (`name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask`)
-  - Converts OOXML documents into canonical XML files.
+  - Converts OOXML documents into canonical zip packages (`canonical.xml` + `media/*`).
 - `extractAssets` (`name.jurgenei.gradle.ooxml.ExtractAssetsTask`)
   - Extracts media and embedded assets from OOXML packages.
 - `validateCanonical` (`name.jurgenei.gradle.ooxml.ValidateCanonicalTask`)
-  - Validates generated canonical XML against `canonical.xsd`.
+  - Validates generated canonical XML against `canonical.xsd` (standalone `.xml` or `canonical.xml` inside `.zip`).
 
 ### Task Inputs and Outputs
 
 - `ooxmlToCanonical`
   - Inputs: `inputFile` or `source(fileTree(...))`
-  - Output: `outputDirectory` with one canonical XML per source file
+  - Optional input: `legacyXmlOutput` (default `false`) to emit historical flat `.xml` files instead of zip packages
+  - Output: `outputDirectory` with one canonical zip per source file
 - `extractAssets`
   - Inputs: `inputFile` or `source(fileTree(...))`
   - Output: `outputDirectory/<document-stem>/...` copied OOXML media/embeddings
@@ -130,7 +197,10 @@ tasks.named('validateCanonical', name.jurgenei.gradle.ooxml.ValidateCanonicalTas
 
 ## Output Conventions
 
-- Canonical XML files are named from input stem (for example `sample_v3.docx` -> `sample_v3.xml`).
+- Canonical packages are named from input stem + extension (for example `document.docx` -> `document_docx.zip`).
+- Each package contains:
+  - `canonical.xml`
+  - `media/<asset-file>` entries referenced by canonical `Diagram@href` values.
 - Asset extraction uses `outputDirectory/<input-stem>/...` preserving package-relative paths.
 
 ## Interop With `gradle-xml-plugin`

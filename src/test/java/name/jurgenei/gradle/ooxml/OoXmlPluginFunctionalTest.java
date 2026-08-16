@@ -43,7 +43,7 @@ class OoXmlPluginFunctionalTest {
                 .build();
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark.xml")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark_docx.zip")));
     }
 
     @Test
@@ -79,9 +79,9 @@ class OoXmlPluginFunctionalTest {
                 .build();
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark.xml")));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/slides.xml")));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/register.xml")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark_docx.zip")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/slides_pptx.zip")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/register_xlsx.zip")));
     }
 
     @Test
@@ -146,6 +146,37 @@ class OoXmlPluginFunctionalTest {
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         assertTrue(Files.exists(projectDir.resolve("src/main/schematron/canonical-observation.sch")));
         assertTrue(Files.exists(projectDir.resolve("build/reports/schematron/canonical.svrl.xml")));
+    }
+
+    @Test
+    void supportsLegacyXmlOutputFlagInConsumerBuild() throws Exception {
+        Path projectDir = tempDir.resolve("consumer-legacy");
+        Files.createDirectories(projectDir.resolve("docs"));
+        copyFixture(projectDir.resolve("docs"), "v2-diagrams.docx", "v2-diagrams.docx");
+
+        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'ooxml-functional-legacy'\n", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("build.gradle"), """
+                plugins {
+                    id 'name.jurgenei.gradle.ooxml'
+                }
+
+                tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask) {
+                    source(fileTree(layout.projectDirectory.dir('docs')) {
+                        include '**/*.docx'
+                    })
+                    legacyXmlOutput.set(true)
+                }
+                """, StandardCharsets.UTF_8);
+
+        BuildResult result = GradleRunner.create()
+                .withProjectDir(projectDir.toFile())
+                .withArguments("ooxmlToCanonical")
+                .withPluginClasspath()
+                .build();
+
+        assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams.xml")));
+        assertTrue(!Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams_docx.zip")));
     }
 
     private void copyFixture(Path targetDirectory, String fixtureName, String targetName) throws Exception {

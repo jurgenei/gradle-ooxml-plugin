@@ -5,6 +5,8 @@ import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -29,9 +31,11 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
     private final OpenXmlValidator validator = new OpenXmlValidator();
     private final OoXmlCanonicalizer canonicalizer = new OoXmlCanonicalizer();
     private final CanonicalXmlSerializer serializer = new CanonicalXmlSerializer();
+    private final CanonicalZipPackageWriter packageWriter = new CanonicalZipPackageWriter();
 
     @Inject
     public OoXmlToCanonicalTask() {
+        getLegacyXmlOutput().convention(false);
     }
 
     @Optional
@@ -46,6 +50,9 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
+
+    @Input
+    public abstract Property<Boolean> getLegacyXmlOutput();
 
     /**
      * Adds one or more sources using Gradle file notation.
@@ -70,7 +77,11 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
                 validator.validate(input);
                 Path output = outputRoot.resolve(toOutputName(input));
                 getLogger().debug("Converting '{}' to '{}'", input.getAbsolutePath(), output.toAbsolutePath());
-                serializer.write(canonicalizer.canonicalize(input), output);
+                if (getLegacyXmlOutput().getOrElse(false)) {
+                    serializer.write(canonicalizer.canonicalize(input), output);
+                } else {
+                    packageWriter.write(canonicalizer.canonicalize(input), input, output);
+                }
             }
         } catch (Exception e) {
             throw new GradleException("Failed to convert OOXML to canonical XML", e);
@@ -81,6 +92,10 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
         String name = input.getName();
         int dot = name.lastIndexOf('.');
         String stem = dot > 0 ? name.substring(0, dot) : name;
-        return stem + ".xml";
+        if (getLegacyXmlOutput().getOrElse(false)) {
+            return stem + ".xml";
+        }
+        String extension = dot > 0 ? name.substring(dot + 1).toLowerCase() : "ooxml";
+        return stem + "_" + extension + ".zip";
     }
 }
