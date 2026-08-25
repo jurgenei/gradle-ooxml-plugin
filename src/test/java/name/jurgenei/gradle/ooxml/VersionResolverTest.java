@@ -6,6 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class VersionResolverTest {
     @Test
+    void resolvesDashedVersionPrefixPattern() {
+        VersionResolver.ResolvedVersion resolved = VersionResolver.resolve("v2-diagrams");
+
+        assertEquals("v2-diagrams", resolved.documentId());
+        assertEquals("v2", resolved.version());
+    }
+
+    @Test
     void resolvesVPrefixVersionPattern() {
         VersionResolver.ResolvedVersion resolved = VersionResolver.resolve("CustomerData_v3");
 

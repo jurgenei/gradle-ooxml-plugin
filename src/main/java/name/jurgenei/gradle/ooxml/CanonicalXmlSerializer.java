@@ -7,6 +7,7 @@ import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
 import org.glassfish.jaxb.runtime.v2.JAXBContextFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -35,11 +36,17 @@ final class CanonicalXmlSerializer {
     void write(CanonicalDocument document, Path outputFile) throws IOException {
         try {
             Files.createDirectories(outputFile.getParent());
-            Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            marshaller.marshal(document, outputFile.toFile());
+            try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
+                write(document, outputStream);
+            }
         } catch (JAXBException e) {
             throw new IOException("Failed to serialize canonical XML", e);
         }
+    }
+
+    void write(CanonicalDocument document, OutputStream outputStream) throws IOException, JAXBException {
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        marshaller.marshal(document, outputStream);
     }
 }

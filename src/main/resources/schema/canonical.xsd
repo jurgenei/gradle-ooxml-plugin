@@ -101,6 +101,7 @@
             <xs:element name="Annotation" type="c:AnnotationType" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="source-path" type="xs:string" use="optional"/>
+        <xs:attribute name="href" type="xs:string" use="optional"/>
     </xs:complexType>
 
     <xs:complexType name="GroupType">

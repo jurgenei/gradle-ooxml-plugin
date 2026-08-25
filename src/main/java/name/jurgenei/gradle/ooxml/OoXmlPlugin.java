@@ -22,7 +22,7 @@ public class OoXmlPlugin implements Plugin<Project> {
 
         TaskProvider<OoXmlToCanonicalTask> canonicalTask = project.getTasks().register("ooxmlToCanonical", OoXmlToCanonicalTask.class, task -> {
             task.setGroup("ooxml");
-            task.setDescription("Converts DOCX/PPTX/XLSX files to canonical XML.");
+            task.setDescription("Converts DOCX/PPTX/XLSX files to canonical zip packages.");
             task.getOutputDirectory().convention(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
         });
 

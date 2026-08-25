@@ -19,6 +19,9 @@ public class Diagram {
     @XmlAttribute(name = "source-path")
     private String sourcePath;
 
+    @XmlAttribute(name = "href")
+    private String href;
+
     @XmlElement(name = "Shape", namespace = CanonicalNamespace.URI)
     private List<Shape> shapes = new ArrayList<>();
 
@@ -87,6 +90,14 @@ public class Diagram {
      */
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;
+    }
+
+    public String getHref() {
+        return href;
+    }
+
+    public void setHref(String href) {
+        this.href = href;
     }
 
     /**

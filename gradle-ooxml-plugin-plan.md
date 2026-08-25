@@ -335,7 +335,7 @@ Slide tit*e
 ## Paragraph
 
 ```xml
-<*:Paragraph>
+<c:Paragraph>
 ```
 
 Represents:
@@ -586,7 +586,7 @@ Preserves groupe* shapes.
 ## Note
 
 ```xml
-<c:*ote>
+<c:note>
 ```
 
 Preserves callouts and a*notations.
@@ -858,7 +858,7 @@ becomes:
 ---
 *## Version Resolver
 
-Provide plugg*ble filename resolvers.
+Provide pluggable filename resolvers.
 
 Examples:
 ```text
