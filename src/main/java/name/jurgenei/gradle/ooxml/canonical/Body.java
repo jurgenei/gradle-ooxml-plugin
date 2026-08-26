@@ -20,7 +20,7 @@ public class Body {
             @XmlElementRef(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
             @XmlElementRef(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
             @XmlElementRef(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
-            @XmlElementRef(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
+            @XmlElementRef(name = "graph", namespace = CanonicalNamespace.GRAPHML_URI, type = Diagram.class)
     })
     private List<Object> content = new ArrayList<>();
 

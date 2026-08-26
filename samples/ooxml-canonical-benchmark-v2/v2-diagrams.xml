@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Document xmlns="http://jurgenei.name/canonical">
+<?xml version="1.0" encoding="UTF-8"?><Document xmlns="http://jurgenei.name/canonical">
     <Metadata>
         <DocumentId>v2-diagrams</DocumentId>
         <Version>v2</Version>
@@ -10,56 +9,177 @@
         <Paragraph source-path="/word/document/p[1]">
             <Text>Image78.emf</Text>
         </Paragraph>
-        <Diagram source-path="/word/document/p[2]/drawing[1]" href="media/image1.emf">
-            <Node id="469179847-start" geometry="ellipse" semantic="root" confidence="0.82">
-                <Label>Start</Label>
-            </Node>
-            <Node id="469179847-a-calculate-uncovered" geometry="rectangle" semantic="process" confidence="0.76">
-                <Label>Calculate Uncovered Amount (see section a)</Label>
-            </Node>
-            <Edge source="469179847-start" target="469179847-a-calculate-uncovered" directed="true" semantic="flow" confidence="0.74"/>
-            <Group id="469179847-group-1" semantic="process-group">
-                <Label>Allocate Cover to Outstanding Group</Label>
-                <Member node="469179847-a-calculate-uncovered"/>
-            </Group>
-            <Annotation kind="asset" target="469179847" confidence="0.95">
-                <Text>word/media/image1.emf</Text>
-            </Annotation>
-            <Annotation kind="asset-text" target="469179847" confidence="0.65">
-                <Text>Allocate Cover to | Outstanding Group | Start | Calculate Uncovered | Amount | see section | Calculate Allocated Cover | amount without excess</Text>
-            </Annotation>
-            <Annotation kind="inferred-flow" target="469179847" confidence="0.7">
-                <Text>generated 2 nodes, 1 edges</Text>
-            </Annotation>
-        </Diagram>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]">
+            <node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root">
+                <label>Start</label>
+            </node>
+            <node confidence="0.73" geometry="rectangle" id="469179847-a-calculate-uncovered" semantic="process">
+                <label>Calculate Uncovered Amount (see section a)</label>
+            </node>
+            <node confidence="0.73" geometry="rectangle" id="469179847-b-alloc-before-haircut" semantic="process">
+                <label>Calculate Allocated Cover Amount without excess before haircut (see section b)</label>
+            </node>
+            <node confidence="0.73" geometry="rectangle" id="469179847-c-alloc-after-haircut" semantic="process">
+                <label>Calculate Allocated Cover Amount without excess after haircut (see section c)</label>
+            </node>
+            <node confidence="0.67" geometry="ellipse" id="469179847-end-inferred" semantic="leaf">
+                <label>End</label>
+            </node>
+            <edge confidence="0.77" directed="true" semantic="flow" source="469179847-start" target="469179847-a-calculate-uncovered"/>
+            <edge confidence="0.77" directed="true" semantic="flow" source="469179847-a-calculate-uncovered" target="469179847-b-alloc-before-haircut"/>
+            <edge confidence="0.77" directed="true" semantic="flow" source="469179847-b-alloc-before-haircut" target="469179847-c-alloc-after-haircut"/>
+            <edge confidence="0.77" directed="true" semantic="flow" source="469179847-c-alloc-after-haircut" target="469179847-end-inferred"/>
+            <group id="469179847-group-1" semantic="process-group">
+                <label>Allocate Cover to Outstanding Group</label>
+                <member node="469179847-a-calculate-uncovered"/>
+                <member node="469179847-b-alloc-before-haircut"/>
+                <member node="469179847-c-alloc-after-haircut"/>
+            </group>
+            <annotation confidence="0.95" kind="asset" target="469179847">
+                <text>word/media/image1.emf</text>
+            </annotation>
+            <annotation confidence="0.95" kind="asset-text" target="469179847">
+                <text>Allocate Cover to | Outstanding Group | Start | Calculate Uncovered | Amount | see section | Calculate Allocated Cover | amount without excess | before haircut | after haircut</text>
+            </annotation>
+            <annotation confidence="0.89" kind="emf-stats" target="469179847">
+                <text>records text=24, shape=0, connector=0</text>
+            </annotation>
+            <annotation confidence="0.7" kind="inferred-flow" target="469179847">
+                <text>generated 5 nodes, 4 edges</text>
+            </annotation>
+        </graph>
         <Paragraph source-path="/word/document/p[3]">
             <Text>image81.emf</Text>
         </Paragraph>
-        <Diagram source-path="/word/document/p[3]/drawing[1]" href="media/image2.emf">
-            <Node id="25-start" geometry="ellipse" semantic="root" confidence="0.82">
-                <Label>Start</Label>
-            </Node>
-            <Node id="25-b-alloc-before-haircut" geometry="rectangle" semantic="process" confidence="0.76">
-                <Label>Calculate Allocated Cover Amount without excess before haircut (see section b)</Label>
-            </Node>
-            <Node id="25-c-alloc-after-haircut" geometry="rectangle" semantic="process" confidence="0.76">
-                <Label>Calculate Allocated Cover Amount without excess after haircut (see section c)</Label>
-            </Node>
-            <Node id="25-end-inferred" geometry="ellipse" semantic="leaf" confidence="0.58">
-                <Label>End</Label>
-            </Node>
-            <Edge source="25-start" target="25-b-alloc-before-haircut" directed="true" semantic="flow" confidence="0.74"/>
-            <Edge source="25-b-alloc-before-haircut" target="25-c-alloc-after-haircut" directed="true" semantic="flow" confidence="0.74"/>
-            <Edge source="25-c-alloc-after-haircut" target="25-end-inferred" directed="true" semantic="flow" confidence="0.74"/>
-            <Annotation kind="asset" target="25" confidence="0.95">
-                <Text>word/media/image2.emf</Text>
-            </Annotation>
-            <Annotation kind="asset-text" target="25" confidence="0.65">
-                <Text>Calculate Allocated Cover Amount | Without Excess After Haircut | Start | Alloc Cover No Excess After HC | Cov,Osg | Alloc Cover No Excess Before HC | Effective HC</Text>
-            </Annotation>
-            <Annotation kind="inferred-flow" target="25" confidence="0.7">
-                <Text>generated 4 nodes, 3 edges</Text>
-            </Annotation>
-        </Diagram>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image2.emf" source-path="/word/document/p[3]/drawing[1]">
+            <node confidence="0.7" geometry="ellipse" id="25-start" semantic="root">
+                <label>Start</label>
+            </node>
+            <node confidence="0.7" geometry="rectangle" id="25-calc-after-hc" semantic="process">
+                <label>Alloc Cover No Excess after HC cov,osg = Alloc Cover No Excess before HC cov,osg * (1 - Effective HC cov,osg)</label>
+            </node>
+            <node confidence="0.7" geometry="ellipse" id="25-end" semantic="leaf">
+                <label>End</label>
+            </node>
+            <node confidence="0.68" geometry="rectangle" id="25-input-before-hc" semantic="process">
+                <label>Alloc Cover No Excess Before HC</label>
+            </node>
+            <node confidence="0.68" geometry="rectangle" id="25-input-effective-hc" semantic="process">
+                <label>Effective Haircut</label>
+            </node>
+            <node confidence="0.68" geometry="rectangle" id="25-output-after-hc" semantic="process">
+                <label>Alloc Cover No Excess After HC</label>
+            </node>
+            <edge confidence="0.69" directed="true" semantic="flow" source="25-start" target="25-calc-after-hc"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="25-calc-after-hc" target="25-end"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="25-input-before-hc" target="25-calc-after-hc"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="25-input-effective-hc" target="25-calc-after-hc"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="25-calc-after-hc" target="25-output-after-hc"/>
+            <group id="25-group-before" semantic="process-group">
+                <label>Calculate Allocated Cover Amount Without Excess Before HC</label>
+                <member node="25-input-before-hc"/>
+            </group>
+            <group id="25-group-effective" semantic="process-group">
+                <label>Calculate Effective Haircut</label>
+                <member node="25-input-effective-hc"/>
+            </group>
+            <group id="25-group-after" semantic="process-group">
+                <label>Calculate Allocated Cover Amount Without Excess After Haircut</label>
+                <member node="25-calc-after-hc"/>
+            </group>
+            <group id="25-group-outstanding" semantic="process-group">
+                <label>Outstanding/Cover</label>
+                <member node="25-calc-after-hc"/>
+            </group>
+            <annotation confidence="0.95" kind="asset" target="25">
+                <text>word/media/image2.emf</text>
+            </annotation>
+            <annotation confidence="0.88" kind="asset-text" target="25">
+                <text>Calculate Allocated Cover Amount | Without Excess After Haircut | Start | Alloc Cover No Excess After HC | Cov,Osg | Alloc Cover No Excess Before HC | Effective HC</text>
+            </annotation>
+            <annotation confidence="0.89" kind="emf-stats" target="25">
+                <text>records text=16, shape=0, connector=0</text>
+            </annotation>
+            <annotation confidence="0.7" kind="inferred-flow" target="25">
+                <text>generated 6 nodes, 5 edges</text>
+            </annotation>
+        </graph>
+        <Paragraph source-path="/word/document/p[5]">
+            <Text>flow chart</Text>
+        </Paragraph>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image3.emf" source-path="/word/document/p[5]/drawing[1]">
+            <node confidence="0.71" geometry="ellipse" id="200-start" semantic="root">
+                <label>Start</label>
+            </node>
+            <node confidence="0.7" geometry="rectangle" id="200-pro-rata-basis" semantic="process">
+                <label>Calculate Pro Rata Basis</label>
+            </node>
+            <node confidence="0.7" geometry="diamond" id="200-if-cover" semantic="decision">
+                <label>If Cover Available</label>
+            </node>
+            <node confidence="0.7" geometry="diamond" id="200-if-residual-value" semantic="decision">
+                <label>If Residual Value</label>
+            </node>
+            <node confidence="0.69" geometry="rectangle" id="200-residual-value" semantic="process">
+                <label>Residual Value</label>
+            </node>
+            <node confidence="0.69" geometry="rectangle" id="200-no-allocation" semantic="process">
+                <label>No Allocation</label>
+            </node>
+            <node confidence="0.69" geometry="rectangle" id="200-vre-request" semantic="process">
+                <label>VRE Request</label>
+            </node>
+            <node confidence="0.71" geometry="ellipse" id="200-end" semantic="leaf">
+                <label>End</label>
+            </node>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-start" target="200-pro-rata-basis"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-pro-rata-basis" target="200-if-cover"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-if-cover" target="200-no-allocation">
+                <label>N</label>
+            </edge>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-if-cover" target="200-if-residual-value">
+                <label>Y</label>
+            </edge>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-if-residual-value" target="200-residual-value">
+                <label>Y</label>
+            </edge>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-if-residual-value" target="200-vre-request">
+                <label>N</label>
+            </edge>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-residual-value" target="200-vre-request"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-no-allocation" target="200-end"/>
+            <edge confidence="0.69" directed="true" semantic="flow" source="200-vre-request" target="200-end"/>
+            <group id="200-group-residual" semantic="process-group">
+                <label>Residual Value</label>
+                <member node="200-if-residual-value"/>
+                <member node="200-residual-value"/>
+            </group>
+            <group id="200-group-cover" semantic="process-group">
+                <label>Cover</label>
+                <member node="200-if-cover"/>
+                <member node="200-vre-request"/>
+                <member group="200-group-residual"/>
+            </group>
+            <group id="200-group-vre-request" semantic="process-group">
+                <label>VRE Request</label>
+                <member node="200-start"/>
+                <member node="200-pro-rata-basis"/>
+                <member node="200-no-allocation"/>
+                <member node="200-end"/>
+                <member group="200-group-cover"/>
+            </group>
+            <annotation confidence="0.95" kind="asset" target="200">
+                <text>word/media/image3.emf</text>
+            </annotation>
+            <annotation confidence="0.95" kind="asset-text" target="200">
+                <text>Calculate Pro Rata Basis Cover I | Start | Pro Rata Basis | Max Amt Coverable | Osgr | Sum (Pro Rata Basis | If Residual Value | No Allocation</text>
+            </annotation>
+            <annotation confidence="0.89" kind="emf-stats" target="200">
+                <text>records text=32, shape=0, connector=0</text>
+            </annotation>
+            <annotation confidence="0.7" kind="inferred-flow" target="200">
+                <text>generated 8 nodes, 9 edges</text>
+            </annotation>
+        </graph>
     </Body>
 </Document>

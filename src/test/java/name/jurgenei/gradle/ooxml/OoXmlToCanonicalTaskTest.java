@@ -72,13 +72,14 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(!formulaXml.contains("<Text>CoverAmt Cov Perc"));
 
         String diagramsXml = readCanonicalXml(diagramsZip);
-        assertTrue(diagramsXml.contains("<Diagram"));
+        assertTrue(diagramsXml.contains("<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
         assertTrue(diagramsXml.contains("href=\"media/"));
-        assertTrue(diagramsXml.contains("<Node"));
+        assertTrue(diagramsXml.contains("<node "));
         assertTrue(diagramsXml.contains("semantic=\"process\""));
         assertTrue(diagramsXml.contains("semantic=\"flow\""));
-        assertTrue(diagramsXml.contains("<Group"));
-        assertTrue(diagramsXml.contains("<Annotation kind=\"asset\""));
+        assertTrue(diagramsXml.contains("<group id="));
+        assertTrue(diagramsXml.contains("kind=\"asset\""));
+        assertTrue(!diagramsXml.contains("<g:graph"));
         assertTrue(diagramsXml.contains("source-path=\"/word/document/p[2]/drawing[1]\""));
         assertTrue(diagramsXml.contains("source-path=\"/word/document/p[3]/drawing[1]\""));
         assertTrue(diagramsXml.contains("kind=\"asset-text\""));
@@ -124,6 +125,30 @@ class OoXmlToCanonicalTaskTest {
         String xml = Files.readString(legacyXml);
         assertTrue(xml.contains("<Version>v2</Version>"));
         assertTrue(xml.contains("href=\"media/image1.emf\"") || xml.contains("href=\"media/image2.emf\""));
+    }
+
+    @Test
+    void supportsConfiguredRecognizerClassNames() throws Exception {
+        File projectDir = Files.createTempDirectory("ooxml-task-recognizer-project").toFile();
+        Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
+
+        Path docs = projectDir.toPath().resolve("docs");
+        Files.createDirectories(docs);
+        copyFixture(docs, "v2-diagrams.docx", "v2-diagrams.docx");
+
+        OoXmlToCanonicalTask task = project.getTasks().create("ooxmlToCanonicalRecognizers", OoXmlToCanonicalTask.class);
+        task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
+        task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
+        task.getRecognizerClassNames().set(java.util.List.of("name.jurgenei.gradle.ooxml.recognizer.EmfAssetRecognizer"));
+
+        task.convert();
+
+        Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
+        Path diagramsZip = canonicalRoot.resolve("v2-diagrams_docx.zip");
+        assertTrue(Files.exists(diagramsZip));
+
+        String xml = readCanonicalXml(diagramsZip);
+        assertTrue(xml.contains("kind=\"emf-stats\""));
     }
 
     private int countOccurrences(String text, String token) {

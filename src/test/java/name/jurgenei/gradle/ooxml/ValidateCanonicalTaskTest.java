@@ -22,19 +22,19 @@ class ValidateCanonicalTaskTest {
         Path canonical = projectDir.toPath().resolve("build/ooxml/canonical");
         Files.createDirectories(canonical);
         Files.writeString(canonical.resolve("sample.xml"), """
-                <c:Document xmlns:c=\"http://jurgenei.name/canonical\">
-                  <c:Metadata>
-                    <c:DocumentId>sample</c:DocumentId>
-                    <c:Version>1</c:Version>
-                    <c:SourceFile>sample.docx</c:SourceFile>
-                    <c:DocumentType>DOCX</c:DocumentType>
-                  </c:Metadata>
-                  <c:Body>
-                    <c:Paragraph>
-                      <c:Text>Hello</c:Text>
-                    </c:Paragraph>
-                  </c:Body>
-                </c:Document>
+                <Document xmlns=\"http://jurgenei.name/canonical\">
+                  <Metadata>
+                    <DocumentId>sample</DocumentId>
+                    <Version>1</Version>
+                    <SourceFile>sample.docx</SourceFile>
+                    <DocumentType>DOCX</DocumentType>
+                  </Metadata>
+                  <Body>
+                    <Paragraph>
+                      <Text>Hello</Text>
+                    </Paragraph>
+                  </Body>
+                </Document>
                 """, StandardCharsets.UTF_8);
 
         ValidateCanonicalTask task = project.getTasks().create("validateCanonical", ValidateCanonicalTask.class);
@@ -54,17 +54,17 @@ class ValidateCanonicalTaskTest {
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(zipPath))) {
             zip.putNextEntry(new ZipEntry("canonical.xml"));
             zip.write("""
-                    <c:Document xmlns:c=\"http://jurgenei.name/canonical\">
-                      <c:Metadata>
-                        <c:DocumentId>sample</c:DocumentId>
-                        <c:Version>v2</c:Version>
-                        <c:SourceFile>sample.docx</c:SourceFile>
-                        <c:DocumentType>DOCX</c:DocumentType>
-                      </c:Metadata>
-                      <c:Body>
-                        <c:Diagram href=\"media/image1.png\" source-path=\"/word/document/p[1]/drawing[1]\"/>
-                      </c:Body>
-                    </c:Document>
+                    <Document xmlns=\"http://jurgenei.name/canonical\" xmlns:g=\"http://graphml.graphdrawing.org/xmlns\">
+                      <Metadata>
+                        <DocumentId>sample</DocumentId>
+                        <Version>v2</Version>
+                        <SourceFile>sample.docx</SourceFile>
+                        <DocumentType>DOCX</DocumentType>
+                      </Metadata>
+                      <Body>
+                        <g:graph href=\"media/image1.png\" source-path=\"/word/document/p[1]/drawing[1]\"/>
+                      </Body>
+                    </Document>
                     """.getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
         }

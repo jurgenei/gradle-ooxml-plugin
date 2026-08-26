@@ -1,33 +1,102 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<c:Document xmlns:c="http://jurgenei.name/canonical">
-  <c:Metadata>
-    <c:DocumentId>v1-benchmark</c:DocumentId>
-    <c:Version/>
-    <c:SourceFile>v1-benchmark.pptx</c:SourceFile>
-    <c:DocumentType>PPTX</c:DocumentType>
-  </c:Metadata>
-  <c:Body>
-    <c:Paragraph source-path="/ppt/slides/slide1.xml/p[1]">
-      <c:Text>Overview</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/ppt/slides/slide1.xml/p[2]">
-      <c:Text>System landscape overview</c:Text>
-    </c:Paragraph>
-    <c:Table source-path="/ppt/slides/slide1.xml/tbl[1]">
-      <c:Row>
-        <c:Cell><c:Text>App</c:Text></c:Cell>
-        <c:Cell><c:Text>Team</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>CRM</c:Text></c:Cell>
-        <c:Cell><c:Text>Sales</c:Text></c:Cell>
-      </c:Row>
-    </c:Table>
-    <c:Diagram source-path="/ppt/slides/slide1.xml/diagram[1]">
-      <c:Shape id="3"><c:Label>CRM</c:Label></c:Shape>
-      <c:Shape id="4"><c:Label>SAP</c:Label></c:Shape>
-      <c:Connector source="3" target="4"/>
-    </c:Diagram>
-  </c:Body>
-</c:Document>
-
+<?xml version="1.0" encoding="UTF-8"?><Document xmlns="http://jurgenei.name/canonical">
+    <Metadata>
+        <DocumentId>v1-benchmark</DocumentId>
+        <Version>v1</Version>
+        <SourceFile>v1-benchmark.pptx</SourceFile>
+        <DocumentType>PPTX</DocumentType>
+    </Metadata>
+    <Body>
+        <Paragraph source-path="/ppt/slides/slide1.xml/p[1]">
+            <Text>Overview</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide1.xml/p[2]">
+            <Text>System landscape overview</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide2.xml/p[1]">
+            <Text>Architecture</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide2.xml/p[2]">
+            <Text>CRM</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide2.xml/p[3]">
+            <Text>SAP</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide3.xml/p[1]">
+            <Text>Responsibilities</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide3.xml/p[2]">
+            <Text>App</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide3.xml/p[3]">
+            <Text>Team</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide3.xml/p[4]">
+            <Text>CRM</Text>
+        </Paragraph>
+        <Paragraph source-path="/ppt/slides/slide3.xml/p[5]">
+            <Text>Sales</Text>
+        </Paragraph>
+        <Table source-path="/ppt/slides/slide3.xml/tbl[1]">
+            <Row>
+                <Cell>
+                    <Text>App</Text>
+                </Cell>
+                <Cell>
+                    <Text>Team</Text>
+                </Cell>
+            </Row>
+            <Row>
+                <Cell>
+                    <Text>CRM</Text>
+                </Cell>
+                <Cell>
+                    <Text>Sales</Text>
+                </Cell>
+            </Row>
+        </Table>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" source-path="/ppt/slides/slide1.xml/diagram[1]">
+            <shape id="2">
+                <label>Title 1</label>
+            </shape>
+            <shape id="3">
+                <label>Content Placeholder 2</label>
+            </shape>
+            <node geometry="rectangle" id="2">
+                <label>Title 1</label>
+            </node>
+            <node geometry="rectangle" id="3">
+                <label>Content Placeholder 2</label>
+            </node>
+        </graph>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" source-path="/ppt/slides/slide2.xml/diagram[1]">
+            <shape id="2">
+                <label>Title 1</label>
+            </shape>
+            <shape id="3">
+                <label>CRM</label>
+            </shape>
+            <shape id="4">
+                <label>SAP</label>
+            </shape>
+            <connector source="3" target="4"/>
+            <node geometry="rectangle" id="2">
+                <label>Title 1</label>
+            </node>
+            <node confidence="0.7" geometry="rectangle" id="3" semantic="root">
+                <label>CRM</label>
+            </node>
+            <node confidence="0.7" geometry="rectangle" id="4" semantic="leaf">
+                <label>SAP</label>
+            </node>
+            <edge confidence="0.95" directed="true" semantic="flow" source="3" target="4"/>
+        </graph>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" source-path="/ppt/slides/slide3.xml/diagram[1]">
+            <shape id="2">
+                <label>Title 1</label>
+            </shape>
+            <node geometry="rectangle" id="2">
+                <label>Title 1</label>
+            </node>
+        </graph>
+    </Body>
+</Document>

@@ -17,6 +17,7 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -74,13 +75,12 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
     }
 
     private Schema loadSchema() throws IOException, SAXException {
-        try (InputStream input = getClass().getResourceAsStream("/schema/canonical.xsd")) {
-            if (input == null) {
-                throw new IOException("Missing schema resource: /schema/canonical.xsd");
-            }
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            return schemaFactory.newSchema(new StreamSource(input));
+        URL schemaUrl = getClass().getResource("/schema/canonical.xsd");
+        if (schemaUrl == null) {
+            throw new IOException("Missing schema resource: /schema/canonical.xsd");
         }
+        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        return schemaFactory.newSchema(schemaUrl);
     }
 
     private void validateFile(Validator validator, Path xmlFile) {

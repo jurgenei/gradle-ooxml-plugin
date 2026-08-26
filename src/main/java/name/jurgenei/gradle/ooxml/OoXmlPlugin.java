@@ -19,11 +19,13 @@ public class OoXmlPlugin implements Plugin<Project> {
     public void apply(Project project) {
         OoXmlExtension extension = project.getExtensions().create("ooxml", OoXmlExtension.class);
         extension.getCanonicalSchemaUrl().convention(project.provider(() -> resolveSchemaUrl(project)));
+        extension.getRecognizerClasses().convention(java.util.List.of());
 
         TaskProvider<OoXmlToCanonicalTask> canonicalTask = project.getTasks().register("ooxmlToCanonical", OoXmlToCanonicalTask.class, task -> {
             task.setGroup("ooxml");
             task.setDescription("Converts DOCX/PPTX/XLSX files to canonical zip packages.");
             task.getOutputDirectory().convention(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
+            task.getRecognizerClassNames().convention(extension.getRecognizerClasses());
         });
 
         project.getTasks().register("extractAssets", ExtractAssetsTask.class, task -> {

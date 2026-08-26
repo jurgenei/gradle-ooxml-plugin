@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://graphml.graphdrawing.org/xmlns"
+           xmlns:g="http://graphml.graphdrawing.org/xmlns"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+    <xs:element name="graph" type="g:GraphType"/>
+
+    <xs:complexType name="GraphType">
+        <xs:sequence>
+            <xs:element name="shape" type="g:ShapeType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="connector" type="g:ConnectorType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="node" type="g:NodeType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="edge" type="g:EdgeType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="group" type="g:GroupType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="annotation" type="g:AnnotationType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="source-path" type="xs:string" use="optional"/>
+        <xs:attribute name="href" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="ShapeType">
+        <xs:sequence>
+            <xs:element name="label" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="ConnectorType">
+        <xs:attribute name="source" type="xs:string" use="optional"/>
+        <xs:attribute name="target" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="NodeType">
+        <xs:sequence>
+            <xs:element name="label" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="optional"/>
+        <xs:attribute name="geometry" type="xs:string" use="optional"/>
+        <xs:attribute name="semantic" type="xs:string" use="optional"/>
+        <xs:attribute name="confidence" type="xs:decimal" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="EdgeType">
+        <xs:sequence>
+            <xs:element name="label" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="source" type="xs:string" use="optional"/>
+        <xs:attribute name="target" type="xs:string" use="optional"/>
+        <xs:attribute name="directed" type="xs:boolean" use="optional"/>
+        <xs:attribute name="semantic" type="xs:string" use="optional"/>
+        <xs:attribute name="confidence" type="xs:decimal" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="GroupType">
+        <xs:sequence>
+            <xs:element name="label" type="xs:string" minOccurs="0"/>
+            <xs:element name="member" type="g:GroupMemberType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="optional"/>
+        <xs:attribute name="semantic" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="GroupMemberType">
+        <xs:attribute name="node" type="xs:string" use="optional"/>
+        <xs:attribute name="group" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="AnnotationType">
+        <xs:sequence>
+            <xs:element name="text" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="kind" type="xs:string" use="optional"/>
+        <xs:attribute name="target" type="xs:string" use="optional"/>
+        <xs:attribute name="confidence" type="xs:decimal" use="optional"/>
+    </xs:complexType>
+</xs:schema>
+

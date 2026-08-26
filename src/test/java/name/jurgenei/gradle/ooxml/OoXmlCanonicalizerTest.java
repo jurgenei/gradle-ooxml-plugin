@@ -114,7 +114,7 @@ class OoXmlCanonicalizerTest {
     @Test
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
         assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
-        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<Table source-path=\"/ppt/slides/slide", "<Diagram source-path=\"/ppt/slides/slide", "<Diagram"));
+        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<Table source-path=\"/ppt/slides/slide", "source-path=\"/ppt/slides/slide", "<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
         assertSerializedContains("v1-benchmark.xlsx", List.of("id=\"Applications\"", "id=\"Matrix\"", "id=\"NamedRange\"", "Application", "NamedRange!A1:B2", "A4:B4"));
     }
 
@@ -186,8 +186,10 @@ class OoXmlCanonicalizerTest {
 
         String xml = serialize(document);
         assertAppearsBefore(xml, "source-path=\"/word/document/p[2]/drawing[1]\"", "source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertAppearsBefore(xml, "source-path=\"/word/document/p[3]/drawing[1]\"", "source-path=\"/word/document/p[5]/drawing[1]\"");
         assertTrue(xml.contains("href=\"media/image1.emf\"") || xml.contains("href=\"media/image2.emf\""));
-        assertTrue(xml.contains("<Group"), "Expected canonical group structure for inferred subgraph");
+        assertTrue(xml.contains("<group id="), "Expected canonical group structure for inferred subgraph");
+        assertTrue(!xml.contains("<g:graph"), "Expected graph elements to use local default namespace form");
         assertTrue(xml.contains("semantic=\"process\""), "Expected inferred process nodes");
         assertTrue(xml.contains("semantic=\"flow\""), "Expected inferred flow edges");
         assertTrue(xml.contains("see section a") || xml.contains("see section b") || xml.contains("see section c"),
@@ -196,6 +198,39 @@ class OoXmlCanonicalizerTest {
         assertTrue(xml.contains("kind=\"asset-text\""), "Expected extracted diagram text annotation");
         assertTrue(xml.contains("Start") || xml.contains("Calculate"),
                 "Expected recovered EMF text content in canonical diagram annotations");
+
+        var first = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[2]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(first.getNodes().size() >= 5, "Expected first diagram to include extended process chain");
+        assertTrue(first.getEdges().size() >= 4, "Expected first diagram to include full flow chain");
+        assertTrue(first.getGroups().stream().anyMatch(group -> group.getMembers().size() >= 3),
+                "Expected first diagram group to include all process members");
+
+        var second = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[3]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(second.getNodes().size() >= 6, "Expected second diagram to include formula inputs and outputs");
+        assertTrue(second.getEdges().size() >= 5, "Expected second diagram to include multi-input flow");
+        assertTrue(second.getGroups().size() >= 3, "Expected second diagram to include process groups");
+        assertTrue(second.getAnnotations().stream().anyMatch(annotation -> "emf-stats".equals(annotation.getKind())),
+                "Expected EMF record statistics annotation");
+
+        var third = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[5]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(third.getNodes().stream().filter(node -> "diamond".equals(node.getGeometry())).count() >= 2,
+                "Expected decision-heavy third diagram to include two diamonds");
+        assertTrue(third.getEdges().stream().anyMatch(edge -> "Y".equals(edge.getLabel())));
+        assertTrue(third.getEdges().stream().anyMatch(edge -> "N".equals(edge.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> "VRE Request".equals(group.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> "Cover".equals(group.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> "Residual Value".equals(group.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> group.getMembers().stream().anyMatch(member -> member.getGroup() != null)),
+                "Expected nested group references in third diagram");
     }
 
     private void assertDeterministic(String fixtureName) throws Exception {

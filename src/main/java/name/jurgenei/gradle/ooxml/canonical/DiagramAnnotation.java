@@ -20,7 +20,7 @@ public class DiagramAnnotation {
     @XmlAttribute(name = "confidence")
     private Double confidence;
 
-    @XmlElement(name = "Text", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "text", namespace = CanonicalNamespace.GRAPHML_URI)
     private String text;
 
     public DiagramAnnotation() {

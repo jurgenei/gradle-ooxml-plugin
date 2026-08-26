@@ -14,7 +14,7 @@ import java.util.List;
  * Canonical diagram topology container.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "Diagram", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "graph", namespace = CanonicalNamespace.GRAPHML_URI)
 public class Diagram {
     @XmlAttribute(name = "source-path")
     private String sourcePath;
@@ -22,22 +22,22 @@ public class Diagram {
     @XmlAttribute(name = "href")
     private String href;
 
-    @XmlElement(name = "Shape", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "shape", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<Shape> shapes = new ArrayList<>();
 
-    @XmlElement(name = "Connector", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "connector", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<Connector> connectors = new ArrayList<>();
 
-    @XmlElement(name = "Node", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "node", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<DiagramNode> nodes = new ArrayList<>();
 
-    @XmlElement(name = "Edge", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "edge", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<DiagramEdge> edges = new ArrayList<>();
 
-    @XmlElement(name = "Group", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "group", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<DiagramGroup> groups = new ArrayList<>();
 
-    @XmlElement(name = "Annotation", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "annotation", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<DiagramAnnotation> annotations = new ArrayList<>();
 
     public Diagram() {
