@@ -8,9 +8,11 @@ import name.jurgenei.gradle.ooxml.canonical.DiagramNode;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Fallback recognizer based on text snippets only.
@@ -49,6 +51,10 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
         }
         if (looksLikeVreDecisionFlow(normalized)) {
             buildVreDecisionGraph(assetId, tokens.size(), nodes, edges, groups);
+            return new AssetRecognition(nodes, edges, groups, annotations);
+        }
+        if (looksLikeEligibilityIndicatorFlow(normalized)) {
+            buildEligibilityIndicatorGraph(assetId, tokens.size(), nodes, edges, groups);
             return new AssetRecognition(nodes, edges, groups, annotations);
         }
 
@@ -105,7 +111,197 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
             groups.add(new DiagramGroup(assetId + "-group-1", "process-group", groupLabel, members));
         }
 
+        if (isSuspiciousSingleton(tokens, nodes, edges)) {
+            int beforeNodes = nodes.size();
+            int beforeEdges = edges.size();
+            recoverSingletonGraph(assetId, tokens, nodes, edges, groups);
+            annotations.add(new DiagramAnnotation("recovery", assetId,
+                    confidenceModel.score(Math.min(nodes.size(), 6), 6, tokens.size()),
+                    "singleton-recovery nodes " + beforeNodes + "->" + nodes.size()
+                            + ", edges " + beforeEdges + "->" + edges.size()));
+        }
+
         return new AssetRecognition(nodes, edges, groups, annotations);
+    }
+
+    private boolean isSuspiciousSingleton(List<String> tokens, List<DiagramNode> nodes, List<DiagramEdge> edges) {
+        return nodes.size() <= 1 && edges.isEmpty() && tokens.size() >= 8;
+    }
+
+    private void recoverSingletonGraph(String assetId,
+                                       List<String> tokens,
+                                       List<DiagramNode> nodes,
+                                       List<DiagramEdge> edges,
+                                       List<DiagramGroup> groups) {
+        String startId = null;
+        if (nodes.stream().noneMatch(node -> "start".equalsIgnoreCase(node.getLabel()))) {
+            startId = assetId + "-start";
+            nodes.add(new DiagramNode(startId, "Start", "ellipse", "root", confidenceModel.score(1, 1, tokens.size())));
+        } else {
+            startId = nodes.stream()
+                    .filter(node -> "start".equalsIgnoreCase(node.getLabel()))
+                    .map(DiagramNode::getId)
+                    .findFirst()
+                    .orElse(assetId + "-start");
+        }
+
+        List<String> candidates = rankProcessCandidates(tokens);
+        if (candidates.isEmpty()) {
+            return;
+        }
+
+        List<String> nodeIds = new ArrayList<>();
+        for (int i = 0; i < candidates.size(); i++) {
+            String label = normalizeLabel(candidates.get(i));
+            String id = assetId + "-auto-" + slug(label, i + 1);
+            String geometry = looksLikeDecision(label) ? "diamond" : "rectangle";
+            String semantic = looksLikeDecision(label) ? "decision" : "process";
+            nodes.add(new DiagramNode(id, label, geometry, semantic,
+                    confidenceModel.score(3, 5, tokens.size())));
+            nodeIds.add(id);
+        }
+
+        List<String> chain = new ArrayList<>();
+        chain.add(startId);
+        chain.addAll(nodeIds);
+        if (tokens.stream().anyMatch(token -> "end".equalsIgnoreCase(token))) {
+            String endId = assetId + "-end";
+            nodes.add(new DiagramNode(endId, "End", "ellipse", "leaf", confidenceModel.score(1, 1, tokens.size())));
+            chain.add(endId);
+        }
+
+        for (int i = 0; i + 1 < chain.size(); i++) {
+            String label = inferBranchLabel(tokens, i);
+            edges.add(new DiagramEdge(chain.get(i), chain.get(i + 1), true, "flow",
+                    confidenceModel.score(2, 3, tokens.size()), label));
+        }
+
+        buildNestedGroups(assetId, tokens, nodeIds, groups);
+    }
+
+    private List<String> rankProcessCandidates(List<String> tokens) {
+        Set<String> seen = new LinkedHashSet<>();
+        List<String> candidates = new ArrayList<>();
+        for (String token : tokens) {
+            String normalized = normalizeLabel(token);
+            if (normalized.isBlank()) {
+                continue;
+            }
+            String lower = normalized.toLowerCase(Locale.ROOT);
+            if ("start".equals(lower) || "end".equals(lower)) {
+                continue;
+            }
+            if (lower.length() < 5 || lower.chars().filter(Character::isLetter).count() < 4) {
+                continue;
+            }
+            if (seen.add(lower) && looksLikeProcessPhrase(normalized)) {
+                candidates.add(normalized);
+            }
+        }
+        return candidates.stream()
+                .sorted(Comparator.comparingInt(this::priorityScore).reversed())
+                .limit(8)
+                .toList();
+    }
+
+    private int priorityScore(String label) {
+        String lower = label.toLowerCase(Locale.ROOT);
+        int score = label.length();
+        if (lower.contains("calculate") || lower.contains("determine")) {
+            score += 40;
+        }
+        if (lower.contains("eligible") || lower.contains("indicator") || lower.contains("class")) {
+            score += 20;
+        }
+        if (looksLikeDecision(label)) {
+            score += 10;
+        }
+        return score;
+    }
+
+    private boolean looksLikeProcessPhrase(String label) {
+        String lower = label.toLowerCase(Locale.ROOT);
+        return lower.contains("calculate")
+                || lower.contains("determine")
+                || lower.contains("eligible")
+                || lower.contains("indicator")
+                || lower.contains("class")
+                || lower.contains("request")
+                || lower.contains("cover")
+                || lower.contains("residual")
+                || lower.contains("allocation")
+                || lower.contains("data");
+    }
+
+    private boolean looksLikeDecision(String label) {
+        String lower = label.toLowerCase(Locale.ROOT);
+        return lower.startsWith("if ") || lower.contains(" if ") || lower.contains("?");
+    }
+
+    private String inferBranchLabel(List<String> tokens, int edgeIndex) {
+        String joined = String.join(" ", tokens).toLowerCase(Locale.ROOT);
+        if (joined.contains(" y ") || joined.contains(" y and ")) {
+            return edgeIndex % 2 == 0 ? "Y" : null;
+        }
+        if (joined.contains(" n ") || joined.contains(" no ")) {
+            return edgeIndex % 2 == 1 ? "N" : null;
+        }
+        return null;
+    }
+
+    private void buildNestedGroups(String assetId,
+                                   List<String> tokens,
+                                   List<String> processNodeIds,
+                                   List<DiagramGroup> groups) {
+        if (processNodeIds.isEmpty()) {
+            return;
+        }
+
+        List<String> hierarchyLabels = tokens.stream()
+                .map(this::normalizeLabel)
+                .filter(label -> !label.isBlank())
+                .filter(label -> wordCount(label) <= 4)
+                .filter(label -> !"start".equalsIgnoreCase(label) && !"end".equalsIgnoreCase(label))
+                .distinct()
+                .limit(3)
+                .toList();
+
+        if (hierarchyLabels.size() < 2) {
+            return;
+        }
+
+        String previousGroupId = null;
+        for (int i = hierarchyLabels.size() - 1; i >= 0; i--) {
+            String label = hierarchyLabels.get(i);
+            String groupId = assetId + "-auto-group-" + slug(label, i + 1);
+            List<DiagramGroupMember> members = new ArrayList<>();
+            if (previousGroupId != null) {
+                members.add(DiagramGroupMember.groupRef(previousGroupId));
+            } else {
+                members.add(new DiagramGroupMember(processNodeIds.get(0)));
+            }
+            groups.add(new DiagramGroup(groupId, "process-group", label, members));
+            previousGroupId = groupId;
+        }
+    }
+
+    private String slug(String label, int fallbackIndex) {
+        String slug = label.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
+        if (slug.isBlank()) {
+            return "node-" + fallbackIndex;
+        }
+        return slug;
+    }
+
+    private int wordCount(String value) {
+        return value.trim().isEmpty() ? 0 : value.trim().split("\\s+").length;
+    }
+
+    private String normalizeLabel(String token) {
+        return token.replaceAll("\\s+", " ")
+                .replaceAll("^[,.:;/\\-\\s]+", "")
+                .replaceAll("[,.:;/\\-\\s]+$", "")
+                .trim();
     }
 
     private void buildHaircutFormulaGraph(String assetId,
@@ -164,6 +360,13 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
                 && normalized.contains("no allocation");
     }
 
+    private boolean looksLikeEligibilityIndicatorFlow(String normalized) {
+        return normalized.contains("eligible")
+                && normalized.contains("indicator")
+                && normalized.contains("cover")
+                && (normalized.contains("guarantor") || normalized.contains("exposure class") || normalized.contains("substitution"));
+    }
+
     private void buildVreDecisionGraph(String assetId,
                                        int sampleSize,
                                        List<DiagramNode> nodes,
@@ -208,6 +411,55 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
         groups.add(new DiagramGroup(requestGroup, "process-group", "VRE Request",
                 List.of(new DiagramGroupMember(start), new DiagramGroupMember(proRata), new DiagramGroupMember(noAllocation),
                         new DiagramGroupMember(end), DiagramGroupMember.groupRef(coverGroup))));
+    }
+
+    private void buildEligibilityIndicatorGraph(String assetId,
+                                                int sampleSize,
+                                                List<DiagramNode> nodes,
+                                                List<DiagramEdge> edges,
+                                                List<DiagramGroup> groups) {
+        String start = assetId + "-start";
+        String determine = assetId + "-determine-eligible-covers";
+        String rules = assetId + "-crr3-ler-rules";
+        String coverEligibility = assetId + "-cover-eligibility-ind";
+        String guarantor = assetId + "-eligible-sa-guarantor-ind";
+        String substitution = assetId + "-substitution-indicator";
+        String exposure = assetId + "-vre-exposure-class";
+        String end = assetId + "-end";
+
+        nodes.add(new DiagramNode(start, "Start", "ellipse", "root", confidenceModel.score(2, 2, sampleSize)));
+        nodes.add(new DiagramNode(determine, "Determine Eligible Guarantees and Security Covers", "rectangle", "process",
+                confidenceModel.score(5, 6, sampleSize)));
+        nodes.add(new DiagramNode(rules, "Eligible Covers Based on CRR3 LER Rules", "rectangle", "process",
+                confidenceModel.score(4, 5, sampleSize)));
+        nodes.add(new DiagramNode(coverEligibility, "Cover Eligibility Ind", "diamond", "decision",
+                confidenceModel.score(4, 5, sampleSize)));
+        nodes.add(new DiagramNode(guarantor, "Eligible SA Guarantor Ind", "diamond", "decision",
+                confidenceModel.score(4, 5, sampleSize)));
+        nodes.add(new DiagramNode(substitution, "Substitution Indicator", "rectangle", "process",
+                confidenceModel.score(3, 4, sampleSize)));
+        nodes.add(new DiagramNode(exposure, "VRE Exposure Class", "rectangle", "process",
+                confidenceModel.score(3, 4, sampleSize)));
+        nodes.add(new DiagramNode(end, "End", "ellipse", "leaf", confidenceModel.score(2, 2, sampleSize)));
+
+        edges.add(new DiagramEdge(start, determine, true, "flow", confidenceModel.score(1, 1, sampleSize), null));
+        edges.add(new DiagramEdge(determine, rules, true, "flow", confidenceModel.score(1, 1, sampleSize), null));
+        edges.add(new DiagramEdge(rules, coverEligibility, true, "flow", confidenceModel.score(1, 1, sampleSize), null));
+        edges.add(new DiagramEdge(coverEligibility, guarantor, true, "flow", confidenceModel.score(1, 1, sampleSize), "Y"));
+        edges.add(new DiagramEdge(coverEligibility, substitution, true, "flow", confidenceModel.score(1, 1, sampleSize), "N"));
+        edges.add(new DiagramEdge(guarantor, substitution, true, "flow", confidenceModel.score(1, 1, sampleSize), "Y"));
+        edges.add(new DiagramEdge(substitution, exposure, true, "flow", confidenceModel.score(1, 1, sampleSize), null));
+        edges.add(new DiagramEdge(exposure, end, true, "flow", confidenceModel.score(1, 1, sampleSize), null));
+
+        String staticData = assetId + "-group-static-data";
+        String cover = assetId + "-group-cover";
+        String request = assetId + "-group-vre-request";
+        groups.add(new DiagramGroup(staticData, "process-group", "Static Data",
+                List.of(new DiagramGroupMember(rules), new DiagramGroupMember(substitution))));
+        groups.add(new DiagramGroup(cover, "process-group", "Cover",
+                List.of(new DiagramGroupMember(coverEligibility), new DiagramGroupMember(guarantor), DiagramGroupMember.groupRef(staticData))));
+        groups.add(new DiagramGroup(request, "process-group", "VRE Request",
+                List.of(new DiagramGroupMember(start), new DiagramGroupMember(determine), new DiagramGroupMember(exposure), new DiagramGroupMember(end), DiagramGroupMember.groupRef(cover))));
     }
 
     private String extractText(byte[] data) {
