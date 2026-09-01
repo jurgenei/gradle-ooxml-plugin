@@ -1,59 +1,59 @@
-<?xml version="1.0" encoding="UTF-8"?><Document xmlns="http://jurgenei.name/canonical">
-    <Metadata>
-        <DocumentId>v1-benchmark</DocumentId>
-        <Version>v1</Version>
-        <SourceFile>v1-benchmark.pptx</SourceFile>
-        <DocumentType>PPTX</DocumentType>
-    </Metadata>
-    <Body>
-        <Paragraph source-path="/ppt/slides/slide1.xml/p[1]">
-            <Text>Overview</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide1.xml/p[2]">
-            <Text>System landscape overview</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide2.xml/p[1]">
-            <Text>Architecture</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide2.xml/p[2]">
-            <Text>CRM</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide2.xml/p[3]">
-            <Text>SAP</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide3.xml/p[1]">
-            <Text>Responsibilities</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide3.xml/p[2]">
-            <Text>App</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide3.xml/p[3]">
-            <Text>Team</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide3.xml/p[4]">
-            <Text>CRM</Text>
-        </Paragraph>
-        <Paragraph source-path="/ppt/slides/slide3.xml/p[5]">
-            <Text>Sales</Text>
-        </Paragraph>
-        <Table source-path="/ppt/slides/slide3.xml/tbl[1]">
-            <Row>
-                <Cell>
-                    <Text>App</Text>
-                </Cell>
-                <Cell>
-                    <Text>Team</Text>
-                </Cell>
-            </Row>
-            <Row>
-                <Cell>
-                    <Text>CRM</Text>
-                </Cell>
-                <Cell>
-                    <Text>Sales</Text>
-                </Cell>
-            </Row>
-        </Table>
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v1-benchmark</documentId>
+        <version>v1</version>
+        <sourceFile>v1-benchmark.pptx</sourceFile>
+        <documentType>PPTX</documentType>
+    </metadata>
+    <body>
+        <para source-path="/ppt/slides/slide1.xml/p[1]">
+            <text>Overview</text>
+        </para>
+        <para source-path="/ppt/slides/slide1.xml/p[2]">
+            <text>System landscape overview</text>
+        </para>
+        <para source-path="/ppt/slides/slide2.xml/p[1]">
+            <text>Architecture</text>
+        </para>
+        <para source-path="/ppt/slides/slide2.xml/p[2]">
+            <text>CRM</text>
+        </para>
+        <para source-path="/ppt/slides/slide2.xml/p[3]">
+            <text>SAP</text>
+        </para>
+        <para source-path="/ppt/slides/slide3.xml/p[1]">
+            <text>Responsibilities</text>
+        </para>
+        <para source-path="/ppt/slides/slide3.xml/p[2]">
+            <text>App</text>
+        </para>
+        <para source-path="/ppt/slides/slide3.xml/p[3]">
+            <text>Team</text>
+        </para>
+        <para source-path="/ppt/slides/slide3.xml/p[4]">
+            <text>CRM</text>
+        </para>
+        <para source-path="/ppt/slides/slide3.xml/p[5]">
+            <text>Sales</text>
+        </para>
+        <table source-path="/ppt/slides/slide3.xml/tbl[1]">
+            <row>
+                <cell>
+                    <text>App</text>
+                </cell>
+                <cell>
+                    <text>Team</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>CRM</text>
+                </cell>
+                <cell>
+                    <text>Sales</text>
+                </cell>
+            </row>
+        </table>
         <graph xmlns="http://graphml.graphdrawing.org/xmlns" source-path="/ppt/slides/slide1.xml/diagram[1]">
             <shape id="2">
                 <label>Title 1</label>
@@ -98,5 +98,5 @@
                 <label>Title 1</label>
             </node>
         </graph>
-    </Body>
-</Document>
+    </body>
+</document>

@@ -47,15 +47,15 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
         String normalized = String.join(" ", tokens).replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
         if (looksLikeHaircutFormula(normalized)) {
             buildHaircutFormulaGraph(assetId, tokens.size(), nodes, edges, groups);
-            return new AssetRecognition(nodes, edges, groups, annotations);
+            return finalizeRecognition(assetId, tokens, nodes, edges, groups, annotations);
         }
         if (looksLikeVreDecisionFlow(normalized)) {
             buildVreDecisionGraph(assetId, tokens.size(), nodes, edges, groups);
-            return new AssetRecognition(nodes, edges, groups, annotations);
+            return finalizeRecognition(assetId, tokens, nodes, edges, groups, annotations);
         }
         if (looksLikeEligibilityIndicatorFlow(normalized)) {
             buildEligibilityIndicatorGraph(assetId, tokens.size(), nodes, edges, groups);
-            return new AssetRecognition(nodes, edges, groups, annotations);
+            return finalizeRecognition(assetId, tokens, nodes, edges, groups, annotations);
         }
 
         String startId = null;
@@ -121,7 +121,82 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
                             + ", edges " + beforeEdges + "->" + edges.size()));
         }
 
+        return finalizeRecognition(assetId, tokens, nodes, edges, groups, annotations);
+    }
+
+    private AssetRecognition finalizeRecognition(String assetId,
+                                                 List<String> tokens,
+                                                 List<DiagramNode> nodes,
+                                                 List<DiagramEdge> edges,
+                                                 List<DiagramGroup> groups,
+                                                 List<DiagramAnnotation> annotations) {
+        int addedCoverageNodes = applyAssetTextCoverageHeuristic(assetId, tokens, nodes, edges, groups);
+        if (addedCoverageNodes > 0) {
+            annotations.add(new DiagramAnnotation("coverage-heuristic", assetId,
+                    confidenceModel.score(Math.min(addedCoverageNodes, 6), 6, tokens.size()),
+                    "added " + addedCoverageNodes + " evidence nodes for unmatched asset-text tokens"));
+        }
         return new AssetRecognition(nodes, edges, groups, annotations);
+    }
+
+    private int applyAssetTextCoverageHeuristic(String assetId,
+                                                List<String> tokens,
+                                                List<DiagramNode> nodes,
+                                                List<DiagramEdge> edges,
+                                                List<DiagramGroup> groups) {
+        Set<String> covered = new LinkedHashSet<>();
+        nodes.stream().map(DiagramNode::getLabel).filter(label -> label != null && !label.isBlank())
+                .map(this::normalizeTokenForCoverage).forEach(covered::add);
+        edges.stream().map(DiagramEdge::getLabel).filter(label -> label != null && !label.isBlank())
+                .map(this::normalizeTokenForCoverage).forEach(covered::add);
+        groups.stream().map(DiagramGroup::getLabel).filter(label -> label != null && !label.isBlank())
+                .map(this::normalizeTokenForCoverage).forEach(covered::add);
+
+        List<String> missing = new ArrayList<>();
+        for (String token : tokens) {
+            String normalizedToken = normalizeTokenForCoverage(token);
+            if (normalizedToken.isBlank() || isCoverageStopToken(normalizedToken)) {
+                continue;
+            }
+            boolean present = covered.stream().anyMatch(label -> label.contains(normalizedToken) || normalizedToken.contains(label));
+            if (!present && missing.stream().noneMatch(existing -> existing.equals(normalizedToken))) {
+                missing.add(normalizedToken);
+            }
+        }
+
+        int limit = Math.min(64, missing.size());
+        for (int i = 0; i < limit; i++) {
+            String token = missing.get(i);
+            String label = token.substring(0, 1).toUpperCase(Locale.ROOT) + token.substring(1);
+            String nodeId = assetId + "-coverage-" + slug(label, i + 1);
+            String geometry = looksLikeDecision(label) ? "diamond" : "rectangle";
+            String semantic = looksLikeDecision(label) ? "decision" : "evidence";
+            nodes.add(new DiagramNode(nodeId, label, geometry, semantic,
+                    confidenceModel.score(1, 4, Math.max(tokens.size(), 1))));
+        }
+        return limit;
+    }
+
+    private String normalizeTokenForCoverage(String value) {
+        if (value == null) {
+            return "";
+        }
+        return normalizeLabel(value)
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9 ]+", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private boolean isCoverageStopToken(String token) {
+        return token.length() < 3
+                || "and".equals(token)
+                || "the".equals(token)
+                || "for".equals(token)
+                || "with".equals(token)
+                || "see section".equals(token)
+                || "yes".equals(token)
+                || "no".equals(token);
     }
 
     private boolean isSuspiciousSingleton(List<String> tokens, List<DiagramNode> nodes, List<DiagramEdge> edges) {
@@ -456,7 +531,7 @@ public final class TextSnippetRecognizer implements AssetRecognizer {
         String request = assetId + "-group-vre-request";
         groups.add(new DiagramGroup(staticData, "process-group", "Static Data",
                 List.of(new DiagramGroupMember(rules), new DiagramGroupMember(substitution))));
-        groups.add(new DiagramGroup(cover, "process-group", "Cover",
+        groups.add(new DiagramGroup(cover, "process-group", "Outstanding/Cover",
                 List.of(new DiagramGroupMember(coverEligibility), new DiagramGroupMember(guarantor), DiagramGroupMember.groupRef(staticData))));
         groups.add(new DiagramGroup(request, "process-group", "VRE Request",
                 List.of(new DiagramGroupMember(start), new DiagramGroupMember(determine), new DiagramGroupMember(exposure), new DiagramGroupMember(end), DiagramGroupMember.groupRef(cover))));

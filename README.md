@@ -8,7 +8,7 @@ The plugin is intentionally focused on canonicalization and package asset extrac
 
 Current canonical output includes:
 
-- Paragraphs, lists, and tables
+- Paragraph (`para`), list (`list`), and table (`table`) structures
 - Links and references
 - Diagram topology (shapes and connectors)
 - Provenance attribute (`source-path`) with optional paragraph labels (for example `h1`, `h2`)
@@ -25,7 +25,7 @@ In this plugin, **canonicalization** means converting different OOXML formats (`
 
 For this project, canonicalization is not only text extraction. It means:
 
-- preserving structure (paragraphs, lists, tables, links, references, diagrams)
+- preserving structure (`para`, `list`, `table`, `link`, `reference`, `graph`)
 - preserving provenance (`source-path`) and media linkage (`Diagram@href`)
 - producing deterministic output (same input -> same canonical shape)
 - hiding OOXML package complexity behind one schema-driven contract (`canonical.xml`)
@@ -196,6 +196,12 @@ tasks.named('validateCanonical', name.jurgenei.gradle.ooxml.ValidateCanonicalTas
 ```
 
 ## Output Conventions
+
+Canonical XML element naming:
+
+- All canonical namespace element names are lowercase.
+- Paragraph element name is `para` (short form).
+- Core shape: `document -> metadata + body -> para/list/table/link/reference (+ graphml graph)`.
 
 - Canonical packages are named from input stem + extension (for example `document.docx` -> `document_docx.zip`).
 - Each package contains:

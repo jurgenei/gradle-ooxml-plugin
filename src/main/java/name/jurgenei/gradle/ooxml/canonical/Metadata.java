@@ -10,16 +10,16 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Metadata {
-    @XmlElement(name = "DocumentId", namespace = CanonicalNamespace.URI, required = true)
+    @XmlElement(name = "documentId", namespace = CanonicalNamespace.URI, required = true)
     private String documentId;
 
-    @XmlElement(name = "Version", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "version", namespace = CanonicalNamespace.URI)
     private String version;
 
-    @XmlElement(name = "SourceFile", namespace = CanonicalNamespace.URI, required = true)
+    @XmlElement(name = "sourceFile", namespace = CanonicalNamespace.URI, required = true)
     private String sourceFile;
 
-    @XmlElement(name = "DocumentType", namespace = CanonicalNamespace.URI, required = true)
+    @XmlElement(name = "documentType", namespace = CanonicalNamespace.URI, required = true)
     private String documentType;
 
     public Metadata() {

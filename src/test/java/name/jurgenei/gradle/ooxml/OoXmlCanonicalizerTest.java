@@ -113,8 +113,8 @@ class OoXmlCanonicalizerTest {
 
     @Test
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
-        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
-        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<Table source-path=\"/ppt/slides/slide", "source-path=\"/ppt/slides/slide", "<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
+        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<table>"));
+        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<table source-path=\"/ppt/slides/slide", "source-path=\"/ppt/slides/slide", "<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
         assertSerializedContains("v1-benchmark.xlsx", List.of("id=\"Applications\"", "id=\"Matrix\"", "id=\"NamedRange\"", "Application", "NamedRange!A1:B2", "A4:B4"));
     }
 
@@ -127,7 +127,7 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "First item", "Second item");
         assertAppearsBefore(xml, "Second item", "Alpha");
         assertAppearsBefore(xml, "Alpha", "Beta");
-        assertAppearsBefore(xml, "Visit https://example.com", "<Table");
+        assertAppearsBefore(xml, "Visit https://example.com", "<table");
         assertAppearsBefore(xml, "Beta", "App");
         assertAppearsBefore(xml, "App", "[A] -&gt; [B]");
         assertAppearsBefore(xml, "[A] -&gt; [B]", "Section B");
@@ -147,21 +147,21 @@ class OoXmlCanonicalizerTest {
         assertFalse(xml.contains("<mrow/>"), "MathML should not contain empty mrow noise");
 
         org.w3c.dom.Document parsed = parseXml(xml);
-        Element body = (Element) parsed.getElementsByTagNameNS(CanonicalNamespace.URI, "Body").item(0);
+        Element body = (Element) parsed.getElementsByTagNameNS(CanonicalNamespace.URI, "body").item(0);
         assertFalse(hasDirectMathChild(body), "MathML must not be a direct Body child");
-        assertTrue(hasParagraphWithMath(parsed), "At least one Paragraph should contain nested MathML");
-        assertTrue(hasCellWithMath(parsed), "At least one Cell should contain nested MathML");
-        assertFalse(xml.contains("<Text>CoverAmt Cov Perc"), "Flattened formula text should be removed from Paragraph payload");
+        assertTrue(hasParagraphWithMath(parsed), "At least one para should contain nested MathML");
+        assertTrue(hasCellWithMath(parsed), "At least one cell should contain nested MathML");
+        assertFalse(xml.contains("<text>CoverAmt Cov Perc"), "Flattened formula text should be removed from para payload");
 
-        int bodyIndex = xml.indexOf("<Body>");
+        int bodyIndex = xml.indexOf("<body>");
         int mathIndex = firstMathTagIndex(xml);
         int proseIndex = xml.indexOf("The cover priority for country risk");
-        assertTrue(bodyIndex >= 0, "Missing token: <Body>");
+        assertTrue(bodyIndex >= 0, "Missing token: <body>");
         assertTrue(mathIndex >= 0, "Missing token: :math");
         assertTrue(proseIndex >= 0, "Missing token: The cover priority for country risk");
         assertTrue(bodyIndex < mathIndex && mathIndex < proseIndex,
                 "Expected first MathML fragment to appear before narrative prose");
-        assertAppearsBefore(xml, "Where:", "<Table");
+        assertAppearsBefore(xml, "Where:", "<table");
     }
 
     @Test
@@ -295,7 +295,7 @@ class OoXmlCanonicalizerTest {
     }
 
     private boolean hasParagraphWithMath(org.w3c.dom.Document document) {
-        NodeList paragraphs = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Paragraph");
+        NodeList paragraphs = document.getElementsByTagNameNS(CanonicalNamespace.URI, "para");
         for (int i = 0; i < paragraphs.getLength(); i++) {
             if (hasDirectMathChild((Element) paragraphs.item(i))) {
                 return true;
@@ -305,7 +305,7 @@ class OoXmlCanonicalizerTest {
     }
 
     private boolean hasCellWithMath(org.w3c.dom.Document document) {
-        NodeList cells = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Cell");
+        NodeList cells = document.getElementsByTagNameNS(CanonicalNamespace.URI, "cell");
         for (int i = 0; i < cells.getLength(); i++) {
             if (hasDirectMathChild((Element) cells.item(i))) {
                 return true;

@@ -16,9 +16,9 @@ import java.util.List;
  * Canonical paragraph with source provenance attributes.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "Paragraph", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "para", namespace = CanonicalNamespace.URI)
 public class Paragraph {
-    @XmlElement(name = "Text", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "text", namespace = CanonicalNamespace.URI)
     private List<String> texts = new ArrayList<>();
 
     @XmlAnyElement

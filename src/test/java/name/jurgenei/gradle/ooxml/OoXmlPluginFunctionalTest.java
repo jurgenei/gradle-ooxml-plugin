@@ -122,19 +122,19 @@ class OoXmlPluginFunctionalTest {
                 """, StandardCharsets.UTF_8);
 
         Files.writeString(projectDir.resolve("src/main/xml/canonical.xml"), """
-                <Document xmlns='http://jurgenei.name/canonical'>
-                  <Metadata>
-                    <DocumentId>sample</DocumentId>
-                    <Version>1</Version>
-                    <SourceFile>sample.docx</SourceFile>
-                    <DocumentType>DOCX</DocumentType>
-                  </Metadata>
-                  <Body>
-                    <Paragraph source-path='/word/document/p[1]'>
-                      <Text>Hello</Text>
-                    </Paragraph>
-                  </Body>
-                </Document>
+                <document xmlns='http://jurgenei.name/canonical'>
+                  <metadata>
+                    <documentId>sample</documentId>
+                    <version>1</version>
+                    <sourceFile>sample.docx</sourceFile>
+                    <documentType>DOCX</documentType>
+                  </metadata>
+                  <body>
+                    <para source-path='/word/document/p[1]'>
+                      <text>Hello</text>
+                    </para>
+                  </body>
+                </document>
                 """, StandardCharsets.UTF_8);
 
         BuildResult result = GradleRunner.create()

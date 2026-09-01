@@ -1,14 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?><Document xmlns="http://jurgenei.name/canonical">
-    <Metadata>
-        <DocumentId>v2-diagrams</DocumentId>
-        <Version>v2</Version>
-        <SourceFile>v2-diagrams.docx</SourceFile>
-        <DocumentType>DOCX</DocumentType>
-    </Metadata>
-    <Body>
-        <Paragraph source-path="/word/document/p[1]">
-            <Text>Image78.emf</Text>
-        </Paragraph>
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v2-diagrams</documentId>
+        <version>v2</version>
+        <sourceFile>v2-diagrams.docx</sourceFile>
+        <documentType>DOCX</documentType>
+    </metadata>
+    <body>
+        <para source-path="/word/document/p[1]">
+            <text>Image78.emf</text>
+        </para>
         <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]">
             <node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root">
                 <label>Start</label>
@@ -48,9 +48,9 @@
                 <text>generated 5 nodes, 4 edges</text>
             </annotation>
         </graph>
-        <Paragraph source-path="/word/document/p[3]">
-            <Text>image81.emf</Text>
-        </Paragraph>
+        <para source-path="/word/document/p[3]">
+            <text>image81.emf</text>
+        </para>
         <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image2.emf" source-path="/word/document/p[3]/drawing[1]">
             <node confidence="0.7" geometry="ellipse" id="25-start" semantic="root">
                 <label>Start</label>
@@ -104,33 +104,39 @@
                 <text>generated 6 nodes, 5 edges</text>
             </annotation>
         </graph>
-        <Paragraph source-path="/word/document/p[5]">
-            <Text>flow chart</Text>
-        </Paragraph>
+        <para source-path="/word/document/p[5]">
+            <text>flow chart</text>
+        </para>
         <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image3.emf" source-path="/word/document/p[5]/drawing[1]">
-            <node confidence="0.71" geometry="ellipse" id="200-start" semantic="root">
+            <node confidence="0.7" geometry="ellipse" id="200-start" semantic="root">
                 <label>Start</label>
             </node>
-            <node confidence="0.7" geometry="rectangle" id="200-pro-rata-basis" semantic="process">
+            <node confidence="0.69" geometry="rectangle" id="200-pro-rata-basis" semantic="process">
                 <label>Calculate Pro Rata Basis</label>
             </node>
-            <node confidence="0.7" geometry="diamond" id="200-if-cover" semantic="decision">
+            <node confidence="0.69" geometry="diamond" id="200-if-cover" semantic="decision">
                 <label>If Cover Available</label>
             </node>
-            <node confidence="0.7" geometry="diamond" id="200-if-residual-value" semantic="decision">
+            <node confidence="0.69" geometry="diamond" id="200-if-residual-value" semantic="decision">
                 <label>If Residual Value</label>
             </node>
-            <node confidence="0.69" geometry="rectangle" id="200-residual-value" semantic="process">
+            <node confidence="0.68" geometry="rectangle" id="200-residual-value" semantic="process">
                 <label>Residual Value</label>
             </node>
-            <node confidence="0.69" geometry="rectangle" id="200-no-allocation" semantic="process">
+            <node confidence="0.68" geometry="rectangle" id="200-no-allocation" semantic="process">
                 <label>No Allocation</label>
             </node>
-            <node confidence="0.69" geometry="rectangle" id="200-vre-request" semantic="process">
+            <node confidence="0.68" geometry="rectangle" id="200-vre-request" semantic="process">
                 <label>VRE Request</label>
             </node>
-            <node confidence="0.71" geometry="ellipse" id="200-end" semantic="leaf">
+            <node confidence="0.7" geometry="ellipse" id="200-end" semantic="leaf">
                 <label>End</label>
+            </node>
+            <node confidence="0.59" geometry="rectangle" id="200-coverage-osgr" semantic="evidence">
+                <label>Osgr</label>
+            </node>
+            <node confidence="0.59" geometry="rectangle" id="200-coverage-sum-pro-rata-basis" semantic="evidence">
+                <label>Sum pro rata basis</label>
             </node>
             <edge confidence="0.69" directed="true" semantic="flow" source="200-start" target="200-pro-rata-basis"/>
             <edge confidence="0.69" directed="true" semantic="flow" source="200-pro-rata-basis" target="200-if-cover"/>
@@ -174,12 +180,15 @@
             <annotation confidence="0.95" kind="asset-text" target="200">
                 <text>Calculate Pro Rata Basis Cover I | Start | Pro Rata Basis | Max Amt Coverable | Osgr | Sum (Pro Rata Basis | If Residual Value | No Allocation</text>
             </annotation>
+            <annotation confidence="0.66" kind="coverage-heuristic" target="200">
+                <text>added 2 evidence nodes for unmatched asset-text tokens</text>
+            </annotation>
             <annotation confidence="0.89" kind="emf-stats" target="200">
                 <text>records text=32, shape=0, connector=0</text>
             </annotation>
             <annotation confidence="0.7" kind="inferred-flow" target="200">
-                <text>generated 8 nodes, 9 edges</text>
+                <text>generated 10 nodes, 9 edges</text>
             </annotation>
         </graph>
-    </Body>
-</Document>
+    </body>
+</document>

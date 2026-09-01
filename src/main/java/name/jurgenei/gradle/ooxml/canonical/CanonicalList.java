@@ -14,12 +14,12 @@ import java.util.List;
  * Canonical list container with ordered/unordered semantics.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "List", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "list", namespace = CanonicalNamespace.URI)
 public class CanonicalList {
     @XmlAttribute(name = "ordered")
     private boolean ordered;
 
-    @XmlElement(name = "Item", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "item", namespace = CanonicalNamespace.URI)
     private List<ListItem> items = new ArrayList<>();
 
     public CanonicalList() {

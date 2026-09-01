@@ -13,7 +13,7 @@ import java.util.List;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Row {
-    @XmlElement(name = "Cell", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "cell", namespace = CanonicalNamespace.URI)
     private List<Cell> cells = new ArrayList<>();
 
     public Row() {
