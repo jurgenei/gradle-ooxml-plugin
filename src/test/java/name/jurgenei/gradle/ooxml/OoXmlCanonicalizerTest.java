@@ -233,6 +233,29 @@ class OoXmlCanonicalizerTest {
                 "Expected nested group references in third diagram");
     }
 
+    @Test
+    void canonicalizesDocxPngDiagramFixtureWithOcrAnnotations() throws Exception {
+        Path file = copyFixture("v3-png.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertEquals("v3", document.getMetadata().getVersion());
+        assertTrue(document.getBody().getDiagrams().size() >= 2);
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getHref() != null && diagram.getHref().startsWith("media/") && diagram.getHref().endsWith(".png")));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "asset".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "png-ocr".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "png-stats".equals(annotation.getKind()))));
+
+        String xml = serialize(document);
+        assertTrue(xml.contains("kind=\"png-ocr\""));
+        assertTrue(xml.contains("kind=\"png-stats\""));
+        assertTrue(xml.contains("href=\"media/") && xml.contains(".png\""));
+    }
+
     private void assertDeterministic(String fixtureName) throws Exception {
         Path file = copyFixture(fixtureName);
         String first = serialize(canonicalizer.canonicalize(file.toFile()));

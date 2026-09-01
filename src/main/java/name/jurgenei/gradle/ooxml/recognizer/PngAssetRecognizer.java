@@ -17,14 +17,22 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * PNG recognizer that combines OpenCV pre-processing with Tess4J OCR.
  */
 public final class PngAssetRecognizer implements AssetRecognizer {
     private static final byte[] PNG_SIGNATURE = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    private static final Pattern PLANTUML_TOKEN_PATTERN = Pattern.compile(
+            "(?i)\\*\\s*([^*;\\r\\n]+)|:([^;\\r\\n]+)|\\bif\\s*\\([^\\)]{1,120}\\)|\\bwhile\\s*\\([^\\)]{1,120}\\)|\\bend\\s+normally\\b|\\bstop\\b|\\bstep\\s*\\d+\\b"
+    );
 
     private final ConfidenceModel confidenceModel;
     private final TextSnippetRecognizer textSnippetRecognizer;
@@ -72,7 +80,13 @@ public final class PngAssetRecognizer implements AssetRecognizer {
                 : textSnippetRecognizer.recognize(assetId, assetPath, ocrText.getBytes(StandardCharsets.UTF_16LE));
 
         AssetRecognition synthesized = synthesizeFromOcrTokens(assetId, ocrText);
-        AssetRecognition effective = synthesized.nodes().size() > base.nodes().size() ? synthesized : base;
+        boolean hasPlantUmlMarkers = hasPlantUmlMarkers(ocrText);
+        AssetRecognition effective = hasPlantUmlMarkers && !synthesized.nodes().isEmpty()
+                ? synthesized
+                : synthesized.nodes().size() > base.nodes().size()
+                || (synthesized.nodes().size() == base.nodes().size() && synthesized.edges().size() > base.edges().size())
+                ? synthesized
+                : base;
 
         List<DiagramAnnotation> annotations = new ArrayList<>(effective.annotations());
         annotations.add(new DiagramAnnotation(
@@ -96,13 +110,7 @@ public final class PngAssetRecognizer implements AssetRecognizer {
             return AssetRecognition.empty();
         }
 
-        List<String> tokens = new ArrayList<>();
-        for (String raw : ocrText.split("[\\|\\r\\n]+")) {
-            String token = normalizeText(raw);
-            if (!token.isBlank()) {
-                tokens.add(token);
-            }
-        }
+        List<OcrToken> tokens = extractOrderedTokens(ocrText);
         if (tokens.size() < 2) {
             return AssetRecognition.empty();
         }
@@ -110,16 +118,23 @@ public final class PngAssetRecognizer implements AssetRecognizer {
         List<DiagramNode> nodes = new ArrayList<>();
         List<DiagramEdge> edges = new ArrayList<>();
         List<String> nodeIds = new ArrayList<>();
+        List<OcrTokenKind> nodeKinds = new ArrayList<>();
 
         for (int i = 0; i < Math.min(tokens.size(), 16); i++) {
-            String label = tokens.get(i);
+            OcrToken token = tokens.get(i);
+            String label = token.label();
             String nodeId = assetId + "-png-" + i;
-            String lower = label.toLowerCase(Locale.ROOT);
-            String geometry = ("start".equals(lower) || "end".equals(lower)) ? "ellipse"
-                    : lower.startsWith("if ") ? "diamond" : "rectangle";
-            String semantic = ("start".equals(lower)) ? "root"
-                    : ("end".equals(lower)) ? "leaf"
-                    : lower.startsWith("if ") ? "decision" : "process";
+            String geometry = switch (token.kind()) {
+                case DECISION -> "diamond";
+                case TERMINAL -> "ellipse";
+                default -> "rectangle";
+            };
+            String semantic = switch (token.kind()) {
+                case DECISION -> "decision";
+                case TERMINAL -> "leaf";
+                case LOOP -> "loop";
+                default -> "process";
+            };
             nodes.add(new DiagramNode(
                     nodeId,
                     label,
@@ -128,20 +143,224 @@ public final class PngAssetRecognizer implements AssetRecognizer {
                     confidenceModel.score(2, 3, tokens.size())
             ));
             nodeIds.add(nodeId);
+            nodeKinds.add(token.kind());
         }
 
-        for (int i = 0; i + 1 < nodeIds.size(); i++) {
-            edges.add(new DiagramEdge(
-                    nodeIds.get(i),
-                    nodeIds.get(i + 1),
-                    true,
-                    "flow",
-                    confidenceModel.score(1, 1, nodeIds.size()),
-                    null
-            ));
+        if (isConditionLoopGraph(nodeKinds, nodes)) {
+            addConditionLoopEdges(edges, nodeIds, nodeKinds, nodes);
+        } else {
+            for (int i = 0; i + 1 < nodeIds.size(); i++) {
+                edges.add(new DiagramEdge(
+                        nodeIds.get(i),
+                        nodeIds.get(i + 1),
+                        true,
+                        "flow",
+                        confidenceModel.score(1, 1, nodeIds.size()),
+                        null
+                ));
+            }
         }
 
         return new AssetRecognition(nodes, edges, List.of(), List.of());
+    }
+
+    private boolean isConditionLoopGraph(List<OcrTokenKind> nodeKinds, List<DiagramNode> nodes) {
+        boolean hasDecision = nodeKinds.stream().anyMatch(kind -> kind == OcrTokenKind.DECISION);
+        boolean hasLoop = nodeKinds.stream().anyMatch(kind -> kind == OcrTokenKind.LOOP);
+        boolean hasStop = nodes.stream().anyMatch(node -> "stop".equalsIgnoreCase(node.getLabel()));
+        return hasDecision && hasLoop && hasStop;
+    }
+
+    private void addConditionLoopEdges(List<DiagramEdge> edges,
+                                       List<String> nodeIds,
+                                       List<OcrTokenKind> nodeKinds,
+                                       List<DiagramNode> nodes) {
+        int decision = firstIndex(nodeKinds, OcrTokenKind.DECISION);
+        int loop = firstIndex(nodeKinds, OcrTokenKind.LOOP);
+        int endNormally = firstIndexByLabel(nodes, "end normally");
+        int stop = firstIndexByLabel(nodes, "stop");
+        int stepInsideLoop = firstProcessAfter(nodeKinds, loop);
+
+        if (decision > 0) {
+            addEdge(edges, nodeIds.get(decision - 1), nodeIds.get(decision), nodeIds.size());
+        }
+        if (decision >= 0 && loop >= 0) {
+            addEdge(edges, nodeIds.get(decision), nodeIds.get(loop), nodeIds.size());
+        }
+        if (loop >= 0 && stepInsideLoop >= 0) {
+            addEdge(edges, nodeIds.get(loop), nodeIds.get(stepInsideLoop), nodeIds.size());
+            addEdge(edges, nodeIds.get(stepInsideLoop), nodeIds.get(loop), nodeIds.size());
+        }
+        if (decision >= 0 && endNormally >= 0) {
+            addEdge(edges, nodeIds.get(decision), nodeIds.get(endNormally), nodeIds.size());
+        }
+        if (endNormally >= 0 && stop >= 0) {
+            addEdge(edges, nodeIds.get(endNormally), nodeIds.get(stop), nodeIds.size());
+        }
+
+        if (edges.isEmpty()) {
+            for (int i = 0; i + 1 < nodeIds.size(); i++) {
+                addEdge(edges, nodeIds.get(i), nodeIds.get(i + 1), nodeIds.size());
+            }
+        }
+    }
+
+    private int firstProcessAfter(List<OcrTokenKind> nodeKinds, int startInclusive) {
+        for (int i = Math.max(0, startInclusive + 1); i < nodeKinds.size(); i++) {
+            if (nodeKinds.get(i) == OcrTokenKind.PROCESS) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int firstIndex(List<OcrTokenKind> kinds, OcrTokenKind target) {
+        for (int i = 0; i < kinds.size(); i++) {
+            if (kinds.get(i) == target) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int firstIndexByLabel(List<DiagramNode> nodes, String label) {
+        for (int i = 0; i < nodes.size(); i++) {
+            if (label.equalsIgnoreCase(nodes.get(i).getLabel())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void addEdge(List<DiagramEdge> edges, String source, String target, int nodeCount) {
+        edges.add(new DiagramEdge(
+                source,
+                target,
+                true,
+                "flow",
+                confidenceModel.score(1, 1, nodeCount),
+                null
+        ));
+    }
+
+    private List<OcrToken> extractOrderedTokens(String ocrText) {
+        LinkedHashSet<String> orderedLabels = new LinkedHashSet<>();
+        List<OcrToken> orderedTokens = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        boolean plantUml = hasPlantUmlMarkers(ocrText);
+
+        Matcher matcher = PLANTUML_TOKEN_PATTERN.matcher(ocrText);
+        while (matcher.find()) {
+            String candidate = matcher.group(1) != null ? matcher.group(1)
+                    : matcher.group(2) != null ? matcher.group(2)
+                    : matcher.group();
+            addToken(toToken(candidate), orderedLabels, orderedTokens, seen);
+        }
+
+        // Fallback keeps previous separator behavior for generic OCR streams.
+        if (!plantUml) {
+            for (String raw : ocrText.split("[\\|;\\r\\n]+")) {
+                addToken(toToken(raw), orderedLabels, orderedTokens, seen);
+            }
+        }
+
+        if (!orderedTokens.isEmpty()) {
+            return orderedTokens;
+        }
+
+        List<OcrToken> fallbackTokens = new ArrayList<>();
+        for (String token : orderedLabels) {
+            fallbackTokens.add(new OcrToken(token, OcrTokenKind.PROCESS));
+        }
+        return fallbackTokens;
+    }
+
+    private void addToken(OcrToken token,
+                          LinkedHashSet<String> orderedLabels,
+                          List<OcrToken> orderedTokens,
+                          Set<String> seen) {
+        if (token == null || token.label().isBlank()) {
+            return;
+        }
+        orderedLabels.add(token.label());
+        String key = token.label().toLowerCase(Locale.ROOT);
+        if (seen.add(key)) {
+            orderedTokens.add(token);
+        }
+    }
+
+    private OcrToken toToken(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String token = raw.replaceAll("(?i)@startuml|@enduml", " ")
+                .replaceAll("[-]{1,2}>", " ")
+                .replaceAll("^[-*:\\s]+", "")
+                .replaceAll("[-*:\\s]+$", "")
+                .replaceAll("\\s+", " ")
+                .trim();
+        if (token.isEmpty()) {
+            return null;
+        }
+
+        String lower = token.toLowerCase(Locale.ROOT);
+        if ("then".equals(lower)
+                || "else".equals(lower)
+                || "endif".equals(lower)
+                || "endwhile".equals(lower)
+                || "detach".equals(lower)) {
+            return null;
+        }
+
+        if ("start".equals(lower)) {
+            return new OcrToken("Start", OcrTokenKind.PROCESS);
+        }
+        if (lower.startsWith("step")) {
+            return new OcrToken(token.replaceAll("(?i)^step\\s*", "Step "), OcrTokenKind.PROCESS);
+        }
+        if (lower.startsWith("if")) {
+            return new OcrToken(extractBracketValue(token, "if"), OcrTokenKind.DECISION);
+        }
+        if (lower.startsWith("while")) {
+            return new OcrToken(extractBracketValue(token, "while"), OcrTokenKind.LOOP);
+        }
+        if ("stop".equals(lower)) {
+            return new OcrToken("Stop", OcrTokenKind.TERMINAL);
+        }
+        if ("end".equals(lower) || lower.startsWith("end ")) {
+            return new OcrToken(token, OcrTokenKind.TERMINAL);
+        }
+        return new OcrToken(token, OcrTokenKind.PROCESS);
+    }
+
+    private String extractBracketValue(String token, String prefix) {
+        String cleaned = token.replaceAll("(?i)^" + prefix + "\\s*", "").trim();
+        if (cleaned.startsWith("(") && cleaned.contains(")")) {
+            int close = cleaned.indexOf(')');
+            String value = cleaned.substring(1, close).trim();
+            if (!value.isEmpty()) {
+                return value;
+            }
+        }
+        return cleaned;
+    }
+
+    private boolean hasPlantUmlMarkers(String text) {
+        if (text == null) {
+            return false;
+        }
+        String lower = text.toLowerCase(Locale.ROOT);
+        return lower.contains("@startuml") && lower.contains("@enduml");
+    }
+
+    private enum OcrTokenKind {
+        PROCESS,
+        DECISION,
+        LOOP,
+        TERMINAL
+    }
+
+    private record OcrToken(String label, OcrTokenKind kind) {
     }
 
     private Double ocrConfidence(String text) {
@@ -267,4 +486,3 @@ public final class PngAssetRecognizer implements AssetRecognizer {
         }
     }
 }
-

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v3-png</documentId>
+        <version>v3</version>
+        <sourceFile>v3-png.docx</sourceFile>
+        <documentType>DOCX</documentType>
+    </metadata>
+    <body>
+        <para source-path="/word/document/p[1]">
+            <text>Diagram 1</text>
+        </para>
+        <graph href="media/image1.png" source-path="/word/document/p[1]/drawing[1]" xmlns="http://graphml.graphdrawing.org/xmlns">
+            <node confidence="0.67" geometry="rectangle" id="64005151-png-0" semantic="process">
+                <label>Action 1</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="64005151-png-1" semantic="process">
+                <label>Action 2</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="64005151-png-2" semantic="process">
+                <label>Action 3</label>
+            </node>
+            <edge confidence="0.74" directed="true" semantic="flow" source="64005151-png-0" target="64005151-png-1"/>
+            <edge confidence="0.74" directed="true" semantic="flow" source="64005151-png-1" target="64005151-png-2"/>
+            <annotation confidence="0.95" kind="asset" target="64005151">
+                <text>word/media/image1.png</text>
+            </annotation>
+        </graph>
+        <para source-path="/word/document/p[2]">
+            <text>Diagram 2</text>
+        </para>
+        <graph href="media/image2.png" source-path="/word/document/p[3]/drawing[1]" xmlns="http://graphml.graphdrawing.org/xmlns">
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-0" semantic="process">
+                <label>Step 1</label>
+            </node>
+            <node confidence="0.67" geometry="diamond" id="1666746648-png-1" semantic="decision">
+                <label>condition1</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-2" semantic="loop">
+                <label>loop forever</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-3" semantic="process">
+                <label>Step 2</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-4" semantic="process">
+                <label>end normally</label>
+            </node>
+            <node confidence="0.67" geometry="ellipse" id="1666746648-png-5" semantic="leaf">
+                <label>Stop</label>
+            </node>
+            <edge confidence="0.74" directed="true" semantic="flow" source="1666746648-png-0" target="1666746648-png-1"/>
+            <edge confidence="0.74" directed="true" semantic="flow" source="1666746648-png-1" target="1666746648-png-2"/>
+            <edge confidence="0.74" directed="true" semantic="flow" source="1666746648-png-2" target="1666746648-png-3"/>
+            <edge confidence="0.74" directed="true" semantic="flow" source="1666746648-png-3" target="1666746648-png-2"/>
+            <edge confidence="0.74" directed="true" semantic="flow" source="1666746648-png-1" target="1666746648-png-4"/>
+            <edge confidence="0.74" directed="true" semantic="flow" source="1666746648-png-4" target="1666746648-png-5"/>
+            <annotation confidence="0.95" kind="asset" target="1666746648">
+                <text>word/media/image2.png</text>
+            </annotation>
+        </graph>
+    </body>
+</document>
+
