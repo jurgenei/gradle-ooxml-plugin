@@ -37,7 +37,7 @@ class ValidateCanonicalTaskTest {
                 </document>
                 """, StandardCharsets.UTF_8);
 
-        ValidateCanonicalTask task = project.getTasks().create("validateCanonical", ValidateCanonicalTask.class);
+        ValidateCanonicalTask task = project.getTasks().register("validateCanonical", ValidateCanonicalTask.class).get();
         task.getInputDirectory().set(project.getLayout().getProjectDirectory().dir("build/ooxml/canonical"));
 
         assertDoesNotThrow(task::validate);
@@ -69,7 +69,7 @@ class ValidateCanonicalTaskTest {
             zip.closeEntry();
         }
 
-        ValidateCanonicalTask task = project.getTasks().create("validateCanonicalZip", ValidateCanonicalTask.class);
+        ValidateCanonicalTask task = project.getTasks().register("validateCanonicalZip", ValidateCanonicalTask.class).get();
         task.getInputDirectory().set(project.getLayout().getProjectDirectory().dir("build/ooxml/canonical"));
 
         assertDoesNotThrow(task::validate);

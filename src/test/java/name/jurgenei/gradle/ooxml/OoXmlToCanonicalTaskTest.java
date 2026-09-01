@@ -29,7 +29,7 @@ class OoXmlToCanonicalTaskTest {
         copyFixture(docs, "v1-benchmark.pptx", "slides.pptx");
         copyFixture(docs, "v1-benchmark.xlsx", "register.xlsx");
 
-        OoXmlToCanonicalTask task = project.getTasks().create("ooxmlToCanonical", OoXmlToCanonicalTask.class);
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonical", OoXmlToCanonicalTask.class).get();
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx", "**/*.pptx", "**/*.xlsx")));
         task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
 
@@ -109,7 +109,7 @@ class OoXmlToCanonicalTaskTest {
         Files.createDirectories(docs);
         copyFixture(docs, "v2-diagrams.docx", "v2-diagrams.docx");
 
-        OoXmlToCanonicalTask task = project.getTasks().create("ooxmlToCanonicalLegacy", OoXmlToCanonicalTask.class);
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalLegacy", OoXmlToCanonicalTask.class).get();
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
         task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
         task.getLegacyXmlOutput().set(true);
@@ -135,7 +135,7 @@ class OoXmlToCanonicalTaskTest {
         Files.createDirectories(docs);
         copyFixture(docs, "v2-diagrams.docx", "v2-diagrams.docx");
 
-        OoXmlToCanonicalTask task = project.getTasks().create("ooxmlToCanonicalRecognizers", OoXmlToCanonicalTask.class);
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalRecognizers", OoXmlToCanonicalTask.class).get();
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
         task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
         task.getRecognizerClassNames().set(java.util.List.of("name.jurgenei.gradle.ooxml.recognizer.EmfAssetRecognizer"));

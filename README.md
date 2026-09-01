@@ -80,6 +80,61 @@ Current strategy:
 - use Tesseract for OCR text extraction
 - infer canonical graph hints with confidence scores; keep as fallback due to OCR variability
 
+## PNG Asset Recognizer (`PngAssetRecognizer`)
+
+`PngAssetRecognizer` is active in default `RecognizerRegistry` discovery via `META-INF/services`.
+It handles `.png` assets, runs OpenCV preprocessing (grayscale + denoise + Otsu threshold), then runs Tess4J OCR.
+Recognized text feeds topology inference and emits canonical graph evidence with `png-ocr` and `png-stats` annotations.
+
+Behavior when native OCR runtime is missing:
+
+- plugin does not crash conversion flow
+- recognizer returns empty OCR text and falls back to non-OCR diagram inference paths
+- canonical package still generated
+
+### Runtime Setup: macOS
+
+OpenCV native loading is provided by `org.openpnp:opencv` dependency. No separate Homebrew OpenCV required for default path.
+Tess4J needs native `tesseract` and `leptonica` libraries available on machine.
+
+```zsh
+brew update
+brew install tesseract leptonica
+brew install tesseract-lang
+```
+
+Optional environment setup for predictable OCR behavior:
+
+```zsh
+export TESSDATA_PREFIX="$(brew --prefix)/share/tessdata"
+export DYLD_LIBRARY_PATH="$(brew --prefix tesseract)/lib:$(brew --prefix leptonica)/lib:${DYLD_LIBRARY_PATH}"
+```
+
+### Runtime Setup: Azure Pipelines Ubuntu (`ubuntu-latest`)
+
+Install native OCR dependencies before running Gradle tasks/tests.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y tesseract-ocr libtesseract-dev libleptonica-dev tesseract-ocr-eng
+tesseract --version
+tesseract --list-langs | grep -E '^eng$' || true
+```
+
+If runner needs explicit native library path for JVM process:
+
+```bash
+./gradlew test -Djava.library.path=/usr/lib:/usr/lib/x86_64-linux-gnu
+```
+
+### Quick Verification
+
+Run focused PNG recognizer tests:
+
+```bash
+./gradlew test --tests "name.jurgenei.gradle.ooxml.recognizer.PngAssetRecognizerTest"
+```
+
 ### Implementation Sequence
 
 1. add an `AssetAnalyzer` extension point by media type
