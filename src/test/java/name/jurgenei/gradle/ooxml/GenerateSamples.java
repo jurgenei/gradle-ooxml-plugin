@@ -20,6 +20,7 @@ class GenerateSamples {
 
         Path samplesDir = Paths.get("samples/ooxml-canonical-benchmark-v1");
         Path samplesV2Dir = Paths.get("samples/ooxml-canonical-benchmark-v2");
+        Path samplesV3Dir = Paths.get("samples/ooxml-canonical-benchmark-v3");
 
         // Generate docx sample
         generateSample(canonicalizer, serializer, "v1-benchmark.docx", samplesDir.resolve("v1-benchmark.docx.sample.xml"));
@@ -32,6 +33,9 @@ class GenerateSamples {
 
         // Generate v2 diagrams sample
         generateSample(canonicalizer, serializer, "v2-diagrams.docx", samplesV2Dir.resolve("v2-diagrams.xml"));
+
+        // Generate v3 PNG sample
+        generateSample(canonicalizer, serializer, "v3-png.docx", samplesV3Dir.resolve("v3-png.xml"));
 
         System.out.println("Sample XML files generated successfully!");
     }

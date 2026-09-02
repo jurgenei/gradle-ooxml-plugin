@@ -250,6 +250,29 @@ class OoXmlCanonicalizerTest {
         assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
                 diagram.getAnnotations().stream().anyMatch(annotation -> "png-stats".equals(annotation.getKind()))));
 
+        var first = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[1]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(3, first.getNodes().size());
+        assertEquals(2, first.getEdges().size());
+        assertTrue(first.getNodes().stream().anyMatch(node -> "Action 1".equals(node.getLabel())));
+        assertTrue(first.getNodes().stream().anyMatch(node -> "Action 2".equals(node.getLabel())));
+        assertTrue(first.getNodes().stream().anyMatch(node -> "Action 3".equals(node.getLabel())));
+
+        var second = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[3]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(6, second.getNodes().size());
+        assertEquals(6, second.getEdges().size());
+        assertTrue(second.getNodes().stream().anyMatch(node -> "Step 1".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "condition1".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "loop forever".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "Step 2".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "end normally".equalsIgnoreCase(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "Stop".equals(node.getLabel())));
+
         String xml = serialize(document);
         assertTrue(xml.contains("kind=\"png-ocr\""));
         assertTrue(xml.contains("kind=\"png-stats\""));

@@ -33,7 +33,7 @@ These technologies are candidates for targeted enrichment behind feature flags:
   - add robust vector parsing for shape/connector/text mapping
 - **EMF -> FreeHEP**
   - improve extraction of vector primitives and embedded text from EMF/WMF
-- **PNG -> OpenCV + Tesseract**
+- **PNG -> OpenCV + PaddleOCR (ONNX/DJL)**
   - add OCR-based fallback for raster-only diagram artifacts
 
 ## Adoption Rules

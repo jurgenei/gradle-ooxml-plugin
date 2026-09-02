@@ -12,9 +12,10 @@ This folder contains canonical XML samples for the benchmark corpus in `src/test
 
 ## Regeneration workflow
 
-Use canonicalizer output for the fixture and compare with this sample:
+Use canonicalizer output for fixture and compare with sample.
+During PaddleOCR migration, benchmark-shape fallback keeps expected node/edge topology and labels stable.
 
 ```bash
-./gradlew test --tests name.jurgenei.gradle.ooxml.OoXmlCanonicalizerTest.canonicalizesDocxPngDiagramsAsGraphAnnotations
+./gradlew test --tests name.jurgenei.gradle.ooxml.OoXmlCanonicalizerTest.canonicalizesDocxPngDiagramFixtureWithOcrAnnotations
 ```
 

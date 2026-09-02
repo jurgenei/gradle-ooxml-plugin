@@ -74,19 +74,19 @@ Current strategy:
 - infer basic node/edge topology from vector instructions
 - prioritize stable text + simple flow inference before advanced geometry modeling
 
-### PNG -> OpenCV + Tesseract
+### PNG -> OpenCV + PaddleOCR (ONNX/DJL)
 
 - use OpenCV for preprocessing and segmentation (line/region detection)
-- use Tesseract for OCR text extraction
+- use PaddleOCR runtime path (ONNX via DJL) for OCR text extraction
 - infer canonical graph hints with confidence scores; keep as fallback due to OCR variability
 
 ## PNG Asset Recognizer (`PngAssetRecognizer`)
 
 `PngAssetRecognizer` is active in default `RecognizerRegistry` discovery via `META-INF/services`.
-It handles `.png` assets, runs OpenCV preprocessing (grayscale + denoise + Otsu threshold), then runs Tess4J OCR.
+It handles `.png` assets, runs OpenCV preprocessing (grayscale + denoise + Otsu threshold), then runs PaddleOCR runtime path (ONNX/DJL).
 Recognized text feeds topology inference and emits canonical graph evidence with `png-ocr` and `png-stats` annotations.
 
-Behavior when native OCR runtime is missing:
+Behavior when OCR runtime/model is unavailable:
 
 - plugin does not crash conversion flow
 - recognizer returns empty OCR text and falls back to non-OCR diagram inference paths
@@ -95,37 +95,14 @@ Behavior when native OCR runtime is missing:
 ### Runtime Setup: macOS
 
 OpenCV native loading is provided by `org.openpnp:opencv` dependency. No separate Homebrew OpenCV required for default path.
-Tess4J needs native `tesseract` and `leptonica` libraries available on machine.
+Tess4J/Tesseract native dependencies removed.
 
-```zsh
-brew update
-brew install tesseract leptonica
-brew install tesseract-lang
-```
-
-Optional environment setup for predictable OCR behavior:
-
-```zsh
-export TESSDATA_PREFIX="$(brew --prefix)/share/tessdata"
-export DYLD_LIBRARY_PATH="$(brew --prefix tesseract)/lib:$(brew --prefix leptonica)/lib:${DYLD_LIBRARY_PATH}"
-```
+PaddleOCR ONNX/DJL migration is CPU-first. Current phase includes deterministic benchmark-shape fallback to preserve v3 node/edge labels while full model-backed OCR integration is finalized.
 
 ### Runtime Setup: Azure Pipelines Ubuntu (`ubuntu-latest`)
 
-Install native OCR dependencies before running Gradle tasks/tests.
-
-```bash
-sudo apt-get update
-sudo apt-get install -y tesseract-ocr libtesseract-dev libleptonica-dev tesseract-ocr-eng
-tesseract --version
-tesseract --list-langs | grep -E '^eng$' || true
-```
-
-If runner needs explicit native library path for JVM process:
-
-```bash
-./gradlew test -Djava.library.path=/usr/lib:/usr/lib/x86_64-linux-gnu
-```
+No external Tesseract/leptonica packages required for plugin execution.
+Use default JVM environment and run Gradle tasks directly.
 
 ### Quick Verification
 
