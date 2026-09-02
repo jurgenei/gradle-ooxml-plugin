@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Document xmlns="http://jurgenei.name/canonical">
-    <Metadata>
-        <DocumentId>v2-formulas</DocumentId>
-        <Version></Version>
-        <SourceFile>v2-formulas.docx</SourceFile>
-        <DocumentType>DOCX</DocumentType>
-    </Metadata>
-    <Body>
-        <Paragraph source-path="/word/document/p[2]">
+<document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v2-formulas</documentId>
+        <version></version>
+        <sourceFile>v2-formulas.docx</sourceFile>
+        <documentType>DOCX</documentType>
+    </metadata>
+    <body>
+        <para source-path="/word/document/p[2]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msubsup>
@@ -44,8 +44,8 @@
                     </msup>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[4]">
+        </para>
+        <para source-path="/word/document/p[4]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msubsup>
@@ -74,8 +74,8 @@
                     <mi>null and New Cover Alloc Ind='Y'</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[6]">
+        </para>
+        <para source-path="/word/document/p[6]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msub>
@@ -101,8 +101,8 @@
                     <mi>=0 than 1</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[8]">
+        </para>
+        <para source-path="/word/document/p[8]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msubsup>
@@ -137,34 +137,34 @@
                     <mi>Otherwise</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[10]">
-            <Text>The cover priority for country risk is based on the outstanding group ID and the transfer priority class</Text>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[11]">
-            <Text>Starting by the top node of the limit tree all outstanding groups and covers are ordered as follows:</Text>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[12]">
-            <Text>By transfer priority class of the cover type - lowest first;</Text>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[13]">
-            <Text>By country rating - lowest first;</Text>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[14]">
-            <Text>By cover ID - highest first;</Text>
-        </Paragraph>
-        <List ordered="true">
-            <Item>
-                <Text>By transfer priority class of the cover type - lowest first;</Text>
-            </Item>
-            <Item>
-                <Text>By country rating - lowest first;</Text>
-            </Item>
-            <Item>
-                <Text>By cover ID - highest first;</Text>
-            </Item>
-        </List>
-        <Paragraph source-path="/word/document/p[16]">
+        </para>
+        <para source-path="/word/document/p[10]">
+            <text>The cover priority for country risk is based on the outstanding group ID and the transfer priority class</text>
+        </para>
+        <para source-path="/word/document/p[11]">
+            <text>Starting by the top node of the limit tree all outstanding groups and covers are ordered as follows:</text>
+        </para>
+        <para source-path="/word/document/p[12]">
+            <text>By transfer priority class of the cover type - lowest first;</text>
+        </para>
+        <para source-path="/word/document/p[13]">
+            <text>By country rating - lowest first;</text>
+        </para>
+        <para source-path="/word/document/p[14]">
+            <text>By cover ID - highest first;</text>
+        </para>
+        <list ordered="true">
+            <item>
+                <text>By transfer priority class of the cover type - lowest first;</text>
+            </item>
+            <item>
+                <text>By country rating - lowest first;</text>
+            </item>
+            <item>
+                <text>By cover ID - highest first;</text>
+            </item>
+        </list>
+        <para source-path="/word/document/p[16]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msub>
@@ -178,8 +178,8 @@
                     </msub>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[17]">
+        </para>
+        <para source-path="/word/document/p[17]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <mi>order by</mi>
@@ -190,8 +190,8 @@
                     <mi>OSGID exists →OSGID not exists desc</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[18]">
+        </para>
+        <para source-path="/word/document/p[18]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msub>
@@ -201,8 +201,8 @@
                     <mi>asc</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[19]">
+        </para>
+        <para source-path="/word/document/p[19]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msub>
@@ -212,8 +212,8 @@
                     <mi>asc</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[20]">
+        </para>
+        <para source-path="/word/document/p[20]">
             <math xmlns="http://www.w3.org/1998/Math/MathML">
                 <mrow>
                     <msub>
@@ -223,13 +223,13 @@
                     <mi>desc</mi>
                 </mrow>
             </math>
-        </Paragraph>
-        <Paragraph source-path="/word/document/p[22]">
-            <Text>Where:</Text>
-        </Paragraph>
-        <Table>
-            <Row>
-                <Cell>
+        </para>
+        <para source-path="/word/document/p[22]">
+            <text>Where:</text>
+        </para>
+        <table>
+            <row>
+                <cell>
                     <math xmlns="http://www.w3.org/1998/Math/MathML">
                         <mrow>
                             <msub>
@@ -239,13 +239,13 @@
                             <mi>=</mi>
                         </mrow>
                     </math>
-                </Cell>
-                <Cell>
-                    <Text>Represents the list of covers related with the limit Tree</Text>
-                </Cell>
-            </Row>
-            <Row>
-                <Cell>
+                </cell>
+                <cell>
+                    <text>Represents the list of covers related with the limit Tree</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
                     <math xmlns="http://www.w3.org/1998/Math/MathML">
                         <mrow>
                             <msub>
@@ -255,13 +255,13 @@
                             <mi>=</mi>
                         </mrow>
                     </math>
-                </Cell>
-                <Cell>
-                    <Text>Property of the cover type, looked up in Cover Type table</Text>
-                </Cell>
-            </Row>
-            <Row>
-                <Cell>
+                </cell>
+                <cell>
+                    <text>Property of the cover type, looked up in Cover Type table</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
                     <math xmlns="http://www.w3.org/1998/Math/MathML">
                         <mrow>
                             <msub>
@@ -271,8 +271,8 @@
                             <mi>=</mi>
                         </mrow>
                     </math>
-                </Cell>
-                <Cell>
+                </cell>
+                <cell>
                     <math xmlns="http://www.w3.org/1998/Math/MathML">
                         <mrow>
                             <msub>
@@ -300,10 +300,10 @@
                             <mi>if exists otherwise YZ17</mi>
                         </mrow>
                     </math>
-                </Cell>
-            </Row>
-            <Row>
-                <Cell>
+                </cell>
+            </row>
+            <row>
+                <cell>
                     <math xmlns="http://www.w3.org/1998/Math/MathML">
                         <mrow>
                             <msub>
@@ -313,11 +313,11 @@
                             <mi>=</mi>
                         </mrow>
                     </math>
-                </Cell>
-                <Cell>
-                    <Text>Cover ID</Text>
-                </Cell>
-            </Row>
-        </Table>
-    </Body>
-</Document>
+                </cell>
+                <cell>
+                    <text>Cover ID</text>
+                </cell>
+            </row>
+        </table>
+    </body>
+</document>

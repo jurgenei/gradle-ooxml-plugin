@@ -11,12 +11,12 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
  * Canonical external or relationship-based link.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "Link", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "link", namespace = CanonicalNamespace.URI)
 public class Link {
     @XmlAttribute(name = "target")
     private String target;
 
-    @XmlElement(name = "Text", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "text", namespace = CanonicalNamespace.URI)
     private String text;
 
     public Link() {

@@ -15,12 +15,12 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Body {
     @XmlElementRefs({
-            @XmlElementRef(name = "Paragraph", namespace = CanonicalNamespace.URI, type = Paragraph.class),
-            @XmlElementRef(name = "List", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
-            @XmlElementRef(name = "Table", namespace = CanonicalNamespace.URI, type = Table.class),
-            @XmlElementRef(name = "Link", namespace = CanonicalNamespace.URI, type = Link.class),
-            @XmlElementRef(name = "Reference", namespace = CanonicalNamespace.URI, type = Reference.class),
-            @XmlElementRef(name = "Diagram", namespace = CanonicalNamespace.URI, type = Diagram.class)
+            @XmlElementRef(name = "para", namespace = CanonicalNamespace.URI, type = Paragraph.class),
+            @XmlElementRef(name = "list", namespace = CanonicalNamespace.URI, type = CanonicalList.class),
+            @XmlElementRef(name = "table", namespace = CanonicalNamespace.URI, type = Table.class),
+            @XmlElementRef(name = "link", namespace = CanonicalNamespace.URI, type = Link.class),
+            @XmlElementRef(name = "reference", namespace = CanonicalNamespace.URI, type = Reference.class),
+            @XmlElementRef(name = "graph", namespace = CanonicalNamespace.GRAPHML_URI, type = Diagram.class)
     })
     private List<Object> content = new ArrayList<>();
 

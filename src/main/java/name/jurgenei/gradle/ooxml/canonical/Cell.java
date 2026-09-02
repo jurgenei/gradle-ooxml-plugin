@@ -15,7 +15,7 @@ import java.util.List;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Cell {
-    @XmlElement(name = "Text", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "text", namespace = CanonicalNamespace.URI)
     private List<String> texts = new ArrayList<>();
 
     @XmlAnyElement

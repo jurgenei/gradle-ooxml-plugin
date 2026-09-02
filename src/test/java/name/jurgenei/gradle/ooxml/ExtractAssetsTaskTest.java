@@ -23,7 +23,7 @@ class ExtractAssetsTaskTest {
         copyFixture(docs, "v1-benchmark.pptx", "slides.pptx");
         copyFixture(docs, "v1-benchmark.xlsx", "register.xlsx");
 
-        ExtractAssetsTask task = project.getTasks().create("extractAssets", ExtractAssetsTask.class);
+        ExtractAssetsTask task = project.getTasks().register("extractAssets", ExtractAssetsTask.class).get();
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx", "**/*.pptx", "**/*.xlsx")));
         task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/assets"));
 

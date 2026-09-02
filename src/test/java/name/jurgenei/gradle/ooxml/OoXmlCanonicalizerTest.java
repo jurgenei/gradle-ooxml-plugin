@@ -113,8 +113,8 @@ class OoXmlCanonicalizerTest {
 
     @Test
     void serializedBenchmarkOutputContainsCoreStructures() throws Exception {
-        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<Table>"));
-        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<Table source-path=\"/ppt/slides/slide", "<Diagram source-path=\"/ppt/slides/slide", "<Diagram"));
+        assertSerializedContains("v1-benchmark.docx", List.of("Benchmark Document", "label=\"h1\"", "label=\"h2\"", "Paragraph with bold", "Visit https://example.com", "Final paragraph", "<table>"));
+        assertSerializedContains("v1-benchmark.pptx", List.of("Overview", "CRM", "SAP", "<table source-path=\"/ppt/slides/slide", "source-path=\"/ppt/slides/slide", "<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
         assertSerializedContains("v1-benchmark.xlsx", List.of("id=\"Applications\"", "id=\"Matrix\"", "id=\"NamedRange\"", "Application", "NamedRange!A1:B2", "A4:B4"));
     }
 
@@ -127,7 +127,7 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "First item", "Second item");
         assertAppearsBefore(xml, "Second item", "Alpha");
         assertAppearsBefore(xml, "Alpha", "Beta");
-        assertAppearsBefore(xml, "Visit https://example.com", "<Table");
+        assertAppearsBefore(xml, "Visit https://example.com", "<table");
         assertAppearsBefore(xml, "Beta", "App");
         assertAppearsBefore(xml, "App", "[A] -&gt; [B]");
         assertAppearsBefore(xml, "[A] -&gt; [B]", "Section B");
@@ -147,21 +147,21 @@ class OoXmlCanonicalizerTest {
         assertFalse(xml.contains("<mrow/>"), "MathML should not contain empty mrow noise");
 
         org.w3c.dom.Document parsed = parseXml(xml);
-        Element body = (Element) parsed.getElementsByTagNameNS(CanonicalNamespace.URI, "Body").item(0);
+        Element body = (Element) parsed.getElementsByTagNameNS(CanonicalNamespace.URI, "body").item(0);
         assertFalse(hasDirectMathChild(body), "MathML must not be a direct Body child");
-        assertTrue(hasParagraphWithMath(parsed), "At least one Paragraph should contain nested MathML");
-        assertTrue(hasCellWithMath(parsed), "At least one Cell should contain nested MathML");
-        assertFalse(xml.contains("<Text>CoverAmt Cov Perc"), "Flattened formula text should be removed from Paragraph payload");
+        assertTrue(hasParagraphWithMath(parsed), "At least one para should contain nested MathML");
+        assertTrue(hasCellWithMath(parsed), "At least one cell should contain nested MathML");
+        assertFalse(xml.contains("<text>CoverAmt Cov Perc"), "Flattened formula text should be removed from para payload");
 
-        int bodyIndex = xml.indexOf("<Body>");
+        int bodyIndex = xml.indexOf("<body>");
         int mathIndex = firstMathTagIndex(xml);
         int proseIndex = xml.indexOf("The cover priority for country risk");
-        assertTrue(bodyIndex >= 0, "Missing token: <Body>");
+        assertTrue(bodyIndex >= 0, "Missing token: <body>");
         assertTrue(mathIndex >= 0, "Missing token: :math");
         assertTrue(proseIndex >= 0, "Missing token: The cover priority for country risk");
         assertTrue(bodyIndex < mathIndex && mathIndex < proseIndex,
                 "Expected first MathML fragment to appear before narrative prose");
-        assertAppearsBefore(xml, "Where:", "<Table");
+        assertAppearsBefore(xml, "Where:", "<table");
     }
 
     @Test
@@ -186,8 +186,10 @@ class OoXmlCanonicalizerTest {
 
         String xml = serialize(document);
         assertAppearsBefore(xml, "source-path=\"/word/document/p[2]/drawing[1]\"", "source-path=\"/word/document/p[3]/drawing[1]\"");
+        assertAppearsBefore(xml, "source-path=\"/word/document/p[3]/drawing[1]\"", "source-path=\"/word/document/p[5]/drawing[1]\"");
         assertTrue(xml.contains("href=\"media/image1.emf\"") || xml.contains("href=\"media/image2.emf\""));
-        assertTrue(xml.contains("<Group"), "Expected canonical group structure for inferred subgraph");
+        assertTrue(xml.contains("<group id="), "Expected canonical group structure for inferred subgraph");
+        assertTrue(!xml.contains("<g:graph"), "Expected graph elements to use local default namespace form");
         assertTrue(xml.contains("semantic=\"process\""), "Expected inferred process nodes");
         assertTrue(xml.contains("semantic=\"flow\""), "Expected inferred flow edges");
         assertTrue(xml.contains("see section a") || xml.contains("see section b") || xml.contains("see section c"),
@@ -196,6 +198,85 @@ class OoXmlCanonicalizerTest {
         assertTrue(xml.contains("kind=\"asset-text\""), "Expected extracted diagram text annotation");
         assertTrue(xml.contains("Start") || xml.contains("Calculate"),
                 "Expected recovered EMF text content in canonical diagram annotations");
+
+        var first = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[2]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(first.getNodes().size() >= 5, "Expected first diagram to include extended process chain");
+        assertTrue(first.getEdges().size() >= 4, "Expected first diagram to include full flow chain");
+        assertTrue(first.getGroups().stream().anyMatch(group -> group.getMembers().size() >= 3),
+                "Expected first diagram group to include all process members");
+
+        var second = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[3]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(second.getNodes().size() >= 6, "Expected second diagram to include formula inputs and outputs");
+        assertTrue(second.getEdges().size() >= 5, "Expected second diagram to include multi-input flow");
+        assertTrue(second.getGroups().size() >= 3, "Expected second diagram to include process groups");
+        assertTrue(second.getAnnotations().stream().anyMatch(annotation -> "emf-stats".equals(annotation.getKind())),
+                "Expected EMF record statistics annotation");
+
+        var third = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[5]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(third.getNodes().stream().filter(node -> "diamond".equals(node.getGeometry())).count() >= 2,
+                "Expected decision-heavy third diagram to include two diamonds");
+        assertTrue(third.getEdges().stream().anyMatch(edge -> "Y".equals(edge.getLabel())));
+        assertTrue(third.getEdges().stream().anyMatch(edge -> "N".equals(edge.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> "VRE Request".equals(group.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> "Cover".equals(group.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> "Residual Value".equals(group.getLabel())));
+        assertTrue(third.getGroups().stream().anyMatch(group -> group.getMembers().stream().anyMatch(member -> member.getGroup() != null)),
+                "Expected nested group references in third diagram");
+    }
+
+    @Test
+    void canonicalizesDocxPngDiagramFixtureWithOcrAnnotations() throws Exception {
+        Path file = copyFixture("v3-png.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertEquals("v3", document.getMetadata().getVersion());
+        assertTrue(document.getBody().getDiagrams().size() >= 2);
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getHref() != null && diagram.getHref().startsWith("media/") && diagram.getHref().endsWith(".png")));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "asset".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "png-ocr".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "png-stats".equals(annotation.getKind()))));
+
+        var first = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[1]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(3, first.getNodes().size());
+        assertEquals(2, first.getEdges().size());
+        assertTrue(first.getNodes().stream().anyMatch(node -> "Action 1".equals(node.getLabel())));
+        assertTrue(first.getNodes().stream().anyMatch(node -> "Action 2".equals(node.getLabel())));
+        assertTrue(first.getNodes().stream().anyMatch(node -> "Action 3".equals(node.getLabel())));
+
+        var second = document.getBody().getDiagrams().stream()
+                .filter(diagram -> "/word/document/p[3]/drawing[1]".equals(diagram.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(6, second.getNodes().size());
+        assertEquals(6, second.getEdges().size());
+        assertTrue(second.getNodes().stream().anyMatch(node -> "Step 1".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "condition1".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "loop forever".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "Step 2".equals(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "end normally".equalsIgnoreCase(node.getLabel())));
+        assertTrue(second.getNodes().stream().anyMatch(node -> "Stop".equals(node.getLabel())));
+
+        String xml = serialize(document);
+        assertTrue(xml.contains("kind=\"png-ocr\""));
+        assertTrue(xml.contains("kind=\"png-stats\""));
+        assertTrue(xml.contains("href=\"media/") && xml.contains(".png\""));
     }
 
     private void assertDeterministic(String fixtureName) throws Exception {
@@ -260,7 +341,7 @@ class OoXmlCanonicalizerTest {
     }
 
     private boolean hasParagraphWithMath(org.w3c.dom.Document document) {
-        NodeList paragraphs = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Paragraph");
+        NodeList paragraphs = document.getElementsByTagNameNS(CanonicalNamespace.URI, "para");
         for (int i = 0; i < paragraphs.getLength(); i++) {
             if (hasDirectMathChild((Element) paragraphs.item(i))) {
                 return true;
@@ -270,7 +351,7 @@ class OoXmlCanonicalizerTest {
     }
 
     private boolean hasCellWithMath(org.w3c.dom.Document document) {
-        NodeList cells = document.getElementsByTagNameNS(CanonicalNamespace.URI, "Cell");
+        NodeList cells = document.getElementsByTagNameNS(CanonicalNamespace.URI, "cell");
         for (int i = 0; i < cells.getLength(); i++) {
             if (hasDirectMathChild((Element) cells.item(i))) {
                 return true;

@@ -23,7 +23,7 @@ public class DiagramNode {
     @XmlAttribute(name = "confidence")
     private Double confidence;
 
-    @XmlElement(name = "Label", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "label", namespace = CanonicalNamespace.GRAPHML_URI)
     private String label;
 
     public DiagramNode() {

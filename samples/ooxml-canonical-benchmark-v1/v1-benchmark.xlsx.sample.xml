@@ -1,59 +1,91 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<c:Document xmlns:c="http://jurgenei.name/canonical">
-  <c:Metadata>
-    <c:DocumentId>v1-benchmark</c:DocumentId>
-    <c:Version/>
-    <c:SourceFile>v1-benchmark.xlsx</c:SourceFile>
-    <c:DocumentType>XLSX</c:DocumentType>
-  </c:Metadata>
-  <c:Body>
-    <c:Table id="Applications">
-      <c:Row>
-        <c:Cell><c:Text>Application</c:Text></c:Cell>
-        <c:Cell><c:Text>Owner</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>CRM</c:Text></c:Cell>
-        <c:Cell><c:Text>Sales</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>SAP</c:Text></c:Cell>
-        <c:Cell><c:Text>Finance</c:Text></c:Cell>
-      </c:Row>
-    </c:Table>
-    <c:Table id="Matrix">
-      <c:Row>
-        <c:Cell><c:Text>EU</c:Text></c:Cell>
-        <c:Cell><c:Text>US</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>CRM</c:Text></c:Cell>
-        <c:Cell><c:Text>X</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>SAP</c:Text></c:Cell>
-        <c:Cell><c:Text>X</c:Text></c:Cell>
-      </c:Row>
-    </c:Table>
-    <c:Table id="NamedRange">
-      <c:Row>
-        <c:Cell><c:Text>Key</c:Text></c:Cell>
-        <c:Cell><c:Text>Value</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>Sample</c:Text></c:Cell>
-        <c:Cell><c:Text>Data</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>Merged Cell</c:Text></c:Cell>
-      </c:Row>
-    </c:Table>
-    <c:Reference target="NamedRange!A1:B2">
-      <c:Text>SampleRange</c:Text>
-    </c:Reference>
-    <c:Reference target="A4:B4">
-      <c:Text>merge</c:Text>
-    </c:Reference>
-  </c:Body>
-</c:Document>
-
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v1-benchmark</documentId>
+        <version>v1</version>
+        <sourceFile>v1-benchmark.xlsx</sourceFile>
+        <documentType>XLSX</documentType>
+    </metadata>
+    <body>
+        <table id="Applications">
+            <row>
+                <cell>
+                    <text>Application</text>
+                </cell>
+                <cell>
+                    <text>Owner</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>CRM</text>
+                </cell>
+                <cell>
+                    <text>Sales</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>SAP</text>
+                </cell>
+                <cell>
+                    <text>Finance</text>
+                </cell>
+            </row>
+        </table>
+        <table id="Matrix">
+            <row>
+                <cell>
+                    <text>EU</text>
+                </cell>
+                <cell>
+                    <text>US</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>CRM</text>
+                </cell>
+                <cell>
+                    <text>X</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>SAP</text>
+                </cell>
+                <cell>
+                    <text>X</text>
+                </cell>
+            </row>
+        </table>
+        <table id="NamedRange">
+            <row>
+                <cell>
+                    <text>Key</text>
+                </cell>
+                <cell>
+                    <text>Value</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>Sample</text>
+                </cell>
+                <cell>
+                    <text>Data</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>Merged Cell</text>
+                </cell>
+            </row>
+        </table>
+        <reference target="NamedRange!A1:B2">
+            <text>SampleRange</text>
+        </reference>
+        <reference target="A4:B4">
+            <text>merge</text>
+        </reference>
+    </body>
+</document>

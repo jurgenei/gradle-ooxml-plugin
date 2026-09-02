@@ -25,6 +25,9 @@ class OoXmlPluginTest {
         OoXmlExtension extension = project.getExtensions().getByType(OoXmlExtension.class);
         assertNotNull(extension.getCanonicalSchemaUrl().getOrNull());
         assertTrue(extension.getCanonicalSchemaUrl().get().contains("canonical.xsd"));
+
+        extension.registerRecognizer("name.jurgenei.gradle.ooxml.recognizer.EmfAssetRecognizer");
+        assertTrue(extension.getRecognizerClasses().get().contains("name.jurgenei.gradle.ooxml.recognizer.EmfAssetRecognizer"));
     }
 }
 

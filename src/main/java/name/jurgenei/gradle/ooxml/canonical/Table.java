@@ -14,7 +14,7 @@ import java.util.List;
  * Canonical table container.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "Table", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "table", namespace = CanonicalNamespace.URI)
 public class Table {
     @XmlAttribute(name = "id")
     private String id;
@@ -22,7 +22,7 @@ public class Table {
     @XmlAttribute(name = "source-path")
     private String sourcePath;
 
-    @XmlElement(name = "Row", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "row", namespace = CanonicalNamespace.URI)
     private List<Row> rows = new ArrayList<>();
 
     public Table() {

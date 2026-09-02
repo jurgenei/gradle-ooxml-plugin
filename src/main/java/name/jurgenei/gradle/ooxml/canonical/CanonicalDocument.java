@@ -9,13 +9,13 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
 /**
  * Root JAXB type for canonical XML output.
  */
-@XmlRootElement(name = "Document", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "document", namespace = CanonicalNamespace.URI)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CanonicalDocument {
-    @XmlElement(name = "Metadata", namespace = CanonicalNamespace.URI, required = true)
+    @XmlElement(name = "metadata", namespace = CanonicalNamespace.URI, required = true)
     private Metadata metadata;
 
-    @XmlElement(name = "Body", namespace = CanonicalNamespace.URI, required = true)
+    @XmlElement(name = "body", namespace = CanonicalNamespace.URI, required = true)
     private Body body;
 
     public CanonicalDocument() {

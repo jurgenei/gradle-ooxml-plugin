@@ -9,7 +9,7 @@ configurations {
 }
 
 group = 'name.jurgenei.gradle'
-version = '0.1.4'
+version = '0.1.6'
 
 repositories {
     mavenCentral()
@@ -21,6 +21,10 @@ dependencies {
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
     implementation 'org.jgrapht:jgrapht-core:1.5.2'
+    implementation 'org.openpnp:opencv:4.9.0-0'
+    implementation 'ai.djl:api:0.33.0'
+    runtimeOnly 'ai.djl.onnxruntime:onnxruntime-engine:0.33.0'
+    runtimeOnly 'com.microsoft.onnxruntime:onnxruntime:1.20.0'
 
     xjcTool 'org.glassfish.jaxb:jaxb-xjc:4.0.5'
 

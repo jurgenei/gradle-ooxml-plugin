@@ -11,12 +11,12 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
  * Canonical internal/document-local reference.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "Reference", namespace = CanonicalNamespace.URI)
+@XmlRootElement(name = "reference", namespace = CanonicalNamespace.URI)
 public class Reference {
     @XmlAttribute(name = "target")
     private String target;
 
-    @XmlElement(name = "Text", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "text", namespace = CanonicalNamespace.URI)
     private String text;
 
     public Reference() {

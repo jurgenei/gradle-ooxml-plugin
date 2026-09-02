@@ -1,6 +1,7 @@
 package name.jurgenei.gradle.ooxml;
 
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
@@ -21,5 +22,16 @@ public abstract class OoXmlExtension {
      * @return readable schema URL string.
      */
     public abstract Property<String> getCanonicalSchemaUrl();
+
+    /**
+     * Fully qualified recognizer class names to register in addition to built-ins.
+     *
+     * @return custom recognizer class names.
+     */
+    public abstract ListProperty<String> getRecognizerClasses();
+
+    public void registerRecognizer(String className) {
+        getRecognizerClasses().add(className);
+    }
 }
 

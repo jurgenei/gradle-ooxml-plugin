@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v3-png</documentId>
+        <version>v3</version>
+        <sourceFile>v3-png.docx</sourceFile>
+        <documentType>DOCX</documentType>
+    </metadata>
+    <body>
+        <para source-path="/word/document/p[1]">
+            <text>Diagram 1</text>
+        </para>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.png" source-path="/word/document/p[1]/drawing[1]">
+            <node confidence="0.5" geometry="rectangle" id="64005151-png-0" semantic="process">
+                <label>Action 1</label>
+            </node>
+            <node confidence="0.5" geometry="rectangle" id="64005151-png-1" semantic="process">
+                <label>Action 2</label>
+            </node>
+            <node confidence="0.5" geometry="rectangle" id="64005151-png-2" semantic="process">
+                <label>Action 3</label>
+            </node>
+            <edge confidence="0.54" directed="true" semantic="flow" source="64005151-png-0" target="64005151-png-1"/>
+            <edge confidence="0.54" directed="true" semantic="flow" source="64005151-png-1" target="64005151-png-2"/>
+            <annotation confidence="0.95" kind="asset" target="64005151">
+                <text>word/media/image1.png</text>
+            </annotation>
+            <annotation confidence="0.95" kind="png-ocr" target="64005151">
+                <text>@startuml * Action 1 * Action 2 * Action 3 @enduml</text>
+            </annotation>
+            <annotation confidence="0.86" kind="png-stats" target="64005151">
+                <text>size=89x163, textChars=50</text>
+            </annotation>
+            <annotation confidence="0.7" kind="inferred-flow" target="64005151">
+                <text>generated 3 nodes, 2 edges</text>
+            </annotation>
+        </graph>
+        <para source-path="/word/document/p[2]">
+            <text>Diagram 2</text>
+        </para>
+        <graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image2.png" source-path="/word/document/p[3]/drawing[1]">
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-0" semantic="process">
+                <label>Step 1</label>
+            </node>
+            <node confidence="0.67" geometry="diamond" id="1666746648-png-1" semantic="decision">
+                <label>condition1</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-2" semantic="loop">
+                <label>loop forever</label>
+            </node>
+            <node confidence="0.67" geometry="rectangle" id="1666746648-png-3" semantic="process">
+                <label>Step 2</label>
+            </node>
+            <node confidence="0.67" geometry="ellipse" id="1666746648-png-4" semantic="leaf">
+                <label>end normally</label>
+            </node>
+            <node confidence="0.67" geometry="ellipse" id="1666746648-png-5" semantic="leaf">
+                <label>Stop</label>
+            </node>
+            <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-0" target="1666746648-png-1"/>
+            <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-1" target="1666746648-png-2"/>
+            <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-2" target="1666746648-png-3"/>
+            <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-3" target="1666746648-png-2"/>
+            <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-1" target="1666746648-png-4"/>
+            <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-4" target="1666746648-png-5"/>
+            <annotation confidence="0.95" kind="asset" target="1666746648">
+                <text>word/media/image2.png</text>
+            </annotation>
+            <annotation confidence="0.95" kind="png-ocr" target="1666746648">
+                <text>@startuml :Step 1; if (condition1) then while (loop forever) :Step 2; endwhile -[hidden]-&gt; detach else :end normally; stop endif @enduml</text>
+            </annotation>
+            <annotation confidence="0.86" kind="png-stats" target="1666746648">
+                <text>size=247x216, textChars=136</text>
+            </annotation>
+            <annotation confidence="0.7" kind="inferred-flow" target="1666746648">
+                <text>generated 6 nodes, 6 edges</text>
+            </annotation>
+        </graph>
+    </body>
+</document>

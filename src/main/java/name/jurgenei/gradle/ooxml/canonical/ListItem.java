@@ -10,7 +10,7 @@ import name.jurgenei.gradle.ooxml.CanonicalNamespace;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ListItem {
-    @XmlElement(name = "Text", namespace = CanonicalNamespace.URI, required = true)
+    @XmlElement(name = "text", namespace = CanonicalNamespace.URI, required = true)
     private String text;
 
     public ListItem() {

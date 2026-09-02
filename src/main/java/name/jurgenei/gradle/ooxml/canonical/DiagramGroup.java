@@ -20,10 +20,10 @@ public class DiagramGroup {
     @XmlAttribute(name = "semantic")
     private String semantic;
 
-    @XmlElement(name = "Label", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "label", namespace = CanonicalNamespace.GRAPHML_URI)
     private String label;
 
-    @XmlElement(name = "Member", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "member", namespace = CanonicalNamespace.GRAPHML_URI)
     private List<DiagramGroupMember> members = new ArrayList<>();
 
     public DiagramGroup() {

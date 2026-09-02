@@ -1,51 +1,127 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<c:Document xmlns:c="http://jurgenei.name/canonical">
-  <c:Metadata>
-    <c:DocumentId>v1-benchmark</c:DocumentId>
-    <c:Version/>
-    <c:SourceFile>v1-benchmark.docx</c:SourceFile>
-    <c:DocumentType>DOCX</c:DocumentType>
-  </c:Metadata>
-  <c:Body>
-    <c:Paragraph source-path="/word/document/p[1]" label="h1">
-      <c:Text>Benchmark Document</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[2]">
-      <c:Text>Paragraph with bold</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[3]">
-      <c:Text>Visit https://example.com</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[4]" label="h2">
-      <c:Text>Section A</c:Text>
-    </c:Paragraph>
-    <c:List ordered="true">
-      <c:Item><c:Text>First item</c:Text></c:Item>
-      <c:Item><c:Text>Second item</c:Text></c:Item>
-    </c:List>
-    <c:List ordered="false">
-      <c:Item><c:Text>Alpha</c:Text></c:Item>
-      <c:Item><c:Text>Beta</c:Text></c:Item>
-    </c:List>
-    <c:Table>
-      <c:Row>
-        <c:Cell><c:Text>App</c:Text></c:Cell>
-        <c:Cell><c:Text>Team</c:Text></c:Cell>
-      </c:Row>
-      <c:Row>
-        <c:Cell><c:Text>CRM</c:Text></c:Cell>
-        <c:Cell><c:Text>Sales</c:Text></c:Cell>
-      </c:Row>
-    </c:Table>
-    <c:Paragraph source-path="/word/document/p[9]">
-      <c:Text>[A] -&gt; [B]</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[10]" label="h2">
-      <c:Text>Section B</c:Text>
-    </c:Paragraph>
-    <c:Paragraph source-path="/word/document/p[11]">
-      <c:Text>Final paragraph</c:Text>
-    </c:Paragraph>
-  </c:Body>
-</c:Document>
-
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v1-benchmark</documentId>
+        <version>v1</version>
+        <sourceFile>v1-benchmark.docx</sourceFile>
+        <documentType>DOCX</documentType>
+    </metadata>
+    <body>
+        <para label="h1" source-path="/word/document/p[1]">
+            <text>Benchmark Document</text>
+        </para>
+        <para source-path="/word/document/p[2]">
+            <text>Paragraph with bold</text>
+        </para>
+        <para source-path="/word/document/p[3]">
+            <text>Visit https://example.com</text>
+        </para>
+        <table>
+            <row>
+                <cell>
+                    <text>Document version control</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>Version</text>
+                </cell>
+                <cell>
+                    <text>Issue Date</text>
+                </cell>
+                <cell>
+                    <text>Author</text>
+                </cell>
+                <cell>
+                    <text>Description of modification</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>1</text>
+                </cell>
+                <cell>
+                    <text>11 Aug 202 6</text>
+                </cell>
+                <cell>
+                    <text>J. S.Hildebrand</text>
+                </cell>
+                <cell>
+                    <text>Replacement of previous documents: A (2019-11) B (2019-07)</text>
+                </cell>
+            </row>
+        </table>
+        <para label="h2" source-path="/word/document/p[5]">
+            <text>Section A</text>
+        </para>
+        <para source-path="/word/document/p[6]">
+            <text>First item</text>
+        </para>
+        <para source-path="/word/document/p[7]">
+            <text>Second item</text>
+        </para>
+        <para source-path="/word/document/p[8]">
+            <text>Alpha</text>
+        </para>
+        <list ordered="true">
+            <item>
+                <text>First item</text>
+            </item>
+            <item>
+                <text>Second item</text>
+            </item>
+        </list>
+        <para source-path="/word/document/p[9]">
+            <text>Beta</text>
+        </para>
+        <list ordered="false">
+            <item>
+                <text>Alpha</text>
+            </item>
+            <item>
+                <text>Beta</text>
+            </item>
+        </list>
+        <table>
+            <row>
+                <cell>
+                    <text>App</text>
+                </cell>
+                <cell>
+                    <text>Team</text>
+                </cell>
+            </row>
+            <row>
+                <cell>
+                    <text>CRM</text>
+                </cell>
+                <cell>
+                    <text>Sales</text>
+                </cell>
+            </row>
+        </table>
+        <para source-path="/word/document/p[10]">
+            <text>[A] -&gt; [B]</text>
+        </para>
+        <para label="h2" source-path="/word/document/p[11]">
+            <text>Section B</text>
+        </para>
+        <para source-path="/word/document/p[12]">
+            <text>Final paragraph</text>
+        </para>
+        <link target="https://example.com">
+            <text>https://example.com</text>
+        </link>
+        <reference target="OLE_LINK4">
+            <text/>
+        </reference>
+        <reference target="OLE_LINK3">
+            <text/>
+        </reference>
+        <reference target="OLE_LINK6">
+            <text/>
+        </reference>
+        <reference target="OLE_LINK5">
+            <text/>
+        </reference>
+    </body>
+</document>

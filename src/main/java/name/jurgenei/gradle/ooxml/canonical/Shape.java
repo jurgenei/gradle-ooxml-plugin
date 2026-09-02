@@ -14,7 +14,7 @@ public class Shape {
     @XmlAttribute(name = "id")
     private String id;
 
-    @XmlElement(name = "Label", namespace = CanonicalNamespace.URI)
+    @XmlElement(name = "label", namespace = CanonicalNamespace.GRAPHML_URI)
     private String label;
 
     public Shape() {

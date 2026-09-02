@@ -22,22 +22,22 @@ class ValidateCanonicalTaskTest {
         Path canonical = projectDir.toPath().resolve("build/ooxml/canonical");
         Files.createDirectories(canonical);
         Files.writeString(canonical.resolve("sample.xml"), """
-                <c:Document xmlns:c=\"http://jurgenei.name/canonical\">
-                  <c:Metadata>
-                    <c:DocumentId>sample</c:DocumentId>
-                    <c:Version>1</c:Version>
-                    <c:SourceFile>sample.docx</c:SourceFile>
-                    <c:DocumentType>DOCX</c:DocumentType>
-                  </c:Metadata>
-                  <c:Body>
-                    <c:Paragraph>
-                      <c:Text>Hello</c:Text>
-                    </c:Paragraph>
-                  </c:Body>
-                </c:Document>
+                <document xmlns=\"http://jurgenei.name/canonical\">
+                  <metadata>
+                    <documentId>sample</documentId>
+                    <version>1</version>
+                    <sourceFile>sample.docx</sourceFile>
+                    <documentType>DOCX</documentType>
+                  </metadata>
+                  <body>
+                    <para>
+                      <text>Hello</text>
+                    </para>
+                  </body>
+                </document>
                 """, StandardCharsets.UTF_8);
 
-        ValidateCanonicalTask task = project.getTasks().create("validateCanonical", ValidateCanonicalTask.class);
+        ValidateCanonicalTask task = project.getTasks().register("validateCanonical", ValidateCanonicalTask.class).get();
         task.getInputDirectory().set(project.getLayout().getProjectDirectory().dir("build/ooxml/canonical"));
 
         assertDoesNotThrow(task::validate);
@@ -54,22 +54,22 @@ class ValidateCanonicalTaskTest {
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(zipPath))) {
             zip.putNextEntry(new ZipEntry("canonical.xml"));
             zip.write("""
-                    <c:Document xmlns:c=\"http://jurgenei.name/canonical\">
-                      <c:Metadata>
-                        <c:DocumentId>sample</c:DocumentId>
-                        <c:Version>v2</c:Version>
-                        <c:SourceFile>sample.docx</c:SourceFile>
-                        <c:DocumentType>DOCX</c:DocumentType>
-                      </c:Metadata>
-                      <c:Body>
-                        <c:Diagram href=\"media/image1.png\" source-path=\"/word/document/p[1]/drawing[1]\"/>
-                      </c:Body>
-                    </c:Document>
+                    <document xmlns=\"http://jurgenei.name/canonical\" xmlns:g=\"http://graphml.graphdrawing.org/xmlns\">
+                      <metadata>
+                        <documentId>sample</documentId>
+                        <version>v2</version>
+                        <sourceFile>sample.docx</sourceFile>
+                        <documentType>DOCX</documentType>
+                      </metadata>
+                      <body>
+                        <g:graph href=\"media/image1.png\" source-path=\"/word/document/p[1]/drawing[1]\"/>
+                      </body>
+                    </document>
                     """.getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
         }
 
-        ValidateCanonicalTask task = project.getTasks().create("validateCanonicalZip", ValidateCanonicalTask.class);
+        ValidateCanonicalTask task = project.getTasks().register("validateCanonicalZip", ValidateCanonicalTask.class).get();
         task.getInputDirectory().set(project.getLayout().getProjectDirectory().dir("build/ooxml/canonical"));
 
         assertDoesNotThrow(task::validate);
