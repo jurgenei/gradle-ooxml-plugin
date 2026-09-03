@@ -9,6 +9,7 @@ The plugin is intentionally focused on canonicalization and package asset extrac
 Current canonical output includes:
 
 - Paragraph (`para`), list (`list`), and table (`table`) structures
+- Chart evidence (`chart`) with title/legend/axis/series schema support
 - Links and references
 - Diagram topology (shapes and connectors)
 - Provenance attribute (`source-path`) with optional paragraph labels (for example `h1`, `h2`)
@@ -84,7 +85,7 @@ Current strategy:
 
 `PngAssetRecognizer` is active in default `RecognizerRegistry` discovery via `META-INF/services`.
 It handles `.png` assets, runs OpenCV preprocessing (grayscale + denoise + Otsu threshold), then runs PaddleOCR runtime path (ONNX/DJL).
-Recognized text feeds topology inference and emits canonical graph evidence with `png-ocr` and `png-stats` annotations.
+Recognized text feeds topology inference and emits canonical graph evidence with `png-ocr`, `png-stats`, and artifact classification annotations (`artifact-kind`, `artifact-evidence`).
 
 Behavior when OCR runtime/model is unavailable:
 

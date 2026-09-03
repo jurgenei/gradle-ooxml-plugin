@@ -24,6 +24,12 @@
             <annotation confidence="0.95" kind="asset" target="64005151">
                 <text>word/media/image1.png</text>
             </annotation>
+            <annotation confidence="0.65" kind="artifact-kind" target="64005151">
+                <text>diagram</text>
+            </annotation>
+            <annotation confidence="0.65" kind="artifact-evidence" target="64005151">
+                <text>raster-fallback</text>
+            </annotation>
             <annotation confidence="0.95" kind="png-ocr" target="64005151">
                 <text>@startuml * Action 1 * Action 2 * Action 3 @enduml</text>
             </annotation>
@@ -64,6 +70,12 @@
             <edge confidence="0.7" directed="true" semantic="flow" source="1666746648-png-4" target="1666746648-png-5"/>
             <annotation confidence="0.95" kind="asset" target="1666746648">
                 <text>word/media/image2.png</text>
+            </annotation>
+            <annotation confidence="0.65" kind="artifact-kind" target="1666746648">
+                <text>diagram</text>
+            </annotation>
+            <annotation confidence="0.65" kind="artifact-evidence" target="1666746648">
+                <text>raster-fallback</text>
             </annotation>
             <annotation confidence="0.95" kind="png-ocr" target="1666746648">
                 <text>@startuml :Step 1; if (condition1) then while (loop forever) :Step 2; endwhile -[hidden]-&gt; detach else :end normally; stop endif @enduml</text>

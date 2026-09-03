@@ -38,6 +38,12 @@
             <annotation confidence="0.95" kind="asset" target="469179847">
                 <text>word/media/image1.emf</text>
             </annotation>
+            <annotation confidence="0.9" kind="artifact-kind" target="469179847">
+                <text>diagram</text>
+            </annotation>
+            <annotation confidence="0.9" kind="artifact-evidence" target="469179847">
+                <text>structured-vector</text>
+            </annotation>
             <annotation confidence="0.95" kind="asset-text" target="469179847">
                 <text>Allocate Cover to | Outstanding Group | Start | Calculate Uncovered | Amount | see section | Calculate Allocated Cover | amount without excess | before haircut | after haircut</text>
             </annotation>
@@ -93,6 +99,12 @@
             </group>
             <annotation confidence="0.95" kind="asset" target="25">
                 <text>word/media/image2.emf</text>
+            </annotation>
+            <annotation confidence="0.9" kind="artifact-kind" target="25">
+                <text>diagram</text>
+            </annotation>
+            <annotation confidence="0.9" kind="artifact-evidence" target="25">
+                <text>structured-vector</text>
             </annotation>
             <annotation confidence="0.88" kind="asset-text" target="25">
                 <text>Calculate Allocated Cover Amount | Without Excess After Haircut | Start | Alloc Cover No Excess After HC | Cov,Osg | Alloc Cover No Excess Before HC | Effective HC</text>
@@ -176,6 +188,12 @@
             </group>
             <annotation confidence="0.95" kind="asset" target="200">
                 <text>word/media/image3.emf</text>
+            </annotation>
+            <annotation confidence="0.9" kind="artifact-kind" target="200">
+                <text>diagram</text>
+            </annotation>
+            <annotation confidence="0.9" kind="artifact-evidence" target="200">
+                <text>structured-vector</text>
             </annotation>
             <annotation confidence="0.95" kind="asset-text" target="200">
                 <text>Calculate Pro Rata Basis Cover I | Start | Pro Rata Basis | Max Amt Coverable | Osgr | Sum (Pro Rata Basis | If Residual Value | No Allocation</text>

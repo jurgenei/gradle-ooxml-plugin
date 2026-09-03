@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><document xmlns="http://jurgenei.name/canonical">
+    <metadata>
+        <documentId>v3-png-chart</documentId>
+        <version>v3</version>
+        <sourceFile>v3-png-chart.docx</sourceFile>
+        <documentType>DOCX</documentType>
+    </metadata>
+    <body>
+        <para source-path="/word/document/p[1]">
+            <text>PNG Chart 1</text>
+        </para>
+        <chart href="media/image1.png" source-path="/word/document/p[2]/drawing[1]">
+            <legend>right</legend>
+            <axis role="x">
+                <label>t</label>
+            </axis>
+            <axis role="y">
+                <label>f(t)</label>
+            </axis>
+            <series>
+                <name>Trajectory</name>
+                <value>(-10,0)</value>
+                <value>(2,10)</value>
+                <value>(5,30)</value>
+                <value>(8,45)</value>
+                <value>(10,50)</value>
+            </series>
+            <series>
+                <name>Checkpoints</name>
+                <value>(1,12)</value>
+                <value>(6,34)</value>
+                <value>(7,47)</value>
+            </series>
+        </chart>
+        <para source-path="/word/document/p[3]">
+            <text>PNG Chart 2</text>
+        </para>
+        <chart href="media/image2.png" source-path="/word/document/p[4]/drawing[1]">
+            <legend>right</legend>
+            <axis role="x">
+                <label>Q1, Q2, Q3, Q4</label>
+            </axis>
+            <series>
+                <name>Series 1</name>
+                <value>45</value>
+                <value>62</value>
+                <value>58</value>
+                <value>70</value>
+            </series>
+            <series>
+                <name>Series 2</name>
+                <value>35</value>
+                <value>48</value>
+                <value>52</value>
+                <value>61</value>
+            </series>
+            <series>
+                <name>Series 3</name>
+                <value>25</value>
+                <value>30</value>
+                <value>28</value>
+                <value>32</value>
+            </series>
+        </chart>
+    </body>
+</document>

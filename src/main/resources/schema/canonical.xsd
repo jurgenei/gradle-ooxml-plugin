@@ -33,8 +33,35 @@
             <xs:element name="table" type="c:TableType"/>
             <xs:element name="link" type="c:LinkType"/>
             <xs:element name="reference" type="c:ReferenceType"/>
+            <xs:element name="chart" type="c:ChartType"/>
             <xs:element ref="g:graph"/>
         </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="ChartType">
+        <xs:sequence>
+            <xs:element name="title" type="xs:string" minOccurs="0"/>
+            <xs:element name="legend" type="xs:string" minOccurs="0"/>
+            <xs:element name="axis" type="c:ChartAxisType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="series" type="c:ChartSeriesType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="source-path" type="xs:string" use="optional"/>
+        <xs:attribute name="href" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="ChartAxisType">
+        <xs:sequence>
+            <xs:element name="label" type="xs:string" minOccurs="0"/>
+            <xs:element name="unit" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="role" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="ChartSeriesType">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string" minOccurs="0"/>
+            <xs:element name="value" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
     </xs:complexType>
 
     <xs:complexType name="ParagraphType">
