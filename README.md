@@ -262,6 +262,7 @@ canonical output:
 
 ![chart1.png](src/test/resources/puml/chart1.png)
 
+canonical output:
 ```xml
 <chart href="media/image1.emf" source-path="/word/document/p[1]/drawing[1]">
   <legend>right</legend>
