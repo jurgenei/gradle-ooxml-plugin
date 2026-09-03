@@ -56,49 +56,235 @@ Boundary keeps pipeline reliable:
 - table as `table -> row -> cell`
 - links and references separated from plain prose
 
-Examples of plain text represented in canonical forms:
+Examples of plain text represented in canonical form:
 
+<kbd>![running text](src/main/resources/png/running-text.png)</kbd>
+
+
+canonical output:
 ```xml
-<para source-path="/word/document/p[3]">
-    <text>Section A</text>
+<para label="h1" source-path="/word/document/p[1]">
+  <text>Benchmark Document</text>
 </para>
-
-<list ordered="true">
-    <item><text>First item</text></item>
-</list>
-
+<para source-path="/word/document/p[2]">
+  <text>Paragraph with bold</text>
+</para>
+<para source-path="/word/document/p[3]">
+  <text>Visit https://example.com</text>
+</para>
 <table>
-    <row><cell><text>Application</text></cell></row>
+  <row>
+    <cell>
+      <text>Document version control</text>
+    </cell>
+  </row>
+  <row>
+    <cell>
+      <text>Version</text>
+    </cell>
+    <cell>
+      <text>Issue Date</text>
+    </cell>
+    <cell>
+      <text>Author</text>
+    </cell>
+    <cell>
+      <text>Description of modification</text>
+    </cell>
+  </row>
+  <row>
+    <cell>
+      <text>1</text>
+    </cell>
+    <cell>
+      <text>11 Aug 202 6</text>
+    </cell>
+    <cell>
+      <text>J. S.Hildebrand</text>
+    </cell>
+    <cell>
+      <text>Replacement of previous documents: A (2019-11) B (2019-07)</text>
+    </cell>
+  </row>
 </table>
+<para label="h2" source-path="/word/document/p[5]">
+  <text>Section A</text>
+</para>
+<para source-path="/word/document/p[6]">
+  <text>First item</text>
+</para>
+<para source-path="/word/document/p[7]">
+  <text>Second item</text>
+</para>
+<para source-path="/word/document/p[8]">
+  <text>Alpha</text>
+</para>
+<list ordered="true">
+  <item>
+    <text>First item</text>
+  </item>
+  <item>
+    <text>Second item</text>
+  </item>
+</list>
+<para source-path="/word/document/p[9]">
+  <text>Beta</text>
+</para>
+<list ordered="false">
+  <item>
+    <text>Alpha</text>
+  </item>
+  <item>
+    <text>Beta</text>
+  </item>
+</list>
+<table>
+  <row>
+    <cell>
+      <text>App</text>
+    </cell>
+    <cell>
+      <text>Team</text>
+    </cell>
+  </row>
+  <row>
+    <cell>
+      <text>CRM</text>
+    </cell>
+    <cell>
+      <text>Sales</text>
+    </cell>
+  </row>
+</table>
+<para source-path="/word/document/p[10]">
+  <text>[A] -&gt; [B]</text>
+</para>
+<para label="h2" source-path="/word/document/p[11]">
+  <text>Section B</text>
+</para>
+<para source-path="/word/document/p[12]">
+  <text>Final paragraph</text>
+</para>
 ```
 
-### Formulas with precision
+### Formulas
 
 - DOCX OMML fragments transformed to MathML
 - Math nodes embedded in canonical paragraph/cell content
 - text flattening noise avoided for formula fidelity
 
+![formula](src/main/resources/png/formula.png)
+
+canonical output:
 ```xml
 <para>
-    <math xmlns="http://www.w3.org/1998/Math/MathML">...</math>
+  <math xmlns="http://www.w3.org/1998/Math/MathML">
+    <mrow>
+      <msubsup>
+        <mi>CoverAmt</mi>
+        <mi>Cov</mi>
+        <mi>Perc</mi>
+      </msubsup>
+      <mi>=</mi>
+      <msubsup>
+        <mi>CoverPerc</mi>
+        <mi>Cov</mi>
+        <mi>CR</mi>
+      </msubsup>
+      <mi>*</mi>
+      <msub>
+        <mi>ExpAmt</mi>
+        <mi>ExpEvent</mi>
+      </msub>
+      <mi>when</mi>
+      <msub>
+        <mi>OSGID</mi>
+        <mi>Cov</mi>
+        <mi>j</mi>
+      </msub>
+      <mi>=</mi>
+      <mi>null and New Cover Alloc Ind&lt;</mi>
+      <msup>
+        <mi>&gt;</mi>
+        <mi>'</mi>
+      </msup>
+      <msup>
+        <mi>Y</mi>
+        <mi>'</mi>
+      </msup>
+    </mrow>
+  </math>
 </para>
+```
+### Flow charts
+
+- Graph topology captured as GraphML `graph` evidence (`node`, `edge`, `group`, annotations)
+
+![flowchart](src/main/resources/png/flowchart.png)
+
+canonical output:
+```xml
+<graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]">
+    <node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root">
+        <label>Start</label>
+    </node>
+    <node confidence="0.73" geometry="rectangle" id="469179847-a-calculate-uncovered" semantic="process">
+        <label>Calculate Uncovered Amount (see section a)</label>
+    </node>
+    <node confidence="0.73" geometry="rectangle" id="469179847-b-alloc-before-haircut" semantic="process">
+        <label>Calculate Allocated Cover Amount without excess before haircut (see section b)</label>
+    </node>
+    <node confidence="0.73" geometry="rectangle" id="469179847-c-alloc-after-haircut" semantic="process">
+        <label>Calculate Allocated Cover Amount without excess after haircut (see section c)</label>
+    </node>
+    <node confidence="0.67" geometry="ellipse" id="469179847-end-inferred" semantic="leaf">
+        <label>End</label>
+    </node>
+    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-start" target="469179847-a-calculate-uncovered"/>
+    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-a-calculate-uncovered" target="469179847-b-alloc-before-haircut"/>
+    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-b-alloc-before-haircut" target="469179847-c-alloc-after-haircut"/>
+    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-c-alloc-after-haircut" target="469179847-end-inferred"/>
+    <group id="469179847-group-1" semantic="process-group">
+        <label>Allocate Cover to Outstanding Group</label>
+        <member node="469179847-a-calculate-uncovered"/>
+        <member node="469179847-b-alloc-before-haircut"/>
+        <member node="469179847-c-alloc-after-haircut"/>
+    </group>
+</graph>
 ```
 
 ### Diagrams and XY charts with precision
 
-- Graph topology captured as GraphML `graph` evidence (`node`, `edge`, `group`, annotations)
+
 - chart evidence captured as canonical `chart` (`axis`, `series`, ordered values)
 - XY points preserve coordinate order from source evidence
 - raster flow uses OpenCV preprocessing + PaddleOCR ONNX/DJL runtime path
 
+![chart1.png](src/test/resources/puml/chart1.png)
+
 ```xml
-<chart href="media/image1.png" source-path="/word/document/p[2]/drawing[1]">
-    <axis role="x"><label>t</label></axis>
-    <series>
-        <name>Trajectory</name>
-        <value>(-10,0)</value>
-        <value>(2,10)</value>
-    </series>
+<chart href="media/image1.emf" source-path="/word/document/p[1]/drawing[1]">
+  <legend>right</legend>
+  <axis role="x">
+    <label>t</label>
+  </axis>
+  <axis role="y">
+    <label>f(t)</label>
+  </axis>
+  <series>
+    <name>Trajectory</name>
+    <value>(-10,0)</value>
+    <value>(2,10)</value>
+    <value>(5,30)</value>
+    <value>(8,45)</value>
+    <value>(10,50)</value>
+  </series>
+  <series>
+    <name>Checkpoints</name>
+    <value>(1,12)</value>
+    <value>(6,34)</value>
+    <value>(7,47)</value>
+  </series>
 </chart>
 ```
 
