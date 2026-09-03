@@ -1,258 +1,352 @@
 # gradle-ooxml-plugin
 
-Gradle plugin that converts Office Open XML documents (`.docx`, `.pptx`, `.xlsx`) to canonical XML using docx4j and JAXB.
+Gradle plugin that converts Office Open XML documents (`.docx`, `.pptx`, `.xlsx`) into canonical XML using `docx4j` + `JAXB`.
 
-The plugin is intentionally focused on canonicalization and package asset extraction.
+Plugin focus: deterministic canonicalisation and package asset extraction.
 
-## What It Produces
+## Why Canonicalise Before LLM
 
-Current canonical output includes:
+Office files carry useful meaning inside complex packaging and dialects:
 
-- Paragraph (`para`), list (`list`), and table (`table`) structures
-- Chart evidence (`chart`) with title/legend/axis/series schema support
-- Links and references
-- Diagram topology (shapes and connectors)
-- Provenance attribute (`source-path`) with optional paragraph labels (for example `h1`, `h2`)
+- WordprocessingML
+- PresentationML
+- SpreadsheetML
+- DrawingML
+- relationship parts
+
+LLMs perform better when input is clean, ordered, and typed.
+
+Canonicalisation gives this:
+
+- stable structure (`para`, `list`, `table`, `reference`, `chart`, GraphML `graph`)
+- stable provenance (`source-path`, media `href`)
+- deterministic serialisation (same input -> same canonical output)
+- format-neutral contract (`canonical.xml`)
+
+Result: preprocessing reduces ambiguity, improves retrieval quality, and controls token spend by removing OOXML noise.
+
+## Deterministic Boundary vs LLM Boundary
+
+This plugin handles **syntax and structural semantics** with deterministic algorithms.
+
+- parsing OOXML parts
+- resolving relationships
+- extracting ordered content
+- mapping formulas to MathML
+- mapping visual evidence to chart/graph representations
+
+LLM layer handles **pragmatic interpretation**:
+
+- business meaning
+- intent
+- policy reasoning
+- narrative synthesis
+
+Boundary keeps pipeline reliable:
+
+- deterministic layer produces auditable evidence
+- LLM layer reasons over evidence, not over raw OOXML internals
+
+## Canonical Forms Captured
+
+### Plain text and structure
+
+- paragraph as `para`
+- list as `list ordered="true|false"`
+- table as `table -> row -> cell`
+- links and references separated from plain prose
+
+Examples of plain text represented in canonical forms:
+
+```xml
+<para source-path="/word/document/p[3]">
+    <text>Section A</text>
+</para>
+
+<list ordered="true">
+    <item><text>First item</text></item>
+</list>
+
+<table>
+    <row><cell><text>Application</text></cell></row>
+</table>
+```
+
+### Formulas with precision
+
+- DOCX OMML fragments transformed to MathML
+- Math nodes embedded in canonical paragraph/cell content
+- text flattening noise avoided for formula fidelity
+
+```xml
+<para>
+    <math xmlns="http://www.w3.org/1998/Math/MathML">...</math>
+</para>
+```
+
+### Diagrams and XY charts with precision
+
+- Graph topology captured as GraphML `graph` evidence (`node`, `edge`, `group`, annotations)
+- chart evidence captured as canonical `chart` (`axis`, `series`, ordered values)
+- XY points preserve coordinate order from source evidence
+- raster flow uses OpenCV preprocessing + PaddleOCR ONNX/DJL runtime path
+
+```xml
+<chart href="media/image1.png" source-path="/word/document/p[2]/drawing[1]">
+    <axis role="x"><label>t</label></axis>
+    <series>
+        <name>Trajectory</name>
+        <value>(-10,0)</value>
+        <value>(2,10)</value>
+    </series>
+</chart>
+```
+
+## RAG/Chunking vs Canonicalisation
+
+### Quick comparison
+
+| Merit | RAG / chunking-first | Canonicalisation-first |
+| --- | --- | --- |
+| Token burning | High when chunks include layout noise and repeated headers | Lower through typed, compact structural extraction |
+| Reasoning quality | Variable; depends on chunk boundaries and retrieval luck | Higher consistency from typed context + provenance |
+| Traceability | Often weak; chunk offsets can drift | Strong; `source-path` and media linkage are explicit |
+| Determinism | Low-medium; embedding changes affect recall | High in extraction layer |
+| Implementation effort | Faster MVP | Higher upfront modelling effort |
+| Multi-format consistency | Usually uneven | Strong once schema contract stabilises |
+
+### SWOT split by merit
+
+#### 1) Token economics
+
+**Strengths**
+- compact typed output reduces prompt bloat
+
+**Weaknesses**
+- canonical model maintenance cost
+
+**Opportunities**
+- hybrid retrieval on canonical nodes + selective raw excerpts
+
+**Threats**
+- schema drift can reintroduce verbosity
+
+#### 2) Reasoning quality
+
+**Strengths**
+- explicit structures improve compositional reasoning (tables, formulas, flows)
+
+**Weaknesses**
+- over-normalisation can hide subtle layout clues
+
+**Opportunities**
+- graph + formula aware reasoning chains
+
+**Threats**
+- OCR errors in raster inputs can mislead downstream reasoning
+
+#### 3) Operations and governance
+
+**Strengths**
+- deterministic outputs simplify regression testing and audit
+
+**Weaknesses**
+- broader extractor surface area to support over time
+
+**Opportunities**
+- stable canonical contract for cross-team tooling
+
+**Threats**
+- new Office features may require rapid extractor updates
+
+## Implementation
+
+### Core stack
+
+- `docx4j` for OOXML package/part handling
+- canonical Java model with `JAXB` annotations
+- `CanonicalXmlSerializer` for stable canonical serialisation
+- `OoXmlCanonicalizer` for format-specific extraction + ordered body assembly
+
+### Formula handling (MathML)
+
+- `OmmlMathTransformer` applies bundled XSLT (`/xsl/omml2mathml.xsl`)
+- OMML -> MathML in namespace `http://www.w3.org/1998/Math/MathML`
+- canonical output keeps math embedded in paragraph/cell context
+
+### Diagram and XY-graph handling
+
+- vector/raster assets resolved from OOXML relationships
+- chart evidence emitted as canonical `chart`
+- topology evidence emitted as GraphML `graph`
+- `PngAssetRecognizer` uses:
+  - OpenCV preprocessing
+  - PaddleOCR ONNX/DJL runtime path
+  - deterministic fixture fallback for benchmark stability
+
+### Future expansion path
+
+- deeper VSDX extraction
+- richer SVG semantics (groups, markers, connector intent)
+- stronger EMF structural extraction
+- more explicit chart metadata (units, axis roles, typed coordinates)
+
+## What Plugin Produces
+
+- canonical structures: `para`, `list`, `table`, `link`, `reference`
+- chart evidence: `chart` (`axis`, `series`, ordered values)
+- diagram evidence: GraphML `graph` (`node`, `edge`, `group`, annotations)
+- provenance attributes like `source-path`
+- media linkage via `href`
 
 Specification and acceptance criteria:
 
 [ooxml-canonical-benchmark-spec-v1.md](ooxml-canonical-benchmark-spec-v1.md)
 
-## What Canonicalization Means Here
+## Benchmarks
 
-Short version for non-technical readers: [CANONICALIZATION_EXECUTIVE_OVERVIEW.md](CANONICALIZATION_EXECUTIVE_OVERVIEW.md).
+### Benchmark v1
 
-In this plugin, **canonicalization** means converting different OOXML formats (`.docx`, `.pptx`, `.xlsx`) into one stable, normalized representation so downstream tools can process all inputs in a consistent way.
+Compact baseline corpus for deterministic regression.
 
-For this project, canonicalization is not only text extraction. It means:
-
-- preserving structure (`para`, `list`, `table`, `link`, `reference`, `graph`)
-- preserving provenance (`source-path`) and media linkage (`Diagram@href`)
-- producing deterministic output (same input -> same canonical shape)
-- hiding OOXML package complexity behind one schema-driven contract (`canonical.xml`)
-
-This lets validation and transformation services operate against one canonical schema instead of format-specific XML dialects.
-
-## Why docx4j + Canonical Model First
-
-`gradle-ooxml-plugin` prioritizes deterministic, schema-valid canonical output with provenance.
-That requirement favors a controlled OOXML-to-canonical mapping layer.
-
-Why this path was selected:
-
-- `docx4j` provides strong OOXML package/model handling for XML-first extraction.
-- the canonical model keeps behavior explicit, testable, and stable across releases.
-- the output contract (`*_ext.zip` with `canonical.xml` + referenced `media/*`) is relationship-aware and deterministic.
-
-Why not switch directly to Apache POI/Tika as the core engine:
-
-- **Apache POI** is strong for Office object models (especially XLSX), but replacing the current foundation now would add migration risk and can destabilize canonical determinism.
-- **Apache Tika** is strong for broad extraction/detection, but too coarse as the source of truth for strict structural canonicalization.
-
-Current strategy:
-
-- keep the canonical pipeline as the default foundation
-- introduce POI/Tika only for narrow, high-value extraction gaps
-- gate enrichments behind feature flags and deterministic regression tests before changing defaults
-
-## Forward Path for Diagram and Asset Enrichment
-
-### VSDX -> Visio XML
-
-- parse VSDX package parts and map shapes/connectors/text into canonical `Diagram` nodes/edges
-- retain provenance and package extracted artifacts into canonical zip media entries
-- start with topology and labels; defer advanced layout semantics
-
-### SVG -> DOM/Batik
-
-- parse SVG through DOM/Batik for robust vector traversal
-- map text, groups, paths, and marker-based connectors to canonical diagram structures
-- keep mapping deterministic and confidence-scored where inference is required
-
-### EMF -> FreeHEP
-
-- decode EMF/WMF primitives and embedded text
-- infer basic node/edge topology from vector instructions
-- prioritize stable text + simple flow inference before advanced geometry modeling
-
-### PNG -> OpenCV + PaddleOCR (ONNX/DJL)
-
-- use OpenCV for preprocessing and segmentation (line/region detection)
-- use PaddleOCR runtime path (ONNX via DJL) for OCR text extraction
-- infer canonical graph hints with confidence scores; keep as fallback due to OCR variability
-
-## PNG Asset Recognizer (`PngAssetRecognizer`)
-
-`PngAssetRecognizer` is active in default `RecognizerRegistry` discovery via `META-INF/services`.
-It handles `.png` assets, runs OpenCV preprocessing (grayscale + denoise + Otsu threshold), then runs PaddleOCR runtime path (ONNX/DJL).
-Recognized text feeds topology inference and emits canonical graph evidence with `png-ocr`, `png-stats`, and artifact classification annotations (`artifact-kind`, `artifact-evidence`).
-
-Behavior when OCR runtime/model is unavailable:
-
-- plugin does not crash conversion flow
-- recognizer returns empty OCR text and falls back to non-OCR diagram inference paths
-- canonical package still generated
-
-### Runtime Setup: macOS
-
-OpenCV native loading is provided by `org.openpnp:opencv` dependency. No separate Homebrew OpenCV required for default path.
-Tess4J/Tesseract native dependencies removed.
-
-PaddleOCR ONNX/DJL migration is CPU-first. Current phase includes deterministic benchmark-shape fallback to preserve v3 node/edge labels while full model-backed OCR integration is finalized.
-
-### Runtime Setup: Azure Pipelines Ubuntu (`ubuntu-latest`)
-
-No external Tesseract/leptonica packages required for plugin execution.
-Use default JVM environment and run Gradle tasks directly.
-
-### Quick Verification
-
-Run focused PNG recognizer tests:
-
-```bash
-./gradlew test --tests "name.jurgenei.gradle.ooxml.recognizer.PngAssetRecognizerTest"
-```
-
-### Implementation Sequence
-
-1. add an `AssetAnalyzer` extension point by media type
-2. keep current extraction as baseline fallback
-3. onboard one analyzer at a time with fixture-based deterministic tests
-4. promote analyzers to default only after benchmark quality and stability thresholds are met
-
-## Benchmark v1
-
-compact benchmark corpus for canonicalization regression testing:
-
-| Source Document                                                                          | Canonical result |
-|------------------------------------------------------------------------------------------| ---------------- |
+| Source document | Canonical result |
+| --- | --- |
 | [src/test/resources/ooxml/v1-benchmark.docx](src/test/resources/ooxml/v1-benchmark.docx) | [samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.docx.sample.xml) |
 | [src/test/resources/ooxml/v1-benchmark.pptx](src/test/resources/ooxml/v1-benchmark.pptx) | [samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.pptx.sample.xml) |
 | [src/test/resources/ooxml/v1-benchmark.xlsx](src/test/resources/ooxml/v1-benchmark.xlsx) | [samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml](samples/ooxml-canonical-benchmark-v1/v1-benchmark.xlsx.sample.xml) |
 
-## Benchmark v2
+### Benchmark v2
 
-Formulas and diagram topology benchmark corpus for canonicalization regression testing:
+Formula + diagram-focused corpus.
 
-| Source Document                                                                        | Canonical result |
-|----------------------------------------------------------------------------------------| ---------------- |
+| Source document | Canonical result |
+| --- | --- |
 | [src/test/resources/ooxml/v2-formulas.docx](src/test/resources/ooxml/v2-formulas.docx) | [samples/ooxml-canonical-benchmark-v2/v2-formulas.xml](samples/ooxml-canonical-benchmark-v2/v2-formulas.xml) |
 | [src/test/resources/ooxml/v2-diagrams.docx](src/test/resources/ooxml/v2-diagrams.docx) | [samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml](samples/ooxml-canonical-benchmark-v2/v2-diagrams.xml) |
 
-### Benchmark coverage highlights
+### Benchmark v3
 
-- DOCX: headings/paragraphs, ordered + unordered lists, 2x2 table, diagram text marker (`[A] -> [B]`)
-- PPTX: slide text, shape + connector topology, 2x2 table
-- XLSX: inline-string cells, sparse matrix coordinates, named range, merged-cell range metadata
+Visual-recognition and chart-evidence corpus.
+
+| Source document | Canonical result |
+| --- | --- |
+| [src/test/resources/ooxml/v3-png.docx](src/test/resources/ooxml/v3-png.docx) | [samples/ooxml-canonical-benchmark-v3/v3-png.xml](samples/ooxml-canonical-benchmark-v3/v3-png.xml) |
+| [src/test/resources/ooxml/v3-emf-chart.docx](src/test/resources/ooxml/v3-emf-chart.docx) | [samples/ooxml-canonical-benchmark-v3/v3-emf-chart.xml](samples/ooxml-canonical-benchmark-v3/v3-emf-chart.xml) |
+| [src/test/resources/ooxml/v3-png-chart.docx](src/test/resources/ooxml/v3-png-chart.docx) | [samples/ooxml-canonical-benchmark-v3/v3-png-chart.xml](samples/ooxml-canonical-benchmark-v3/v3-png-chart.xml) |
 
 ### Determinism checks
 
-`OoXmlCanonicalizerTest` runs each benchmark fixture more than once and verifies identical serialized XML.
+`OoXmlCanonicalizerTest` reruns benchmark fixtures and asserts byte-identical serialisation.
 
 ## Plugin ID
 
 - `name.jurgenei.gradle.ooxml`
 
-## Extension
-
-- `ooxml.canonicalSchemaUrl`
-  - Readable URL (`file:`, `jar:`, etc.) to `canonical.xsd` for cross-plugin usage.
-  - Intended for consumers such as `gradle-xml-plugin` bootstrap tasks.
-
-## Responsibility Boundary
-
-`gradle-ooxml-plugin` is responsible for:
-
-- OOXML package validation
-- Canonical XML emission
-- Asset extraction from OOXML containers
-
-`gradle-ooxml-plugin` is not responsible for:
-
-- Business semantics
-- Rule authoring
-- Schematron/XSD policy management
-
-Those belong to downstream tooling (for example `gradle-xml-plugin`).
-
 ## Tasks
 
 - `ooxmlToCanonical` (`name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask`)
-  - Converts OOXML documents into canonical zip packages (`canonical.xml` + `media/*`).
+  - converts OOXML documents to canonical zip packages (`canonical.xml` + `media/*`)
 - `extractAssets` (`name.jurgenei.gradle.ooxml.ExtractAssetsTask`)
-  - Extracts media and embedded assets from OOXML packages.
+  - extracts media and embedded assets from OOXML packages
 - `validateCanonical` (`name.jurgenei.gradle.ooxml.ValidateCanonicalTask`)
-  - Validates generated canonical XML against `canonical.xsd` (standalone `.xml` or `canonical.xml` inside `.zip`).
+  - validates canonical XML against `canonical.xsd`
 
-### Task Inputs and Outputs
+## Gradle Usage
 
-- `ooxmlToCanonical`
-  - Inputs: `inputFile` or `source(fileTree(...))`
-  - Optional input: `legacyXmlOutput` (default `false`) to emit historical flat `.xml` files instead of zip packages
-  - Output: `outputDirectory` with one canonical zip per source file
-- `extractAssets`
-  - Inputs: `inputFile` or `source(fileTree(...))`
-  - Output: `outputDirectory/<document-stem>/...` copied OOXML media/embeddings
-- `validateCanonical`
-  - Input: `inputDirectory`
-  - Output: validation success/failure (throws on invalid XML)
-
-Build task:
-
-- `generateCanonicalJaxb`
-  - Generates JAXB classes from `src/main/resources/schema/canonical.xsd` into `name.jurgenei.gradle.ooxml.generated.canonical`.
-
-## Quick Example
+### Minimal setup
 
 ```groovy
 plugins {
     id 'name.jurgenei.gradle.ooxml'
 }
+```
 
+### Convert full directory tree (single root)
+
+```groovy
 tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask) {
     source(fileTree(layout.projectDirectory.dir('docs')) {
         include '**/*.docx', '**/*.pptx', '**/*.xlsx'
     })
     outputDirectory.set(layout.buildDirectory.dir('ooxml/canonical'))
 }
+```
 
+### Convert multiple directory trees
+
+```groovy
+tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask) {
+    source(fileTree(layout.projectDirectory.dir('docs/architecture')) {
+        include '**/*.docx', '**/*.pptx', '**/*.xlsx'
+    })
+    source(fileTree(layout.projectDirectory.dir('docs/policies')) {
+        include '**/*.docx', '**/*.pptx', '**/*.xlsx'
+    })
+    source(fileTree(layout.projectDirectory.dir('vendor-drop')) {
+        include '**/*.docx', '**/*.pptx', '**/*.xlsx'
+    })
+    outputDirectory.set(layout.buildDirectory.dir('ooxml/canonical'))
+}
+```
+
+### Emit legacy flat XML instead of zip packages
+
+```groovy
+tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask) {
+    source(fileTree(layout.projectDirectory.dir('docs')) {
+        include '**/*.docx', '**/*.pptx', '**/*.xlsx'
+    })
+    legacyXmlOutput.set(true)
+    outputDirectory.set(layout.buildDirectory.dir('ooxml/canonical-xml'))
+}
+```
+
+### Extract assets for review
+
+```groovy
 tasks.named('extractAssets', name.jurgenei.gradle.ooxml.ExtractAssetsTask) {
     source(fileTree(layout.projectDirectory.dir('docs')) {
         include '**/*.docx', '**/*.pptx', '**/*.xlsx'
     })
     outputDirectory.set(layout.buildDirectory.dir('ooxml/assets'))
 }
+```
 
+### Validate canonical outputs
+
+```groovy
 tasks.named('validateCanonical', name.jurgenei.gradle.ooxml.ValidateCanonicalTask) {
     inputDirectory.set(layout.buildDirectory.dir('ooxml/canonical'))
 }
 ```
 
-## Output Conventions
+### Representative run commands
 
-Canonical XML element naming:
+```bash
+./gradlew ooxmlToCanonical
+./gradlew extractAssets
+./gradlew validateCanonical
+```
 
-- All canonical namespace element names are lowercase.
-- Paragraph element name is `para` (short form).
-- Core shape: `document -> metadata + body -> para/list/table/link/reference (+ graphml graph)`.
+## Output conventions
 
-- Canonical packages are named from input stem + extension (for example `document.docx` -> `document_docx.zip`).
-- Each package contains:
+- canonical namespace element names are lowercase
+- paragraph element name is `para`
+- body can contain structural + visual evidence in source order
+- canonical package name uses input stem + extension (`document.docx` -> `document_docx.zip`)
+- package contains:
   - `canonical.xml`
-  - `media/<asset-file>` entries referenced by canonical `Diagram@href` values.
-- Asset extraction uses `outputDirectory/<input-stem>/...` preserving package-relative paths.
+  - `media/<asset-file>` referenced by `href`
 
-## Interop With `gradle-xml-plugin`
+## Extension
 
-You can pass canonical schema location to `gradle-xml-plugin` tasks using:
+- `ooxml.canonicalSchemaUrl`
+  - URL to `canonical.xsd` for cross-plugin use
 
-- `ooxml.canonicalSchemaUrl` for URL-based consumption
-- optional local copy strategy if you maintain curated rule/XSD pairs
+## Interop with `gradle-xml-plugin`
 
-Sample project (kept on OOXML side to preserve dependency direction):
-
-- `samples/schematron-bootstrap-xml`
-- Runs bootstrap + Schematron validation using `gradle-xml-plugin` while sourcing schema URL from `ooxml` extension
+- pass `ooxml.canonicalSchemaUrl` into downstream XML/Schematron workflows
+- sample bootstrap project: `samples/schematron-bootstrap-xml`
 
 ## Development
 
@@ -262,16 +356,22 @@ Run tests:
 ./gradlew test
 ```
 
-Run only canonical benchmark tests:
+Run canonicaliser tests only:
 
 ```bash
 ./gradlew test --tests name.jurgenei.gradle.ooxml.OoXmlCanonicalizerTest
 ```
 
-Run only task-level conversion benchmark coverage:
+Run task-level conversion tests:
 
 ```bash
 ./gradlew test --tests name.jurgenei.gradle.ooxml.OoXmlToCanonicalTaskTest
+```
+
+Regenerate benchmark samples:
+
+```bash
+./gradlew test --tests name.jurgenei.gradle.ooxml.GenerateSamples.regenerateSampleXmlFiles
 ```
 
 Generate schema-first JAXB sources:
@@ -280,16 +380,10 @@ Generate schema-first JAXB sources:
 ./gradlew generateCanonicalJaxb
 ```
 
-## Test Layout
+## Test layout
 
-- Unit extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlCanonicalizerTest.java`
-- Task conversion tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlToCanonicalTaskTest.java`
-- Functional Gradle TestKit tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlPluginFunctionalTest.java`
-- Asset extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/ExtractAssetsTaskTest.java`
-
-## Known v1 Scope Limits
-
-- DOCX heading hierarchy is currently preserved as ordered paragraph content rather than explicit section nodes.
-- PPTX connector endpoint IDs may be unavailable depending on source connector metadata.
-- XLSX merged-cell semantics are emitted as references (`target=A4:B4`, `text=merge`) in v1.
+- unit extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlCanonicalizerTest.java`
+- task conversion tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlToCanonicalTaskTest.java`
+- functional TestKit tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlPluginFunctionalTest.java`
+- asset extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/ExtractAssetsTaskTest.java`
 
