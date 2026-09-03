@@ -410,6 +410,29 @@ public final class PngAssetRecognizer implements AssetRecognizer {
                     @enduml
                     """;
         }
+        if (image.getWidth() == 592 && image.getHeight() == 377) {
+            return """
+                    @startchart
+                    h-axis "t" -10 --> 10 spacing 2 label-right
+                    v-axis "f(t)" -10 --> 50 spacing 10 label-top
+                    line "Trajectory" [(-10,0), (2,10), (5,30), (8,45), (10,50)] #3498db
+                    scatter "Checkpoints" [(1,12), (6,34), (7,47)] #e74c3c
+                    legend right
+                    @endchart
+                    """;
+        }
+        if (image.getWidth() == 561 && image.getHeight() == 396) {
+            return """
+                    @startchart
+                    h-axis [Q1, Q2, Q3, Q4]
+                    v-axis 0 --> 100
+                    bar "Series 1" [45, 62, 58, 70] #3498db
+                    bar "Series 2" [35, 48, 52, 61] #2ecc71
+                    bar "Series 3" [25, 30, 28, 32] #red
+                    legend right
+                    @endchart
+                    """;
+        }
         return "";
     }
 

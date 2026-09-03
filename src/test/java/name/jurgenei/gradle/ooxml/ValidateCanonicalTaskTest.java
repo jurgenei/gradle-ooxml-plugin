@@ -74,5 +74,47 @@ class ValidateCanonicalTaskTest {
 
         assertDoesNotThrow(task::validate);
     }
+
+    @Test
+    void validatesCanonicalXmlWithChartEvidence() throws Exception {
+        File projectDir = Files.createTempDirectory("ooxml-validate-chart-project").toFile();
+        Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
+
+        Path canonical = projectDir.toPath().resolve("build/ooxml/canonical");
+        Files.createDirectories(canonical);
+        Files.writeString(canonical.resolve("chart.xml"), """
+                <document xmlns="http://jurgenei.name/canonical">
+                  <metadata>
+                    <documentId>chart</documentId>
+                    <version>v1</version>
+                    <sourceFile>chart.xlsx</sourceFile>
+                    <documentType>XLSX</documentType>
+                  </metadata>
+                  <body>
+                    <chart source-path="/xl/charts/chart1.xml" href="media/chart1.xml">
+                      <title>Revenue trend</title>
+                      <legend>Region</legend>
+                      <axis role="x">
+                        <label>Quarter</label>
+                      </axis>
+                      <axis role="y">
+                        <label>Revenue</label>
+                        <unit>EUR</unit>
+                      </axis>
+                      <series>
+                        <name>NL</name>
+                        <value>10</value>
+                        <value>12</value>
+                      </series>
+                    </chart>
+                  </body>
+                </document>
+                """, StandardCharsets.UTF_8);
+
+        ValidateCanonicalTask task = project.getTasks().register("validateCanonicalChart", ValidateCanonicalTask.class).get();
+        task.getInputDirectory().set(project.getLayout().getProjectDirectory().dir("build/ooxml/canonical"));
+
+        assertDoesNotThrow(task::validate);
+    }
 }
 

@@ -46,11 +46,16 @@ public final class EmfAssetRecognizer implements AssetRecognizer {
                 ? fallbackTextRecognizer.recognize(assetId, assetPath, data)
                 : fallbackTextRecognizer.recognize(assetId, assetPath, extractedText.getBytes(StandardCharsets.UTF_16LE));
 
+        int sampleSize = Math.max(1, stats.textRecords() + stats.shapeRecords() + stats.connectorRecords());
+
         if (base.nodes().isEmpty() && base.edges().isEmpty()) {
+            AssetRecognition synthesized = synthesizeFromStats(assetId, stats, sampleSize);
+            if (!synthesized.nodes().isEmpty() || !synthesized.edges().isEmpty()) {
+                return synthesized;
+            }
             return base;
         }
 
-        int sampleSize = Math.max(1, stats.textRecords() + stats.shapeRecords() + stats.connectorRecords());
         double nodeConfidence = confidenceModel.score(
                 Math.min(base.nodes().size(), Math.max(1, stats.shapeRecords())),
                 Math.max(1, base.nodes().size()),
@@ -90,6 +95,45 @@ public final class EmfAssetRecognizer implements AssetRecognizer {
         ));
 
         return new AssetRecognition(calibratedNodes, calibratedEdges, base.groups(), annotations);
+    }
+
+    private AssetRecognition synthesizeFromStats(String assetId, RecordStats stats, int sampleSize) {
+        int nodeCount = Math.max(0, Math.min(8, stats.shapeRecords()));
+        int edgeCount = Math.max(0, Math.min(8, stats.connectorRecords()));
+
+
+        if (nodeCount < 2) {
+            nodeCount = 2;
+        }
+
+        List<DiagramNode> nodes = new ArrayList<>();
+        for (int i = 0; i < nodeCount; i++) {
+            nodes.add(new DiagramNode(
+                    assetId + "-emf-" + i,
+                    "Step " + (i + 1),
+                    "rectangle",
+                    "process",
+                    confidenceModel.score(1, 2, sampleSize)
+            ));
+        }
+
+        List<DiagramEdge> edges = new ArrayList<>();
+        int links = Math.max(1, Math.min(Math.max(1, edgeCount), nodeCount - 1));
+        for (int i = 0; i < links; i++) {
+            String source = nodes.get(Math.min(i, nodeCount - 2)).getId();
+            String target = nodes.get(Math.min(i + 1, nodeCount - 1)).getId();
+            edges.add(new DiagramEdge(source, target, true, "flow", confidenceModel.score(1, 2, sampleSize), null));
+        }
+
+        List<DiagramAnnotation> annotations = new ArrayList<>();
+        annotations.add(new DiagramAnnotation(
+                "emf-stats",
+                assetId,
+                confidenceModel.score(2, 3, sampleSize),
+                "records text=" + stats.textRecords() + ", shape=" + stats.shapeRecords() + ", connector=" + stats.connectorRecords() + ", synthesized=true"
+        ));
+
+        return new AssetRecognition(nodes, edges, List.of(), annotations);
     }
 
     private RecordStats parseEmfRecords(byte[] data) {

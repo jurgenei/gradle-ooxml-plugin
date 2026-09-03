@@ -249,6 +249,10 @@ class OoXmlCanonicalizerTest {
                 diagram.getAnnotations().stream().anyMatch(annotation -> "png-ocr".equals(annotation.getKind()))));
         assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
                 diagram.getAnnotations().stream().anyMatch(annotation -> "png-stats".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "artifact-kind".equals(annotation.getKind()))));
+        assertTrue(document.getBody().getDiagrams().stream().allMatch(diagram ->
+                diagram.getAnnotations().stream().anyMatch(annotation -> "artifact-evidence".equals(annotation.getKind()))));
 
         var first = document.getBody().getDiagrams().stream()
                 .filter(diagram -> "/word/document/p[1]/drawing[1]".equals(diagram.getSourcePath()))
@@ -277,6 +281,78 @@ class OoXmlCanonicalizerTest {
         assertTrue(xml.contains("kind=\"png-ocr\""));
         assertTrue(xml.contains("kind=\"png-stats\""));
         assertTrue(xml.contains("href=\"media/") && xml.contains(".png\""));
+    }
+
+    @Test
+    void canonicalizesDocxEmfChartFixtureWithGraphEvidence() throws Exception {
+        Path file = copyFixture("v3-emf-chart.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertEquals("v3", document.getMetadata().getVersion());
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(paragraph -> "EMF chart 1".equals(paragraph.getText())));
+        assertTrue(document.getBody().getParagraphs().stream().anyMatch(paragraph -> "EMF chart 2".equals(paragraph.getText())));
+        assertTrue(document.getBody().getCharts().size() >= 2);
+        assertTrue(document.getBody().getCharts().stream().allMatch(chart ->
+                chart.getHref() != null && chart.getHref().startsWith("media/") && chart.getHref().endsWith(".emf")));
+
+        String xml = serialize(document);
+        assertAppearsBefore(xml, "EMF chart 1", "href=\"media/image1.emf\"");
+        assertAppearsBefore(xml, "href=\"media/image1.emf\"", "EMF chart 2");
+        assertAppearsBefore(xml, "EMF chart 2", "href=\"media/image2.emf\"");
+
+        var chartOne = document.getBody().getCharts().stream()
+                .filter(chart -> "/word/document/p[1]/drawing[1]".equals(chart.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(chartOne.getSeries().stream().anyMatch(series -> "Trajectory".equals(series.getName())));
+        assertTrue(chartOne.getSeries().stream().anyMatch(series -> "Checkpoints".equals(series.getName())));
+        assertTrue(chartOne.getSeries().stream().filter(series -> "Trajectory".equals(series.getName()))
+                .flatMap(series -> series.getValues().stream())
+                .findFirst().orElseThrow().equals("(-10,0)"));
+
+        var chartTwo = document.getBody().getCharts().stream()
+                .filter(chart -> "/word/document/p[1]/drawing[2]".equals(chart.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(chartTwo.getAxes().stream().anyMatch(axis -> "x".equals(axis.getRole()) && axis.getLabel().contains("Q1")));
+        assertTrue(chartTwo.getSeries().stream().anyMatch(series -> "Series 1".equals(series.getName())));
+        assertTrue(chartTwo.getSeries().stream().anyMatch(series -> "Series 2".equals(series.getName())));
+        assertTrue(chartTwo.getSeries().stream().anyMatch(series -> "Series 3".equals(series.getName())));
+        assertEquals(List.of("45", "62", "58", "70"), chartTwo.getSeries().stream()
+                .filter(series -> "Series 1".equals(series.getName()))
+                .findFirst().orElseThrow().getValues());
+    }
+
+    @Test
+    void canonicalizesDocxPngChartFixtureWithGraphEvidence() throws Exception {
+        Path file = copyFixture("v3-png-chart.docx");
+
+        CanonicalDocument document = canonicalizer.canonicalize(file.toFile());
+        assertEquals("DOCX", document.getMetadata().getDocumentType());
+        assertEquals("v3", document.getMetadata().getVersion());
+        assertTrue(document.getBody().getCharts().size() >= 2);
+        assertTrue(document.getBody().getCharts().stream().allMatch(chart ->
+                chart.getHref() != null && chart.getHref().startsWith("media/") && chart.getHref().endsWith(".png")));
+
+        var chartOne = document.getBody().getCharts().stream()
+                .filter(chart -> "/word/document/p[2]/drawing[1]".equals(chart.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(chartOne.getSeries().stream().anyMatch(series -> "Trajectory".equals(series.getName())));
+        assertTrue(chartOne.getSeries().stream().anyMatch(series -> "Checkpoints".equals(series.getName())));
+        assertEquals(List.of("(-10,0)", "(2,10)", "(5,30)", "(8,45)", "(10,50)"), chartOne.getSeries().stream()
+                .filter(series -> "Trajectory".equals(series.getName()))
+                .findFirst().orElseThrow().getValues());
+
+        var chartTwo = document.getBody().getCharts().stream()
+                .filter(chart -> "/word/document/p[4]/drawing[1]".equals(chart.getSourcePath()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(chartTwo.getAxes().stream().anyMatch(axis -> "x".equals(axis.getRole()) && axis.getLabel().contains("Q4")));
+        assertEquals(List.of("45", "62", "58", "70"), chartTwo.getSeries().stream()
+                .filter(series -> "Series 1".equals(series.getName()))
+                .findFirst().orElseThrow().getValues());
     }
 
     private void assertDeterministic(String fixtureName) throws Exception {

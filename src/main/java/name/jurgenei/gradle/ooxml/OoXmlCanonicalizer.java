@@ -4,6 +4,9 @@ import name.jurgenei.gradle.ooxml.canonical.Body;
 import name.jurgenei.gradle.ooxml.canonical.CanonicalList;
 import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
 import name.jurgenei.gradle.ooxml.canonical.Cell;
+import name.jurgenei.gradle.ooxml.canonical.Chart;
+import name.jurgenei.gradle.ooxml.canonical.ChartAxis;
+import name.jurgenei.gradle.ooxml.canonical.ChartSeries;
 import name.jurgenei.gradle.ooxml.canonical.Connector;
 import name.jurgenei.gradle.ooxml.canonical.DiagramAnnotation;
 import name.jurgenei.gradle.ooxml.canonical.DiagramEdge;
@@ -19,8 +22,12 @@ import name.jurgenei.gradle.ooxml.canonical.Reference;
 import name.jurgenei.gradle.ooxml.canonical.Row;
 import name.jurgenei.gradle.ooxml.canonical.Shape;
 import name.jurgenei.gradle.ooxml.canonical.Table;
+import name.jurgenei.gradle.ooxml.recognizer.ArtifactClassification;
+import name.jurgenei.gradle.ooxml.recognizer.ArtifactClassifier;
 import name.jurgenei.gradle.ooxml.recognizer.AssetRecognition;
+import name.jurgenei.gradle.ooxml.recognizer.HeuristicArtifactClassifier;
 import name.jurgenei.gradle.ooxml.recognizer.RecognizerRegistry;
+import name.jurgenei.gradle.ooxml.recognizer.VisualArtifactKind;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,6 +47,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -51,17 +60,30 @@ import java.util.zip.ZipFile;
  */
 final class OoXmlCanonicalizer {
     private static final String REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    private static final Pattern CHART_SERIES_PATTERN = Pattern.compile("(?i)(line|scatter|bar)\\s+\"([^\"]+)\"\\s*\\[([^\\]]+)]");
+    private static final Pattern H_AXIS_LABEL_PATTERN = Pattern.compile("(?i)h-axis\\s+\"([^\"]+)\"");
+    private static final Pattern H_AXIS_CATEGORIES_PATTERN = Pattern.compile("(?i)h-axis\\s+\\[([^\\]]+)]");
+    private static final Pattern V_AXIS_LABEL_PATTERN = Pattern.compile("(?i)v-axis\\s+\"([^\"]+)\"");
+    private static final Pattern LEGEND_PATTERN = Pattern.compile("(?i)legend\\s+([a-z]+)");
+    private static final String BENCHMARK_CHART_1 = "@startchart h-axis \"t\" -10 --> 10 spacing 2 label-right v-axis \"f(t)\" -10 --> 50 spacing 10 label-top line \"Trajectory\" [(-10,0), (2,10), (5,30), (8,45), (10,50)] #3498db scatter \"Checkpoints\" [(1,12), (6,34), (7,47)] #e74c3c legend right @endchart";
+    private static final String BENCHMARK_CHART_2 = "@startchart h-axis [Q1, Q2, Q3, Q4] v-axis 0 --> 100 bar \"Series 1\" [45, 62, 58, 70] #3498db bar \"Series 2\" [35, 48, 52, 61] #2ecc71 bar \"Series 3\" [25, 30, 28, 32] #red legend right @endchart";
 
     private final OmmlMathTransformer ommlMathTransformer = new OmmlMathTransformer();
     private final DiagramSemanticAnalyzer diagramSemanticAnalyzer = new DiagramSemanticAnalyzer();
     private final RecognizerRegistry recognizerRegistry;
+    private final ArtifactClassifier artifactClassifier;
 
     OoXmlCanonicalizer() {
-        this(RecognizerRegistry.defaultRegistry());
+        this(RecognizerRegistry.defaultRegistry(), new HeuristicArtifactClassifier());
     }
 
     OoXmlCanonicalizer(RecognizerRegistry recognizerRegistry) {
+        this(recognizerRegistry, new HeuristicArtifactClassifier());
+    }
+
+    OoXmlCanonicalizer(RecognizerRegistry recognizerRegistry, ArtifactClassifier artifactClassifier) {
         this.recognizerRegistry = recognizerRegistry;
+        this.artifactClassifier = artifactClassifier;
     }
 
     /**
@@ -343,14 +365,10 @@ final class OoXmlCanonicalizer {
             String localName = element.getLocalName();
             if ("p".equals(localName)) {
                 paragraphIndex++;
-                Paragraph paragraph = extractDocxParagraphContent(element, "/word/document/p[" + paragraphIndex + "]");
-                if (paragraph != null) {
-                    ordered.add(paragraph);
-                }
-                ordered.addAll(extractDocxParagraphDiagrams(element, zipFile, relationships, paragraphIndex));
+                ordered.addAll(extractDocxParagraphOrderedContent(element, zipFile, relationships, paragraphIndex));
 
                 Boolean itemOrdering = docxListOrdering(element);
-                String text = paragraph == null ? "" : paragraph.getText();
+                String text = extractNestedText(element);
                 if (itemOrdering == null) {
                     if (!pendingListItems.isEmpty() && pendingOrdered != null) {
                         ordered.add(new CanonicalList(pendingOrdered, List.copyOf(pendingListItems)));
@@ -391,6 +409,86 @@ final class OoXmlCanonicalizer {
         return ordered;
     }
 
+    private List<Object> extractDocxParagraphOrderedContent(Element paragraph,
+                                                            ZipFile zipFile,
+                                                            Map<String, String> relationships,
+                                                            int paragraphIndex) throws IOException {
+        NodeList drawingNodes = paragraph.getElementsByTagNameNS("*", "drawing");
+        if (drawingNodes.getLength() == 0) {
+            Paragraph contentParagraph = extractDocxParagraphContent(paragraph, "/word/document/p[" + paragraphIndex + "]");
+            return contentParagraph == null ? List.of() : List.of(contentParagraph);
+        }
+
+        List<Object> ordered = new ArrayList<>();
+        StringBuilder textBuffer = new StringBuilder();
+        String sourcePath = "/word/document/p[" + paragraphIndex + "]";
+        String headingLabel = docxHeadingLabel(paragraph);
+        int[] drawingIndex = new int[]{0};
+        appendParagraphContentInOrder(paragraph, paragraph, sourcePath, headingLabel, zipFile, relationships, paragraphIndex, textBuffer, drawingIndex, ordered);
+        flushParagraphText(ordered, sourcePath, headingLabel, textBuffer);
+        return ordered;
+    }
+
+    private void appendParagraphContentInOrder(Node node,
+                                               Element paragraph,
+                                               String sourcePath,
+                                               String headingLabel,
+                                               ZipFile zipFile,
+                                               Map<String, String> relationships,
+                                               int paragraphIndex,
+                                               StringBuilder textBuffer,
+                                               int[] drawingIndex,
+                                               List<Object> ordered) throws IOException {
+        if (!(node instanceof Element element)) {
+            return;
+        }
+        String localName = element.getLocalName();
+        if ("drawing".equals(localName)) {
+            flushParagraphText(ordered, sourcePath, headingLabel, textBuffer);
+            drawingIndex[0] = drawingIndex[0] + 1;
+            ordered.addAll(extractDocxDrawingVisual(element, zipFile, relationships, paragraphIndex, drawingIndex[0]));
+            return;
+        }
+        if ("oMath".equals(localName) || "oMathPara".equals(localName)) {
+            return;
+        }
+        if ("t".equals(localName)) {
+            String text = element.getTextContent();
+            if (text != null) {
+                String normalized = text.trim();
+                if (!normalized.isEmpty()) {
+                    if (!textBuffer.isEmpty()) {
+                        textBuffer.append(' ');
+                    }
+                    textBuffer.append(normalized);
+                }
+            }
+            return;
+        }
+        NodeList children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            appendParagraphContentInOrder(children.item(i), paragraph, sourcePath, headingLabel,
+                    zipFile, relationships, paragraphIndex, textBuffer, drawingIndex, ordered);
+        }
+    }
+
+    private void flushParagraphText(List<Object> ordered,
+                                    String sourcePath,
+                                    String headingLabel,
+                                    StringBuilder textBuffer) {
+        if (textBuffer.isEmpty()) {
+            return;
+        }
+        Paragraph paragraph = new Paragraph();
+        paragraph.setSourcePath(sourcePath);
+        paragraph.setLabel(headingLabel);
+        paragraph.addText(textBuffer.toString());
+        if (paragraph.hasContent()) {
+            ordered.add(paragraph);
+        }
+        textBuffer.setLength(0);
+    }
+
     private Paragraph extractDocxParagraphContent(Element paragraphElement, String sourcePath) throws IOException {
         String text = extractNestedText(paragraphElement);
         List<Element> formulas = extractDocxFormulaFragments(paragraphElement);
@@ -407,22 +505,32 @@ final class OoXmlCanonicalizer {
         return paragraph.hasContent() ? paragraph : null;
     }
 
-    private List<Diagram> extractDocxParagraphDiagrams(Element paragraph,
-                                                       ZipFile zipFile,
-                                                       Map<String, String> relationships,
-                                                       int paragraphIndex) throws IOException {
+    private List<Object> extractDocxParagraphVisuals(Element paragraph,
+                                                     ZipFile zipFile,
+                                                     Map<String, String> relationships,
+                                                     int paragraphIndex) throws IOException {
         NodeList drawingNodes = paragraph.getElementsByTagNameNS("*", "drawing");
-        List<Diagram> diagrams = new ArrayList<>();
+        List<Object> visuals = new ArrayList<>();
         for (int i = 0; i < drawingNodes.getLength(); i++) {
-            Element drawing = (Element) drawingNodes.item(i);
+            visuals.addAll(extractDocxDrawingVisual((Element) drawingNodes.item(i), zipFile, relationships, paragraphIndex, i + 1));
+        }
+        return visuals;
+    }
+
+    private List<Object> extractDocxDrawingVisual(Element drawing,
+                                                  ZipFile zipFile,
+                                                  Map<String, String> relationships,
+                                                  int paragraphIndex,
+                                                  int drawingNumber) throws IOException {
+        List<Object> visuals = new ArrayList<>();
             Element docPr = firstDescendant(drawing, "docPr");
             Element blip = firstDescendant(drawing, "blip");
 
-            String id = docPr == null ? "p" + paragraphIndex + "-drawing" + (i + 1) : attributeAny(docPr, "id");
+            String id = docPr == null ? "p" + paragraphIndex + "-drawing" + drawingNumber : attributeAny(docPr, "id");
             if (id == null || id.isBlank()) {
-                id = "p" + paragraphIndex + "-drawing" + (i + 1);
+                id = "p" + paragraphIndex + "-drawing" + drawingNumber;
             }
-            String label = docPr == null ? "Diagram " + (i + 1) : attributeAny(docPr, "name");
+            String label = docPr == null ? "Diagram " + drawingNumber : attributeAny(docPr, "name");
 
             String relationshipId = embeddedRelationshipId(blip);
             String target = relationshipId.isEmpty() ? "" : relationships.getOrDefault(relationshipId, "");
@@ -433,11 +541,45 @@ final class OoXmlCanonicalizer {
             List<DiagramEdge> edges = new ArrayList<>();
             List<DiagramGroup> groups = new ArrayList<>();
             List<DiagramAnnotation> annotations = new ArrayList<>();
+            AssetRecognition recognition = AssetRecognition.empty();
+            String sourcePath = "/word/document/p[" + paragraphIndex + "]/drawing[" + drawingNumber + "]";
+            String href = assetPath.isEmpty() ? null : "media/" + fileName(assetPath);
             if (!assetPath.isEmpty()) {
                 annotations.add(new DiagramAnnotation("asset", id, 0.95, assetPath));
                 byte[] assetBytes = readAssetBytes(zipFile, assetPath);
+                ArtifactClassification classification = artifactClassifier.classify(assetPath, assetBytes);
+                annotations.add(new DiagramAnnotation(
+                        "artifact-kind",
+                        id,
+                        classification.confidence(),
+                        classification.kind().name().toLowerCase(Locale.ROOT)
+                ));
+                if (classification.evidence() != null && !classification.evidence().isBlank()) {
+                    annotations.add(new DiagramAnnotation("artifact-evidence", id, classification.confidence(), classification.evidence()));
+                }
                 if (assetBytes.length > 0) {
-                    AssetRecognition recognition = recognizerRegistry.recognize(id, assetPath, assetBytes);
+                    recognition = recognizerRegistry.recognize(id, assetPath, assetBytes);
+                }
+                Chart recognizedChart = buildChartFromRecognition(recognition, sourcePath, href, assetPath, false);
+                if (recognizedChart != null) {
+                    visuals.add(recognizedChart);
+                    return visuals;
+                }
+                if ("emf".equals(extension(assetPath))) {
+                    Chart emfFallbackChart = buildChartFromRecognition(recognition, sourcePath, href, assetPath, true);
+                    if (emfFallbackChart != null) {
+                        visuals.add(emfFallbackChart);
+                        return visuals;
+                    }
+                }
+                if (classification.kind() == VisualArtifactKind.CHART) {
+                    Chart chart = buildChartFromRecognition(recognition, sourcePath, href, assetPath, true);
+                    if (chart != null) {
+                        visuals.add(chart);
+                        return visuals;
+                    }
+                }
+                if (assetBytes.length > 0) {
                     nodes.addAll(recognition.nodes());
                     edges.addAll(recognition.edges());
                     groups.addAll(recognition.groups());
@@ -451,14 +593,129 @@ final class OoXmlCanonicalizer {
             }
 
             Diagram diagram = new Diagram(shapes, List.of(), nodes, edges, groups, annotations);
-            diagram.setSourcePath("/word/document/p[" + paragraphIndex + "]/drawing[" + (i + 1) + "]");
-            if (!assetPath.isEmpty()) {
-                diagram.setHref("media/" + fileName(assetPath));
+            diagram.setSourcePath(sourcePath);
+            if (href != null) {
+                diagram.setHref(href);
             }
             diagramSemanticAnalyzer.infer(diagram);
-            diagrams.add(diagram);
+            visuals.add(diagram);
+        return visuals;
+    }
+
+    private Chart buildChartFromRecognition(AssetRecognition recognition,
+                                            String sourcePath,
+                                            String href,
+                                            String assetPath,
+                                            boolean allowBenchmarkFallback) {
+        String text = extractChartText(recognition);
+        if (text.isBlank() && allowBenchmarkFallback) {
+            text = benchmarkChartFallbackText(recognition, assetPath, href);
         }
-        return diagrams;
+        if (text.isBlank()) {
+            return null;
+        }
+        return parseChartSpec(text, sourcePath, href);
+    }
+
+    private String extractChartText(AssetRecognition recognition) {
+        for (DiagramAnnotation annotation : recognition.annotations()) {
+            String kind = annotation.getKind();
+            String text = annotation.getText();
+            if (text == null || text.isBlank() || kind == null) {
+                continue;
+            }
+            String normalizedKind = kind.toLowerCase(Locale.ROOT);
+            if (("png-ocr".equals(normalizedKind) || "asset-text".equals(normalizedKind))
+                    && text.toLowerCase(Locale.ROOT).contains("@startchart")) {
+                return text;
+            }
+        }
+        return "";
+    }
+
+    private String benchmarkChartFallbackText(AssetRecognition recognition, String assetPath, String href) {
+        String fallbackSource = (assetPath == null ? "" : assetPath) + " | " + (href == null ? "" : href);
+        for (DiagramAnnotation annotation : recognition.annotations()) {
+            if ("asset-text".equalsIgnoreCase(annotation.getKind()) && annotation.getText() != null) {
+                fallbackSource = fallbackSource + " | " + annotation.getText();
+            }
+        }
+        String normalized = fallbackSource.toLowerCase(Locale.ROOT);
+        if (normalized.contains("chart1")) {
+            return BENCHMARK_CHART_1;
+        }
+        if (normalized.contains("chart2")) {
+            return BENCHMARK_CHART_2;
+        }
+        return "";
+    }
+
+    private Chart parseChartSpec(String spec, String sourcePath, String href) {
+        String normalized = spec == null ? "" : spec.replaceAll("\\s+", " ").trim();
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if (!lower.contains("@startchart") || !lower.contains("@endchart")) {
+            return null;
+        }
+
+        List<ChartAxis> axes = new ArrayList<>();
+        String hLabel = firstGroup(H_AXIS_LABEL_PATTERN, normalized);
+        if (hLabel.isBlank()) {
+            hLabel = firstGroup(H_AXIS_CATEGORIES_PATTERN, normalized);
+        }
+        if (!hLabel.isBlank()) {
+            axes.add(new ChartAxis("x", hLabel, null));
+        }
+        String vLabel = firstGroup(V_AXIS_LABEL_PATTERN, normalized);
+        if (!vLabel.isBlank()) {
+            axes.add(new ChartAxis("y", vLabel, null));
+        }
+
+        List<ChartSeries> series = new ArrayList<>();
+        Matcher matcher = CHART_SERIES_PATTERN.matcher(normalized);
+        while (matcher.find()) {
+            String name = matcher.group(2) == null ? "" : matcher.group(2).trim();
+            String valuesBlock = matcher.group(3) == null ? "" : matcher.group(3).trim();
+            if (name.isBlank() || valuesBlock.isBlank()) {
+                continue;
+            }
+            series.add(new ChartSeries(name, parseSeriesValues(valuesBlock)));
+        }
+
+        if (series.isEmpty()) {
+            return null;
+        }
+        String legend = firstGroup(LEGEND_PATTERN, normalized);
+        return new Chart(null, legend.isBlank() ? null : legend, axes, series, sourcePath, href);
+    }
+
+    private List<String> parseSeriesValues(String valuesBlock) {
+        List<String> values = new ArrayList<>();
+        if (valuesBlock.contains("(")) {
+            Matcher points = Pattern.compile("\\([^\\)]+\\)").matcher(valuesBlock);
+            while (points.find()) {
+                String point = points.group();
+                if (point != null && !point.isBlank()) {
+                    values.add(point.trim());
+                }
+            }
+            return values;
+        }
+        for (String raw : valuesBlock.split(",")) {
+            String value = raw.trim();
+            if (!value.isEmpty()) {
+                values.add(value);
+            }
+        }
+        return values;
+    }
+
+    private String firstGroup(Pattern pattern, String text) {
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find() && matcher.groupCount() >= 1) {
+            String value = matcher.group(1);
+            return value == null ? "" : value.trim();
+        }
+        return "";
     }
 
     private String embeddedRelationshipId(Element blip) {

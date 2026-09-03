@@ -36,6 +36,8 @@ class GenerateSamples {
 
         // Generate v3 PNG sample
         generateSample(canonicalizer, serializer, "v3-png.docx", samplesV3Dir.resolve("v3-png.xml"));
+        generateSample(canonicalizer, serializer, "v3-emf-chart.docx", samplesV3Dir.resolve("v3-emf-chart.xml"));
+        generateSample(canonicalizer, serializer, "v3-png-chart.docx", samplesV3Dir.resolve("v3-png-chart.xml"));
 
         System.out.println("Sample XML files generated successfully!");
     }

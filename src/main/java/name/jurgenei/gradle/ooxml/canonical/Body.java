@@ -20,6 +20,7 @@ public class Body {
             @XmlElementRef(name = "table", namespace = CanonicalNamespace.URI, type = Table.class),
             @XmlElementRef(name = "link", namespace = CanonicalNamespace.URI, type = Link.class),
             @XmlElementRef(name = "reference", namespace = CanonicalNamespace.URI, type = Reference.class),
+            @XmlElementRef(name = "chart", namespace = CanonicalNamespace.URI, type = Chart.class),
             @XmlElementRef(name = "graph", namespace = CanonicalNamespace.GRAPHML_URI, type = Diagram.class)
     })
     private List<Object> content = new ArrayList<>();
@@ -75,6 +76,10 @@ public class Body {
 
     public List<Reference> getReferences() {
         return filterByType(Reference.class);
+    }
+
+    public List<Chart> getCharts() {
+        return filterByType(Chart.class);
     }
 
     public List<Diagram> getDiagrams() {

@@ -8,6 +8,7 @@ Core output goals:
 
 - stable document metadata
 - ordered structural content (paragraphs, lists, tables, links, references)
+- chart evidence representation (title, legend, axis, series)
 - graph representation for diagrams in GraphML namespace
 - extracted media references with recognizer annotations
 
@@ -108,6 +109,7 @@ Graph namespace:
 Body content:
 
 - canonical elements: `Paragraph`, `List`, `Table`, `Link`, `Reference`
+- chart elements: `Chart` with `axis` and `series`
 - graph elements: `graph` with child `node`, `edge`, `group`, `annotation`
 
 Graph attributes:
@@ -122,6 +124,9 @@ Graph attributes:
 
 ### 6.1 Recognizer SPI
 
+- `ArtifactClassifier`
+  - classifies visual payload into coarse semantic kind (`diagram`, `chart`, `screenshot`, ...)
+  - emits deterministic evidence used for routing and audit
 - `AssetRecognizer`
   - `supports(extension, bytes)`
   - `recognize(assetId, assetPath, bytes)`
@@ -188,6 +193,7 @@ Graph attributes:
 4. Build ordered canonical body
 5. For each drawing asset:
    - read binary payload
+   - classify artifact kind
    - resolve recognizer via registry
    - infer graph topology
    - attach annotations and confidence
