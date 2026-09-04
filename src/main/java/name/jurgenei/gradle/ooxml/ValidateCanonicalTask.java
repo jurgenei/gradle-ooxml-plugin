@@ -5,6 +5,8 @@ import org.gradle.api.GradleException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 import org.xml.sax.SAXException;
@@ -35,6 +37,7 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
 
     @Optional
     @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getInputDirectory();
 
     /**
