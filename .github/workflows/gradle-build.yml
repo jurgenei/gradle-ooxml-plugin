@@ -13,6 +13,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
       matrix:
         java-version: ['21']
@@ -53,14 +55,14 @@ jobs:
         run: ./gradlew clean build --stacktrace
 
       - name: Upload coverage reports to Codecov
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
+        if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}
           slug: jurgenei/gradle-ooxml-plugin
 
       - name: Codecov token missing notice
-        if: ${{ secrets.CODECOV_TOKEN == '' }}
+        if: ${{ env.CODECOV_TOKEN == '' }}
         run: |
           echo "### Codecov upload skipped" >> "$GITHUB_STEP_SUMMARY"
           echo "- Missing repository secret: CODECOV_TOKEN" >> "$GITHUB_STEP_SUMMARY"
