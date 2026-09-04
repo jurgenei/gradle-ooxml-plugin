@@ -2,9 +2,9 @@ name: Coverage
 
 on:
   push:
-    branches: ["main", "release/**"]
+    branches: ["main", "master", "release/**"]
   pull_request:
-    branches: ["main", "release/**"]
+    branches: ["main", "master", "release/**"]
   workflow_dispatch:
 
 permissions:

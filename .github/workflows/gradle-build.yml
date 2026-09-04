@@ -2,9 +2,13 @@ name: Build and Test
 
 on:
   push:
-    branches: ["main", "release/**"]
+    branches: ["main", "master", "release/**"]
   pull_request:
-    branches: ["main", "release/**"]
+    branches: ["main", "master", "release/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -30,8 +34,15 @@ jobs:
         run: ./gradlew clean build --stacktrace
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        if: ${{ secrets.CODECOV_TOKEN != '' }}
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: jurgenei/gradle-ooxml-plugin
+
+      - name: Codecov token missing notice
+        if: ${{ secrets.CODECOV_TOKEN == '' }}
+        run: |
+          echo "### Codecov upload skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Missing repository secret: CODECOV_TOKEN" >> "$GITHUB_STEP_SUMMARY"
 
