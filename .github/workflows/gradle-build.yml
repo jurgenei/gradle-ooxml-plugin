@@ -54,12 +54,11 @@ jobs:
       - name: Build and test
         run: ./gradlew clean build --stacktrace
 
-      - name: Upload coverage reports to Codecov
-        if: ${{ env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
         with:
-          token: ${{ env.CODECOV_TOKEN }}
-          slug: jurgenei/gradle-ooxml-plugin
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Codecov token missing notice
         if: ${{ env.CODECOV_TOKEN == '' }}
