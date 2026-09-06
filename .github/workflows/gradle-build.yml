@@ -1,0 +1,68 @@
+name: Build and Test
+
+on:
+  push:
+    branches: ["main", "master", "release/**"]
+  pull_request:
+    branches: ["main", "master", "release/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    strategy:
+      matrix:
+        java-version: ['21']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Ensure gradle-xml-plugin is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT_PARENT="$(dirname "$GITHUB_WORKSPACE")"
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+
+          if [ -d "$ROOT_PARENT/gradle-xml-plugin/.git" ]; then
+            echo "gradle-xml-plugin already present"
+            exit 0
+          fi
+
+          if git clone --depth 1 "https://github.com/$OWNER/gradle-xml-plugin.git" "$ROOT_PARENT/gradle-xml-plugin"; then
+            echo "Cloned $OWNER/gradle-xml-plugin"
+            exit 0
+          fi
+
+          git clone --depth 1 "https://github.com/jurgenei/gradle-xml-plugin.git" "$ROOT_PARENT/gradle-xml-plugin"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build and test
+        run: ./gradlew clean build --stacktrace
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Codecov token missing notice
+        if: ${{ env.CODECOV_TOKEN == '' }}
+        run: |
+          echo "### Codecov upload skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Missing repository secret: CODECOV_TOKEN" >> "$GITHUB_STEP_SUMMARY"
+
