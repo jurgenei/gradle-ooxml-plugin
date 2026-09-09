@@ -78,7 +78,8 @@ canonical output:
   </tr>
   <tr>
     <td>
-      <pre lang="xml">&lt;para label="h1" source-path="/word/document/p[1]"&gt;
+      <pre lang="xml">&lt;para label="h1" 
+source-path="/word/document/p[1]"&gt;
   &lt;text&gt;Benchmark Document&lt;/text&gt;
 &lt;/para&gt;
 &lt;para source-path="/word/document/p[2]"&gt;
@@ -118,7 +119,8 @@ canonical output:
       &lt;text&gt;J. S.Hildebrand&lt;/text&gt;
     &lt;/cell&gt;
     &lt;cell&gt;
-      &lt;text&gt;Replacement of previous documents: A (2019-11) B (2019-07)&lt;/text&gt;
+      &lt;text&gt;Replacement of previous documents: 
+A (2019-11) B (2019-07)&lt;/text&gt;
     &lt;/cell&gt;
   &lt;/row&gt;
 &lt;/table&gt;
@@ -307,7 +309,8 @@ canonical output:
   </tr>
   <tr>
     <td  valign="top">
-      <pre lang="xml">&lt;graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]"&gt;
+      <pre lang="xml">&lt;graph xmlns="http://graphml.graphdrawing.org/xmlns" 
+href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]"&gt;
     &lt;node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root"&gt;
         &lt;label&gt;Start&lt;/label&gt;
     &lt;/node&gt;
@@ -376,7 +379,8 @@ canonical output:
   </tr>
   <tr>
     <td>
-      <pre lang="xml">&lt;chart href="media/image1.emf" source-path="/word/document/p[1]/drawing[1]"&gt;
+      <pre lang="xml">&lt;chart href="media/image1.emf" 
+source-path="/word/document/p[1]/drawing[1]"&gt;
   &lt;legend&gt;right&lt;/legend&gt;
   &lt;axis role="x"&gt;
     &lt;label&gt;t&lt;/label&gt;
