@@ -181,7 +181,7 @@ canonical output:
   &lt;text&gt;Final paragraph&lt;/text&gt;
 &lt;/para&gt;</pre>
     </td>
-    <td style="vertical-align: top;">
+    <td valign="top">
       <pre lang="lisp">(.
   (para {label "h1" source-path "/word/document/p[1]"} (text "Benchmark Document"))
   (para {source-path "/word/document/p[2]"} (text "Paragraph with bold"))
@@ -274,7 +274,7 @@ canonical output:
   &lt;/math&gt;
 &lt;/para&gt;</pre>
     </td>
-    <td style="vertical-align: top;">
+    <td  valign="top">
       <pre lang="lisp">(.
   (para
     (math {xmlns "http://www.w3.org/1998/Math/MathML"}
@@ -306,7 +306,7 @@ canonical output:
     <th>S-Expression form</th>
   </tr>
   <tr>
-    <td>
+    <td  valign="top">
       <pre lang="xml">&lt;graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]"&gt;
     &lt;node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root"&gt;
         &lt;label&gt;Start&lt;/label&gt;
@@ -335,7 +335,7 @@ canonical output:
     &lt;/group&gt;
 &lt;/graph&gt;</pre>
     </td>
-    <td style="vertical-align: top;">
+    <td valign="top;">
       <pre lang="lisp">(.
   (graph {xmlns "http://graphml.graphdrawing.org/xmlns" href "media/image1.emf" source-path "/word/document/p[2]/drawing[1]"}
     (node {confidence "0.72" geometry "ellipse" id "469179847-start" semantic "root"} (label "Start"))
@@ -400,7 +400,7 @@ canonical output:
   &lt;/series&gt;
 &lt;/chart&gt;</pre>
     </td>
-    <td style="vertical-align: top;">
+    <td valign="top">
       <pre lang="lisp">(.
   (chart {href "media/image1.emf" source-path "/word/document/p[1]/drawing[1]"}
     (legend "right")
@@ -660,7 +660,7 @@ Canonical output (same content, two serializations):
   &lt;/body&gt;
 &lt;/document&gt;</pre>
     </td>
-    <td style="vertical-align: top;">
+    <td valign="top">
       <pre lang="lisp">(.
   (document {xmlns "http://jurgenei.name/canonical"}
     (metadata
