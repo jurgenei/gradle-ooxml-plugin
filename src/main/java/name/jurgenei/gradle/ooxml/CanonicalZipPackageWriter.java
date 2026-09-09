@@ -25,18 +25,24 @@ import java.util.zip.ZipOutputStream;
  */
 final class CanonicalZipPackageWriter {
     private final CanonicalXmlSerializer serializer = new CanonicalXmlSerializer();
+    private final CanonicalSexprSerializer sexprSerializer = new CanonicalSexprSerializer();
 
-    void write(CanonicalDocument document, File sourceOoxml, Path outputZip) throws IOException {
+    void write(CanonicalDocument document, File sourceOoxml, Path outputZip, String targetExtension) throws IOException {
         Files.createDirectories(outputZip.getParent());
         Set<String> referencedMediaNames = referencedMediaNames(document);
         Map<String, byte[]> mediaEntries = readMediaEntries(sourceOoxml, referencedMediaNames);
+        String canonicalEntry = canonicalEntryName(targetExtension);
 
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(outputZip))) {
-            zip.putNextEntry(new ZipEntry("canonical.xml"));
-            try {
-                serializer.write(document, zip);
-            } catch (jakarta.xml.bind.JAXBException e) {
-                throw new IOException("Failed to serialize canonical XML", e);
+            zip.putNextEntry(new ZipEntry(canonicalEntry));
+            if (".sexpr".equalsIgnoreCase(targetExtension)) {
+                sexprSerializer.write(document, zip);
+            } else {
+                try {
+                    serializer.write(document, zip);
+                } catch (jakarta.xml.bind.JAXBException e) {
+                    throw new IOException("Failed to serialize canonical XML", e);
+                }
             }
             zip.closeEntry();
 
@@ -53,6 +59,14 @@ final class CanonicalZipPackageWriter {
                 zip.closeEntry();
             }
         }
+    }
+
+    private String canonicalEntryName(String targetExtension) {
+        String extension = targetExtension == null || targetExtension.isBlank() ? ".xml1" : targetExtension.trim();
+        if (!extension.startsWith(".")) {
+            extension = "." + extension;
+        }
+        return "canonical" + extension;
     }
 
     private Map<String, byte[]> readMediaEntries(File sourceOoxml, Set<String> referencedMediaNames) throws IOException {

@@ -68,7 +68,7 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
 
     private void validatePath(Validator validator, Path path) {
         String fileName = path.getFileName().toString().toLowerCase();
-        if (fileName.endsWith(".xml")) {
+        if (fileName.endsWith(".xml") || fileName.endsWith(".xml1")) {
             validateFile(validator, path);
             return;
         }
@@ -96,9 +96,12 @@ public abstract class ValidateCanonicalTask extends DefaultTask {
 
     private void validateZipCanonical(Validator validator, Path zipFilePath) {
         try (ZipFile zipFile = new ZipFile(zipFilePath.toFile())) {
-            ZipEntry canonical = zipFile.getEntry("canonical.xml");
+            ZipEntry canonical = zipFile.getEntry("canonical.xml1");
             if (canonical == null) {
-                throw new GradleException("Missing canonical.xml in package: " + zipFilePath);
+                canonical = zipFile.getEntry("canonical.xml");
+            }
+            if (canonical == null) {
+                throw new GradleException("Missing canonical.xml1 (or canonical.xml) in package: " + zipFilePath);
             }
             try (InputStream input = zipFile.getInputStream(canonical)) {
                 validator.validate(new StreamSource(input));

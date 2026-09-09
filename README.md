@@ -71,110 +71,155 @@ Examples of plain text represented in canonical form:
 
 
 canonical output:
-```xml
-<para label="h1" source-path="/word/document/p[1]">
-  <text>Benchmark Document</text>
-</para>
-<para source-path="/word/document/p[2]">
-  <text>Paragraph with bold</text>
-</para>
-<para source-path="/word/document/p[3]">
-  <text>Visit https://example.com</text>
-</para>
 <table>
-  <row>
-    <cell>
-      <text>Document version control</text>
-    </cell>
-  </row>
-  <row>
-    <cell>
-      <text>Version</text>
-    </cell>
-    <cell>
-      <text>Issue Date</text>
-    </cell>
-    <cell>
-      <text>Author</text>
-    </cell>
-    <cell>
-      <text>Description of modification</text>
-    </cell>
-  </row>
-  <row>
-    <cell>
-      <text>1</text>
-    </cell>
-    <cell>
-      <text>11 Aug 202 6</text>
-    </cell>
-    <cell>
-      <text>J. S.Hildebrand</text>
-    </cell>
-    <cell>
-      <text>Replacement of previous documents: A (2019-11) B (2019-07)</text>
-    </cell>
-  </row>
+  <tr>
+    <th>XML form</th>
+    <th>S-Expression form</th>
+  </tr>
+  <tr>
+    <td>
+      <pre lang="xml">&lt;para label="h1" 
+source-path="/word/document/p[1]"&gt;
+  &lt;text&gt;Benchmark Document&lt;/text&gt;
+&lt;/para&gt;
+&lt;para source-path="/word/document/p[2]"&gt;
+  &lt;text&gt;Paragraph with bold&lt;/text&gt;
+&lt;/para&gt;
+&lt;para source-path="/word/document/p[3]"&gt;
+  &lt;text&gt;Visit https://example.com&lt;/text&gt;
+&lt;/para&gt;
+&lt;table&gt;
+  &lt;row&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Document version control&lt;/text&gt;
+    &lt;/cell&gt;
+  &lt;/row&gt;
+  &lt;row&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Version&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Issue Date&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Author&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Description of modification&lt;/text&gt;
+    &lt;/cell&gt;
+  &lt;/row&gt;
+  &lt;row&gt;
+    &lt;cell&gt;
+      &lt;text&gt;1&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;11 Aug 202 6&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;J. S.Hildebrand&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Replacement of previous documents: 
+A (2019-11) B (2019-07)&lt;/text&gt;
+    &lt;/cell&gt;
+  &lt;/row&gt;
+&lt;/table&gt;
+&lt;para label="h2" source-path="/word/document/p[5]"&gt;
+  &lt;text&gt;Section A&lt;/text&gt;
+&lt;/para&gt;
+&lt;para source-path="/word/document/p[6]"&gt;
+  &lt;text&gt;First item&lt;/text&gt;
+&lt;/para&gt;
+&lt;para source-path="/word/document/p[7]"&gt;
+  &lt;text&gt;Second item&lt;/text&gt;
+&lt;/para&gt;
+&lt;para source-path="/word/document/p[8]"&gt;
+  &lt;text&gt;Alpha&lt;/text&gt;
+&lt;/para&gt;
+&lt;list ordered="true"&gt;
+  &lt;item&gt;
+    &lt;text&gt;First item&lt;/text&gt;
+  &lt;/item&gt;
+  &lt;item&gt;
+    &lt;text&gt;Second item&lt;/text&gt;
+  &lt;/item&gt;
+&lt;/list&gt;
+&lt;para source-path="/word/document/p[9]"&gt;
+  &lt;text&gt;Beta&lt;/text&gt;
+&lt;/para&gt;
+&lt;list ordered="false"&gt;
+  &lt;item&gt;
+    &lt;text&gt;Alpha&lt;/text&gt;
+  &lt;/item&gt;
+  &lt;item&gt;
+    &lt;text&gt;Beta&lt;/text&gt;
+  &lt;/item&gt;
+&lt;/list&gt;
+&lt;table&gt;
+  &lt;row&gt;
+    &lt;cell&gt;
+      &lt;text&gt;App&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Team&lt;/text&gt;
+    &lt;/cell&gt;
+  &lt;/row&gt;
+  &lt;row&gt;
+    &lt;cell&gt;
+      &lt;text&gt;CRM&lt;/text&gt;
+    &lt;/cell&gt;
+    &lt;cell&gt;
+      &lt;text&gt;Sales&lt;/text&gt;
+    &lt;/cell&gt;
+  &lt;/row&gt;
+&lt;/table&gt;
+&lt;para source-path="/word/document/p[10]"&gt;
+  &lt;text&gt;[A] -&amp;gt; [B]&lt;/text&gt;
+&lt;/para&gt;
+&lt;para label="h2" source-path="/word/document/p[11]"&gt;
+  &lt;text&gt;Section B&lt;/text&gt;
+&lt;/para&gt;
+&lt;para source-path="/word/document/p[12]"&gt;
+  &lt;text&gt;Final paragraph&lt;/text&gt;
+&lt;/para&gt;</pre>
+    </td>
+    <td valign="top">
+      <pre lang="lisp">(.
+  (para {label "h1" source-path "/word/document/p[1]"} (text "Benchmark Document"))
+  (para {source-path "/word/document/p[2]"} (text "Paragraph with bold"))
+  (para {source-path "/word/document/p[3]"} (text "Visit https://example.com"))
+  (table
+    (row (cell (text "Document version control")))
+    (row
+      (cell (text "Version"))
+      (cell (text "Issue Date"))
+      (cell (text "Author"))
+      (cell (text "Description of modification")))
+    (row
+      (cell (text "1"))
+      (cell (text "11 Aug 202 6"))
+      (cell (text "J. S.Hildebrand"))
+      (cell (text "Replacement of previous documents: A (2019-11) B (2019-07)"))))
+  (para {label "h2" source-path "/word/document/p[5]"} (text "Section A"))
+  (para {source-path "/word/document/p[6]"} (text "First item"))
+  (para {source-path "/word/document/p[7]"} (text "Second item"))
+  (para {source-path "/word/document/p[8]"} (text "Alpha"))
+  (list {ordered "true"}
+    (item (text "First item"))
+    (item (text "Second item")))
+  (para {source-path "/word/document/p[9]"} (text "Beta"))
+  (list {ordered "false"}
+    (item (text "Alpha"))
+    (item (text "Beta")))
+  (table
+    (row (cell (text "App")) (cell (text "Team")))
+    (row (cell (text "CRM")) (cell (text "Sales"))))
+  (para {source-path "/word/document/p[10]"} (text "[A] -> [B]"))
+  (para {label "h2" source-path "/word/document/p[11]"} (text "Section B"))
+  (para {source-path "/word/document/p[12]"} (text "Final paragraph")))</pre>
+    </td>
+  </tr>
 </table>
-<para label="h2" source-path="/word/document/p[5]">
-  <text>Section A</text>
-</para>
-<para source-path="/word/document/p[6]">
-  <text>First item</text>
-</para>
-<para source-path="/word/document/p[7]">
-  <text>Second item</text>
-</para>
-<para source-path="/word/document/p[8]">
-  <text>Alpha</text>
-</para>
-<list ordered="true">
-  <item>
-    <text>First item</text>
-  </item>
-  <item>
-    <text>Second item</text>
-  </item>
-</list>
-<para source-path="/word/document/p[9]">
-  <text>Beta</text>
-</para>
-<list ordered="false">
-  <item>
-    <text>Alpha</text>
-  </item>
-  <item>
-    <text>Beta</text>
-  </item>
-</list>
-<table>
-  <row>
-    <cell>
-      <text>App</text>
-    </cell>
-    <cell>
-      <text>Team</text>
-    </cell>
-  </row>
-  <row>
-    <cell>
-      <text>CRM</text>
-    </cell>
-    <cell>
-      <text>Sales</text>
-    </cell>
-  </row>
-</table>
-<para source-path="/word/document/p[10]">
-  <text>[A] -&gt; [B]</text>
-</para>
-<para label="h2" source-path="/word/document/p[11]">
-  <text>Section B</text>
-</para>
-<para source-path="/word/document/p[12]">
-  <text>Final paragraph</text>
-</para>
-```
 
 ### Formulas
 
@@ -185,46 +230,71 @@ canonical output:
 ![formula](src/main/resources/png/formula.png)
 
 canonical output:
-```xml
-<para>
-  <math xmlns="http://www.w3.org/1998/Math/MathML">
-    <mrow>
-      <msubsup>
-        <mi>CoverAmt</mi>
-        <mi>Cov</mi>
-        <mi>Perc</mi>
-      </msubsup>
-      <mi>=</mi>
-      <msubsup>
-        <mi>CoverPerc</mi>
-        <mi>Cov</mi>
-        <mi>CR</mi>
-      </msubsup>
-      <mi>*</mi>
-      <msub>
-        <mi>ExpAmt</mi>
-        <mi>ExpEvent</mi>
-      </msub>
-      <mi>when</mi>
-      <msub>
-        <mi>OSGID</mi>
-        <mi>Cov</mi>
-        <mi>j</mi>
-      </msub>
-      <mi>=</mi>
-      <mi>null and New Cover Alloc Ind&lt;</mi>
-      <msup>
-        <mi>&gt;</mi>
-        <mi>'</mi>
-      </msup>
-      <msup>
-        <mi>Y</mi>
-        <mi>'</mi>
-      </msup>
-    </mrow>
-  </math>
-</para>
-```
+<table>
+  <tr>
+    <th>XML form</th>
+    <th>S-Expression form</th>
+  </tr>
+  <tr>
+    <td>
+      <pre lang="xml">&lt;para&gt;
+  &lt;math xmlns="http://www.w3.org/1998/Math/MathML"&gt;
+    &lt;mrow&gt;
+      &lt;msubsup&gt;
+        &lt;mi&gt;CoverAmt&lt;/mi&gt;
+        &lt;mi&gt;Cov&lt;/mi&gt;
+        &lt;mi&gt;Perc&lt;/mi&gt;
+      &lt;/msubsup&gt;
+      &lt;mi&gt;=&lt;/mi&gt;
+      &lt;msubsup&gt;
+        &lt;mi&gt;CoverPerc&lt;/mi&gt;
+        &lt;mi&gt;Cov&lt;/mi&gt;
+        &lt;mi&gt;CR&lt;/mi&gt;
+      &lt;/msubsup&gt;
+      &lt;mi&gt;*&lt;/mi&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;ExpAmt&lt;/mi&gt;
+        &lt;mi&gt;ExpEvent&lt;/mi&gt;
+      &lt;/msub&gt;
+      &lt;mi&gt;when&lt;/mi&gt;
+      &lt;msub&gt;
+        &lt;mi&gt;OSGID&lt;/mi&gt;
+        &lt;mi&gt;Cov&lt;/mi&gt;
+        &lt;mi&gt;j&lt;/mi&gt;
+      &lt;/msub&gt;
+      &lt;mi&gt;=&lt;/mi&gt;
+      &lt;mi&gt;null and New Cover Alloc Ind&amp;lt;&lt;/mi&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;&amp;gt;&lt;/mi&gt;
+        &lt;mi&gt;'&lt;/mi&gt;
+      &lt;/msup&gt;
+      &lt;msup&gt;
+        &lt;mi&gt;Y&lt;/mi&gt;
+        &lt;mi&gt;'&lt;/mi&gt;
+      &lt;/msup&gt;
+    &lt;/mrow&gt;
+  &lt;/math&gt;
+&lt;/para&gt;</pre>
+    </td>
+    <td  valign="top">
+      <pre lang="lisp">(.
+  (para
+    (math {xmlns "http://www.w3.org/1998/Math/MathML"}
+      (mrow
+        (msubsup (mi "CoverAmt") (mi "Cov") (mi "Perc"))
+        (mi "=")
+        (msubsup (mi "CoverPerc") (mi "Cov") (mi "CR"))
+        (mi "*")
+        (msub (mi "ExpAmt") (mi "ExpEvent"))
+        (mi "when")
+        (msub (mi "OSGID") (mi "Cov") (mi "j"))
+        (mi "=")
+        (mi "null and New Cover Alloc Ind<")
+        (msup (mi ">") (mi "'"))
+        (msup (mi "Y") (mi "'"))))))</pre>
+    </td>
+  </tr>
+</table>
 ### Flow charts
 
 - Graph topology captured as GraphML `graph` evidence (`node`, `edge`, `group`, annotations)
@@ -232,35 +302,65 @@ canonical output:
 ![flowchart](src/main/resources/png/flowchart.png)
 
 canonical output:
-```xml
-<graph xmlns="http://graphml.graphdrawing.org/xmlns" href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]">
-    <node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root">
-        <label>Start</label>
-    </node>
-    <node confidence="0.73" geometry="rectangle" id="469179847-a-calculate-uncovered" semantic="process">
-        <label>Calculate Uncovered Amount (see section a)</label>
-    </node>
-    <node confidence="0.73" geometry="rectangle" id="469179847-b-alloc-before-haircut" semantic="process">
-        <label>Calculate Allocated Cover Amount without excess before haircut (see section b)</label>
-    </node>
-    <node confidence="0.73" geometry="rectangle" id="469179847-c-alloc-after-haircut" semantic="process">
-        <label>Calculate Allocated Cover Amount without excess after haircut (see section c)</label>
-    </node>
-    <node confidence="0.67" geometry="ellipse" id="469179847-end-inferred" semantic="leaf">
-        <label>End</label>
-    </node>
-    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-start" target="469179847-a-calculate-uncovered"/>
-    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-a-calculate-uncovered" target="469179847-b-alloc-before-haircut"/>
-    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-b-alloc-before-haircut" target="469179847-c-alloc-after-haircut"/>
-    <edge confidence="0.77" directed="true" semantic="flow" source="469179847-c-alloc-after-haircut" target="469179847-end-inferred"/>
-    <group id="469179847-group-1" semantic="process-group">
-        <label>Allocate Cover to Outstanding Group</label>
-        <member node="469179847-a-calculate-uncovered"/>
-        <member node="469179847-b-alloc-before-haircut"/>
-        <member node="469179847-c-alloc-after-haircut"/>
-    </group>
-</graph>
-```
+<table>
+  <tr>
+    <th>XML form</th>
+    <th>S-Expression form</th>
+  </tr>
+  <tr>
+    <td  valign="top">
+      <pre lang="xml">&lt;graph xmlns="http://graphml.graphdrawing.org/xmlns" 
+href="media/image1.emf" source-path="/word/document/p[2]/drawing[1]"&gt;
+    &lt;node confidence="0.72" geometry="ellipse" id="469179847-start" semantic="root"&gt;
+        &lt;label&gt;Start&lt;/label&gt;
+    &lt;/node&gt;
+    &lt;node confidence="0.73" geometry="rectangle" id="469179847-a-calculate-uncovered" semantic="process"&gt;
+        &lt;label&gt;Calculate Uncovered Amount (see section a)&lt;/label&gt;
+    &lt;/node&gt;
+    &lt;node confidence="0.73" geometry="rectangle" id="469179847-b-alloc-before-haircut" semantic="process"&gt;
+        &lt;label&gt;Calculate Allocated Cover Amount without excess before haircut (see section b)&lt;/label&gt;
+    &lt;/node&gt;
+    &lt;node confidence="0.73" geometry="rectangle" id="469179847-c-alloc-after-haircut" semantic="process"&gt;
+        &lt;label&gt;Calculate Allocated Cover Amount without excess after haircut (see section c)&lt;/label&gt;
+    &lt;/node&gt;
+    &lt;node confidence="0.67" geometry="ellipse" id="469179847-end-inferred" semantic="leaf"&gt;
+        &lt;label&gt;End&lt;/label&gt;
+    &lt;/node&gt;
+    &lt;edge confidence="0.77" directed="true" semantic="flow" source="469179847-start" target="469179847-a-calculate-uncovered"/&gt;
+    &lt;edge confidence="0.77" directed="true" semantic="flow" source="469179847-a-calculate-uncovered" target="469179847-b-alloc-before-haircut"/&gt;
+    &lt;edge confidence="0.77" directed="true" semantic="flow" source="469179847-b-alloc-before-haircut" target="469179847-c-alloc-after-haircut"/&gt;
+    &lt;edge confidence="0.77" directed="true" semantic="flow" source="469179847-c-alloc-after-haircut" target="469179847-end-inferred"/&gt;
+    &lt;group id="469179847-group-1" semantic="process-group"&gt;
+        &lt;label&gt;Allocate Cover to Outstanding Group&lt;/label&gt;
+        &lt;member node="469179847-a-calculate-uncovered"/&gt;
+        &lt;member node="469179847-b-alloc-before-haircut"/&gt;
+        &lt;member node="469179847-c-alloc-after-haircut"/&gt;
+    &lt;/group&gt;
+&lt;/graph&gt;</pre>
+    </td>
+    <td valign="top;">
+      <pre lang="lisp">(.
+  (graph {xmlns "http://graphml.graphdrawing.org/xmlns" href "media/image1.emf" source-path "/word/document/p[2]/drawing[1]"}
+    (node {confidence "0.72" geometry "ellipse" id "469179847-start" semantic "root"} (label "Start"))
+    (node {confidence "0.73" geometry "rectangle" id "469179847-a-calculate-uncovered" semantic "process"}
+      (label "Calculate Uncovered Amount (see section a)"))
+    (node {confidence "0.73" geometry "rectangle" id "469179847-b-alloc-before-haircut" semantic "process"}
+      (label "Calculate Allocated Cover Amount without excess before haircut (see section b)"))
+    (node {confidence "0.73" geometry "rectangle" id "469179847-c-alloc-after-haircut" semantic "process"}
+      (label "Calculate Allocated Cover Amount without excess after haircut (see section c)"))
+    (node {confidence "0.67" geometry "ellipse" id "469179847-end-inferred" semantic "leaf"} (label "End"))
+    (edge {confidence "0.77" directed "true" semantic "flow" source "469179847-start" target "469179847-a-calculate-uncovered"})
+    (edge {confidence "0.77" directed "true" semantic "flow" source "469179847-a-calculate-uncovered" target "469179847-b-alloc-before-haircut"})
+    (edge {confidence "0.77" directed "true" semantic "flow" source "469179847-b-alloc-before-haircut" target "469179847-c-alloc-after-haircut"})
+    (edge {confidence "0.77" directed "true" semantic "flow" source "469179847-c-alloc-after-haircut" target "469179847-end-inferred"})
+    (group {id "469179847-group-1" semantic "process-group"}
+      (label "Allocate Cover to Outstanding Group")
+      (member {node "469179847-a-calculate-uncovered"})
+      (member {node "469179847-b-alloc-before-haircut"})
+      (member {node "469179847-c-alloc-after-haircut"}))))</pre>
+    </td>
+  </tr>
+</table>
 
 ### Diagrams and XY charts with precision
 
@@ -272,31 +372,59 @@ canonical output:
 ![chart1.png](src/test/resources/puml/chart1.png)
 
 canonical output:
-```xml
-<chart href="media/image1.emf" source-path="/word/document/p[1]/drawing[1]">
-  <legend>right</legend>
-  <axis role="x">
-    <label>t</label>
-  </axis>
-  <axis role="y">
-    <label>f(t)</label>
-  </axis>
-  <series>
-    <name>Trajectory</name>
-    <value>(-10,0)</value>
-    <value>(2,10)</value>
-    <value>(5,30)</value>
-    <value>(8,45)</value>
-    <value>(10,50)</value>
-  </series>
-  <series>
-    <name>Checkpoints</name>
-    <value>(1,12)</value>
-    <value>(6,34)</value>
-    <value>(7,47)</value>
-  </series>
-</chart>
-```
+<table>
+  <tr>
+    <th>XML form</th>
+    <th>S-Expression form</th>
+  </tr>
+  <tr>
+    <td>
+      <pre lang="xml">&lt;chart href="media/image1.emf" 
+source-path="/word/document/p[1]/drawing[1]"&gt;
+  &lt;legend&gt;right&lt;/legend&gt;
+  &lt;axis role="x"&gt;
+    &lt;label&gt;t&lt;/label&gt;
+  &lt;/axis&gt;
+  &lt;axis role="y"&gt;
+    &lt;label&gt;f(t)&lt;/label&gt;
+  &lt;/axis&gt;
+  &lt;series&gt;
+    &lt;name&gt;Trajectory&lt;/name&gt;
+    &lt;value&gt;(-10,0)&lt;/value&gt;
+    &lt;value&gt;(2,10)&lt;/value&gt;
+    &lt;value&gt;(5,30)&lt;/value&gt;
+    &lt;value&gt;(8,45)&lt;/value&gt;
+    &lt;value&gt;(10,50)&lt;/value&gt;
+  &lt;/series&gt;
+  &lt;series&gt;
+    &lt;name&gt;Checkpoints&lt;/name&gt;
+    &lt;value&gt;(1,12)&lt;/value&gt;
+    &lt;value&gt;(6,34)&lt;/value&gt;
+    &lt;value&gt;(7,47)&lt;/value&gt;
+  &lt;/series&gt;
+&lt;/chart&gt;</pre>
+    </td>
+    <td valign="top">
+      <pre lang="lisp">(.
+  (chart {href "media/image1.emf" source-path "/word/document/p[1]/drawing[1]"}
+    (legend "right")
+    (axis {role "x"} (label "t"))
+    (axis {role "y"} (label "f(t)"))
+    (series
+      (name "Trajectory")
+      (value "(-10,0)")
+      (value "(2,10)")
+      (value "(5,30)")
+      (value "(8,45)")
+      (value "(10,50)"))
+    (series
+      (name "Checkpoints")
+      (value "(1,12)")
+      (value "(6,34)")
+      (value "(7,47)"))))</pre>
+    </td>
+  </tr>
+</table>
 
 ## RAG/Chunking vs Canonicalisation
 
@@ -493,9 +621,61 @@ tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask)
         include '**/*.docx', '**/*.pptx', '**/*.xlsx'
     })
     legacyXmlOutput.set(true)
+    targetExtension.set('.xml1')
     outputDirectory.set(layout.buildDirectory.dir('ooxml/canonical-xml'))
 }
 ```
+
+### Emit canonical S-expression payload
+
+```groovy
+tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask) {
+    source(fileTree(layout.projectDirectory.dir('docs')) {
+        include '**/*.docx', '**/*.pptx', '**/*.xlsx'
+    })
+    targetExtension.set('.sexpr')
+    outputDirectory.set(layout.buildDirectory.dir('ooxml/canonical'))
+}
+```
+
+Canonicalisation target extension contract:
+
+- `targetExtension.set('.xml1')` (default): serialize canonical payload as XML
+- `targetExtension.set('.sexpr')`: serialize canonical payload as canonical S-expression
+
+Canonical output (same content, two serializations):
+
+<table>
+  <tr>
+    <th>XML form</th>
+    <th>S-Expression form</th>
+  </tr>
+  <tr>
+    <td>
+      <pre lang="xml">&lt;document xmlns="http://jurgenei.name/canonical"&gt;
+  &lt;metadata&gt;
+    &lt;documentId&gt;sample&lt;/documentId&gt;
+    &lt;version&gt;v1&lt;/version&gt;
+  &lt;/metadata&gt;
+  &lt;body&gt;
+    &lt;para source-path="/word/document/p[1]"&gt;
+      &lt;text&gt;Hello&lt;/text&gt;
+    &lt;/para&gt;
+  &lt;/body&gt;
+&lt;/document&gt;</pre>
+    </td>
+    <td valign="top">
+      <pre lang="lisp">(.
+  (document {xmlns "http://jurgenei.name/canonical"}
+    (metadata
+      (documentId "sample")
+      (version "v1"))
+    (body
+      (para {source-path "/word/document/p[1]"}
+        (text "Hello")))))</pre>
+    </td>
+  </tr>
+</table>
 
 ### Extract assets for review
 
@@ -531,8 +711,9 @@ tasks.named('validateCanonical', name.jurgenei.gradle.ooxml.ValidateCanonicalTas
 - body can contain structural + visual evidence in source order
 - canonical package name uses input stem + extension (`document.docx` -> `document_docx.zip`)
 - package contains:
-  - `canonical.xml`
+  - `canonical.xml1` (default) or `canonical.sexpr`
   - `media/<asset-file>` referenced by `href`
+- legacy flat mode writes `<stem><targetExtension>` (`v2-diagrams.xml1`, `v2-diagrams.sexpr`)
 
 ## Extension
 
