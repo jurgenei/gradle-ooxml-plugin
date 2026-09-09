@@ -10,6 +10,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.ZipFile;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,6 +45,7 @@ class OoXmlPluginFunctionalTest {
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v1-benchmark_docx.zip")));
+        assertTrue(zipEntryExists(projectDir.resolve("build/ooxml/canonical/v1-benchmark_docx.zip"), "canonical.xml1"));
     }
 
     @Test
@@ -175,8 +177,46 @@ class OoXmlPluginFunctionalTest {
                 .build();
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
-        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams.xml")));
+        assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams.xml1")));
         assertTrue(!Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams_docx.zip")));
+    }
+
+    @Test
+    void supportsSexprTargetExtensionInConsumerBuild() throws Exception {
+        Path projectDir = tempDir.resolve("consumer-sexpr");
+        Files.createDirectories(projectDir.resolve("docs"));
+        copyFixture(projectDir.resolve("docs"), "v1-benchmark.docx", "v1-benchmark.docx");
+
+        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'ooxml-functional-sexpr'\n", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("build.gradle"), """
+                plugins {
+                    id 'name.jurgenei.gradle.ooxml'
+                }
+
+                tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask) {
+                    source(fileTree(layout.projectDirectory.dir('docs')) {
+                        include '**/*.docx'
+                    })
+                    targetExtension.set('.sexpr')
+                }
+                """, StandardCharsets.UTF_8);
+
+        BuildResult result = GradleRunner.create()
+                .withProjectDir(projectDir.toFile())
+                .withArguments("ooxmlToCanonical")
+                .withPluginClasspath()
+                .build();
+
+        assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
+        Path zip = projectDir.resolve("build/ooxml/canonical/v1-benchmark_docx.zip");
+        assertTrue(Files.exists(zip));
+        assertTrue(zipEntryExists(zip, "canonical.sexpr"));
+    }
+
+    private boolean zipEntryExists(Path zipPath, String entryName) throws Exception {
+        try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
+            return zipFile.getEntry(entryName) != null;
+        }
     }
 
     private void copyFixture(Path targetDirectory, String fixtureName, String targetName) throws Exception {

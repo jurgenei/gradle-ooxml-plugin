@@ -48,7 +48,7 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(Files.exists(slidesZip));
         assertTrue(Files.exists(registerZip));
 
-        String docxXml = readCanonicalXml(benchmarkZip);
+        String docxXml = readCanonicalPayload(benchmarkZip, ".xml1");
         assertTrue(docxXml.contains("Benchmark Document"));
         assertTrue(docxXml.contains("<documentType>DOCX</documentType>"));
         assertTrue(docxXml.contains("label=\"h1\""));
@@ -61,7 +61,7 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(docxXml.contains("First item"));
         assertTrue(docxXml.contains("Alpha"));
 
-        String formulaXml = readCanonicalXml(formulasZip);
+        String formulaXml = readCanonicalPayload(formulasZip, ".xml1");
         assertTrue(formulaXml.contains("http://www.w3.org/1998/Math/MathML"));
         assertTrue(formulaXml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
         assertTrue(!formulaXml.contains("<mrow/>"));
@@ -70,7 +70,7 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(!formulaXml.contains("</table>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
         assertTrue(!formulaXml.contains("<text>CoverAmt Cov Perc"));
 
-        String diagramsXml = readCanonicalXml(diagramsZip);
+        String diagramsXml = readCanonicalPayload(diagramsZip, ".xml1");
         assertTrue(diagramsXml.contains("<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
         assertTrue(diagramsXml.contains("href=\"media/"));
         assertTrue(diagramsXml.contains("<node "));
@@ -88,7 +88,7 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(hasMediaEntries(diagramsZip));
         assertTrue(countMediaEntries(diagramsZip) >= 1);
 
-        String xlsxXml = readCanonicalXml(registerZip);
+        String xlsxXml = readCanonicalPayload(registerZip, ".xml1");
         assertTrue(countOccurrences(xlsxXml, "<table id=") >= 3);
         assertTrue(xlsxXml.contains("id=\"Applications\""));
         assertTrue(xlsxXml.contains("id=\"Matrix\""));
@@ -117,13 +117,64 @@ class OoXmlToCanonicalTaskTest {
         task.convert();
 
         Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
-        Path legacyXml = canonicalRoot.resolve("v2-diagrams.xml");
+        Path legacyXml = canonicalRoot.resolve("v2-diagrams.xml1");
         assertTrue(Files.exists(legacyXml));
         assertTrue(!Files.exists(canonicalRoot.resolve("v2-diagrams_docx.zip")));
 
         String xml = Files.readString(legacyXml);
         assertTrue(xml.contains("<version>v2</version>"));
         assertTrue(xml.contains("href=\"media/image1.emf\"") || xml.contains("href=\"media/image2.emf\""));
+    }
+
+    @Test
+    void serializesZipPayloadAsSexprWhenTargetExtensionIsSexpr() throws Exception {
+        File projectDir = Files.createTempDirectory("ooxml-task-sexpr-package").toFile();
+        Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
+
+        Path docs = projectDir.toPath().resolve("docs");
+        Files.createDirectories(docs);
+        copyFixture(docs, "v1-benchmark.docx", "benchmark.docx");
+
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalSexpr", OoXmlToCanonicalTask.class).get();
+        task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
+        task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
+        task.getTargetExtension().set(".sexpr");
+
+        task.convert();
+
+        Path zip = projectDir.toPath().resolve("build/ooxml/canonical/benchmark_docx.zip");
+        assertTrue(Files.exists(zip));
+        String sexpr = readCanonicalPayload(zip, ".sexpr");
+        assertTrue(sexpr.startsWith("(."));
+        assertTrue(sexpr.contains("(document"));
+        assertTrue(sexpr.contains("Benchmark Document"));
+    }
+
+    @Test
+    void serializesLegacyFlatOutputAsSexprWhenTargetExtensionIsSexpr() throws Exception {
+        File projectDir = Files.createTempDirectory("ooxml-task-sexpr-flat").toFile();
+        Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
+
+        Path docs = projectDir.toPath().resolve("docs");
+        Files.createDirectories(docs);
+        copyFixture(docs, "v2-diagrams.docx", "v2-diagrams.docx");
+
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalLegacySexpr", OoXmlToCanonicalTask.class).get();
+        task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
+        task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
+        task.getLegacyXmlOutput().set(true);
+        task.getTargetExtension().set(".sexpr");
+
+        task.convert();
+
+        Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
+        Path sexprFile = canonicalRoot.resolve("v2-diagrams.sexpr");
+        assertTrue(Files.exists(sexprFile));
+        assertTrue(!Files.exists(canonicalRoot.resolve("v2-diagrams_docx.zip")));
+
+        String sexpr = Files.readString(sexprFile);
+        assertTrue(sexpr.startsWith("(."));
+        assertTrue(sexpr.contains("(version \"v2\")"));
     }
 
     @Test
@@ -146,7 +197,7 @@ class OoXmlToCanonicalTaskTest {
         Path diagramsZip = canonicalRoot.resolve("v2-diagrams_docx.zip");
         assertTrue(Files.exists(diagramsZip));
 
-        String xml = readCanonicalXml(diagramsZip);
+        String xml = readCanonicalPayload(diagramsZip, ".xml1");
         assertTrue(xml.contains("kind=\"emf-stats\""));
     }
 
@@ -171,11 +222,11 @@ class OoXmlToCanonicalTaskTest {
         }
     }
 
-    private String readCanonicalXml(Path zipPath) throws Exception {
+    private String readCanonicalPayload(Path zipPath, String extension) throws Exception {
         try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
-            ZipEntry canonical = zipFile.getEntry("canonical.xml");
+            ZipEntry canonical = zipFile.getEntry("canonical" + extension);
             if (canonical == null) {
-                throw new IllegalStateException("Missing canonical.xml in package: " + zipPath);
+                throw new IllegalStateException("Missing canonical" + extension + " in package: " + zipPath);
             }
             try (InputStream input = zipFile.getInputStream(canonical)) {
                 return new String(input.readAllBytes(), StandardCharsets.UTF_8);

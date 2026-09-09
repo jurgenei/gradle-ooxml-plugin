@@ -35,11 +35,13 @@ import java.util.Set;
 public abstract class OoXmlToCanonicalTask extends DefaultTask {
     private final OpenXmlValidator validator = new OpenXmlValidator();
     private final CanonicalXmlSerializer serializer = new CanonicalXmlSerializer();
+    private final CanonicalSexprSerializer sexprSerializer = new CanonicalSexprSerializer();
     private final CanonicalZipPackageWriter packageWriter = new CanonicalZipPackageWriter();
 
     @Inject
     public OoXmlToCanonicalTask() {
         getLegacyXmlOutput().convention(false);
+        getTargetExtension().convention(".xml1");
         getRecognizerClassNames().convention(List.of());
     }
 
@@ -58,6 +60,9 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
 
     @Input
     public abstract Property<Boolean> getLegacyXmlOutput();
+
+    @Input
+    public abstract Property<String> getTargetExtension();
 
     @Input
     public abstract ListProperty<String> getRecognizerClassNames();
@@ -84,12 +89,18 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
             getLogger().debug("Preparing OOXML to canonical conversion for {} input file(s)", inputs.size());
             for (File input : inputs) {
                 validator.validate(input);
-                Path output = outputRoot.resolve(toOutputName(input));
+                String targetExtension = normalizedTargetExtension();
+                Path output = outputRoot.resolve(toOutputName(input, targetExtension));
                 getLogger().debug("Converting '{}' to '{}'", input.getAbsolutePath(), output.toAbsolutePath());
+                var canonical = canonicalizer.canonicalize(input);
                 if (getLegacyXmlOutput().getOrElse(false)) {
-                    serializer.write(canonicalizer.canonicalize(input), output);
+                    if (isSexprTarget(targetExtension)) {
+                        sexprSerializer.write(canonical, output);
+                    } else {
+                        serializer.write(canonical, output);
+                    }
                 } else {
-                    packageWriter.write(canonicalizer.canonicalize(input), input, output);
+                    packageWriter.write(canonical, input, output, targetExtension);
                 }
             }
         } catch (Exception e) {
@@ -119,14 +130,26 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
         }
     }
 
-    private String toOutputName(File input) throws IOException {
+    private String toOutputName(File input, String targetExtension) throws IOException {
         String name = input.getName();
         int dot = name.lastIndexOf('.');
         String stem = dot > 0 ? name.substring(0, dot) : name;
         if (getLegacyXmlOutput().getOrElse(false)) {
-            return stem + ".xml";
+            return stem + targetExtension;
         }
         String extension = dot > 0 ? name.substring(dot + 1).toLowerCase() : "ooxml";
         return stem + "_" + extension + ".zip";
+    }
+
+    private String normalizedTargetExtension() {
+        String configured = getTargetExtension().getOrElse(".xml1").trim();
+        if (configured.isBlank()) {
+            throw new GradleException("targetExtension must not be blank");
+        }
+        return configured.startsWith(".") ? configured : "." + configured;
+    }
+
+    private boolean isSexprTarget(String targetExtension) {
+        return ".sexpr".equalsIgnoreCase(targetExtension);
     }
 }

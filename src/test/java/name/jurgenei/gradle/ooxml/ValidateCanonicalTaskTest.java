@@ -21,7 +21,7 @@ class ValidateCanonicalTaskTest {
 
         Path canonical = projectDir.toPath().resolve("build/ooxml/canonical");
         Files.createDirectories(canonical);
-        Files.writeString(canonical.resolve("sample.xml"), """
+        Files.writeString(canonical.resolve("sample.xml1"), """
                 <document xmlns=\"http://jurgenei.name/canonical\">
                   <metadata>
                     <documentId>sample</documentId>
@@ -52,7 +52,7 @@ class ValidateCanonicalTaskTest {
         Files.createDirectories(canonical);
         Path zipPath = canonical.resolve("sample_docx.zip");
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(zipPath))) {
-            zip.putNextEntry(new ZipEntry("canonical.xml"));
+            zip.putNextEntry(new ZipEntry("canonical.xml1"));
             zip.write("""
                     <document xmlns=\"http://jurgenei.name/canonical\" xmlns:g=\"http://graphml.graphdrawing.org/xmlns\">
                       <metadata>
@@ -82,7 +82,7 @@ class ValidateCanonicalTaskTest {
 
         Path canonical = projectDir.toPath().resolve("build/ooxml/canonical");
         Files.createDirectories(canonical);
-        Files.writeString(canonical.resolve("chart.xml"), """
+        Files.writeString(canonical.resolve("chart.xml1"), """
                 <document xmlns="http://jurgenei.name/canonical">
                   <metadata>
                     <documentId>chart</documentId>

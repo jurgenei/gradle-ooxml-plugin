@@ -61,19 +61,34 @@ final class CanonicalXmlSerializer {
 
     void write(CanonicalDocument document, OutputStream outputStream) throws IOException, JAXBException {
         try {
-            Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            marshaller.marshal(document, buffer);
-
-            Document dom = parseXml(buffer.toByteArray());
-            normalizeGraphNamespaceStyle(dom);
-            writeXml(dom, outputStream);
+            outputStream.write(toXml(document).getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             if (e instanceof JAXBException jaxbException) {
                 throw jaxbException;
             }
+            throw new IOException("Failed to serialize canonical XML", e);
+        }
+    }
+
+    String toXml(CanonicalDocument document) throws IOException, JAXBException {
+        try {
+            Marshaller marshaller = jaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+            ByteArrayOutputStream marshalBuffer = new ByteArrayOutputStream();
+            marshaller.marshal(document, marshalBuffer);
+
+            Document dom = parseXml(marshalBuffer.toByteArray());
+            normalizeGraphNamespaceStyle(dom);
+
+            ByteArrayOutputStream xmlBuffer = new ByteArrayOutputStream();
+            writeXml(dom, xmlBuffer);
+            return xmlBuffer.toString(StandardCharsets.UTF_8);
+        } catch (JAXBException e) {
+            throw e;
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
             throw new IOException("Failed to serialize canonical XML", e);
         }
     }
