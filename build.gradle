@@ -9,7 +9,7 @@ configurations {
 }
 
 group = 'name.jurgenei.gradle'
-version = '0.1.9'
+version = '0.1.10'
 
 repositories {
     mavenCentral()
@@ -20,10 +20,11 @@ dependencies {
     implementation 'org.docx4j:docx4j-core:17.0.2'
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
-    implementation 'name.jurgenei:xml-sax-sexpr:0.1.0'
     implementation 'org.jgrapht:jgrapht-core:1.5.2'
     implementation 'org.openpnp:opencv:4.9.0-0'
     implementation 'ai.djl:api:0.33.0'
+    implementation 'name.jurgenei:xml-sax-sexpr:0.1.1'
+
     runtimeOnly 'ai.djl.onnxruntime:onnxruntime-engine:0.33.0'
     runtimeOnly 'com.microsoft.onnxruntime:onnxruntime:1.20.0'
 
