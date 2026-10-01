@@ -23,7 +23,7 @@ dependencies {
     implementation 'org.jgrapht:jgrapht-core:1.5.2'
     implementation 'org.openpnp:opencv:4.9.0-0'
     implementation 'ai.djl:api:0.33.0'
-    implementation 'name.jurgenei:xml-sax-sexpr:0.1.1'
+    implementation 'name.jurgenei:xir-sax:0.1.2'
 
     runtimeOnly 'ai.djl.onnxruntime:onnxruntime-engine:0.33.0'
     runtimeOnly 'com.microsoft.onnxruntime:onnxruntime:1.20.0'
@@ -129,4 +129,3 @@ tasks.named('jacocoTestCoverageVerification') {
 tasks.named('check') {
     dependsOn tasks.named('jacocoTestCoverageVerification')
 }
-

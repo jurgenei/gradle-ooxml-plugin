@@ -189,7 +189,7 @@ class OoXmlCanonicalizerTest {
         assertAppearsBefore(xml, "source-path=\"/word/document/p[3]/drawing[1]\"", "source-path=\"/word/document/p[5]/drawing[1]\"");
         assertTrue(xml.contains("href=\"media/image1.emf\"") || xml.contains("href=\"media/image2.emf\""));
         assertTrue(xml.contains("<group id="), "Expected canonical group structure for inferred subgraph");
-        assertTrue(!xml.contains("<g:graph"), "Expected graph elements to use local default namespace form");
+        assertFalse(xml.contains("<g:graph"), "Expected graph elements to use local default namespace form");
         assertTrue(xml.contains("semantic=\"process\""), "Expected inferred process nodes");
         assertTrue(xml.contains("semantic=\"flow\""), "Expected inferred flow edges");
         assertTrue(xml.contains("see section a") || xml.contains("see section b") || xml.contains("see section c"),
@@ -307,9 +307,9 @@ class OoXmlCanonicalizerTest {
                 .orElseThrow();
         assertTrue(chartOne.getSeries().stream().anyMatch(series -> "Trajectory".equals(series.getName())));
         assertTrue(chartOne.getSeries().stream().anyMatch(series -> "Checkpoints".equals(series.getName())));
-        assertTrue(chartOne.getSeries().stream().filter(series -> "Trajectory".equals(series.getName()))
+        assertEquals("(-10,0)", chartOne.getSeries().stream().filter(series -> "Trajectory".equals(series.getName()))
                 .flatMap(series -> series.getValues().stream())
-                .findFirst().orElseThrow().equals("(-10,0)"));
+                .findFirst().orElseThrow());
 
         var chartTwo = document.getBody().getCharts().stream()
                 .filter(chart -> "/word/document/p[1]/drawing[2]".equals(chart.getSourcePath()))

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExtractAssetsTaskTest {
@@ -34,7 +35,7 @@ class ExtractAssetsTaskTest {
         try (java.util.stream.Stream<Path> stream = Files.walk(assetsRoot)) {
             extractedFiles = stream.filter(Files::isRegularFile).count();
         }
-        assertTrue(extractedFiles == 0, "v1 benchmark corpus should not contain media/embedding assets");
+        assertEquals(0, extractedFiles, "v1 benchmark corpus should not contain media/embedding assets");
     }
 
     private void copyFixture(Path targetDirectory, String fixtureName, String targetName) throws Exception {

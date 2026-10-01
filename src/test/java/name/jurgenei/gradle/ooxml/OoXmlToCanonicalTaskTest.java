@@ -13,6 +13,7 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OoXmlToCanonicalTaskTest {
@@ -64,11 +65,11 @@ class OoXmlToCanonicalTaskTest {
         String formulaXml = readCanonicalPayload(formulasZip, ".xml1");
         assertTrue(formulaXml.contains("http://www.w3.org/1998/Math/MathML"));
         assertTrue(formulaXml.contains("<math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
-        assertTrue(!formulaXml.contains("<mrow/>"));
+        assertFalse(formulaXml.contains("<mrow/>"));
         assertTrue(formulaXml.contains("</para>\n        <para") || formulaXml.contains("</para>\r\n        <para"));
-        assertTrue(!formulaXml.contains("</para>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
-        assertTrue(!formulaXml.contains("</table>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
-        assertTrue(!formulaXml.contains("<text>CoverAmt Cov Perc"));
+        assertFalse(formulaXml.contains("</para>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertFalse(formulaXml.contains("</table>\n        <math xmlns=\"http://www.w3.org/1998/Math/MathML\""));
+        assertFalse(formulaXml.contains("<text>CoverAmt Cov Perc"));
 
         String diagramsXml = readCanonicalPayload(diagramsZip, ".xml1");
         assertTrue(diagramsXml.contains("<graph xmlns=\"http://graphml.graphdrawing.org/xmlns\""));
@@ -78,7 +79,7 @@ class OoXmlToCanonicalTaskTest {
         assertTrue(diagramsXml.contains("semantic=\"flow\""));
         assertTrue(diagramsXml.contains("<group id="));
         assertTrue(diagramsXml.contains("kind=\"asset\""));
-        assertTrue(!diagramsXml.contains("<g:graph"));
+        assertFalse(diagramsXml.contains("<g:graph"));
         assertTrue(diagramsXml.contains("source-path=\"/word/document/p[2]/drawing[1]\""));
         assertTrue(diagramsXml.contains("source-path=\"/word/document/p[3]/drawing[1]\""));
         assertTrue(diagramsXml.contains("kind=\"asset-text\""));
@@ -119,7 +120,7 @@ class OoXmlToCanonicalTaskTest {
         Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
         Path legacyXml = canonicalRoot.resolve("v2-diagrams.xml1");
         assertTrue(Files.exists(legacyXml));
-        assertTrue(!Files.exists(canonicalRoot.resolve("v2-diagrams_docx.zip")));
+        assertFalse(Files.exists(canonicalRoot.resolve("v2-diagrams_docx.zip")));
 
         String xml = Files.readString(legacyXml);
         assertTrue(xml.contains("<version>v2</version>"));
@@ -127,54 +128,54 @@ class OoXmlToCanonicalTaskTest {
     }
 
     @Test
-    void serializesZipPayloadAsSexprWhenTargetExtensionIsSexpr() throws Exception {
-        File projectDir = Files.createTempDirectory("ooxml-task-sexpr-package").toFile();
+    void serializesZipPayloadAsXirWhenTargetExtensionIsXir() throws Exception {
+        File projectDir = Files.createTempDirectory("ooxml-task-xir-package").toFile();
         Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
 
         Path docs = projectDir.toPath().resolve("docs");
         Files.createDirectories(docs);
         copyFixture(docs, "v1-benchmark.docx", "benchmark.docx");
 
-        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalSexpr", OoXmlToCanonicalTask.class).get();
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalXir", OoXmlToCanonicalTask.class).get();
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
         task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
-        task.getTargetExtension().set(".sexpr");
+        task.getTargetExtension().set(".xir");
 
         task.convert();
 
         Path zip = projectDir.toPath().resolve("build/ooxml/canonical/benchmark_docx.zip");
         assertTrue(Files.exists(zip));
-        String sexpr = readCanonicalPayload(zip, ".sexpr");
-        assertTrue(sexpr.startsWith("(."));
-        assertTrue(sexpr.contains("(document"));
-        assertTrue(sexpr.contains("Benchmark Document"));
+        String xir = readCanonicalPayload(zip, ".xir");
+        assertTrue(xir.startsWith("(."));
+        assertTrue(xir.contains("(document"));
+        assertTrue(xir.contains("Benchmark Document"));
     }
 
     @Test
-    void serializesLegacyFlatOutputAsSexprWhenTargetExtensionIsSexpr() throws Exception {
-        File projectDir = Files.createTempDirectory("ooxml-task-sexpr-flat").toFile();
+    void serializesLegacyFlatOutputAsXirWhenTargetExtensionIsXir() throws Exception {
+        File projectDir = Files.createTempDirectory("ooxml-task-xir-flat").toFile();
         Project project = ProjectBuilder.builder().withProjectDir(projectDir).build();
 
         Path docs = projectDir.toPath().resolve("docs");
         Files.createDirectories(docs);
         copyFixture(docs, "v2-diagrams.docx", "v2-diagrams.docx");
 
-        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalLegacySexpr", OoXmlToCanonicalTask.class).get();
+        OoXmlToCanonicalTask task = project.getTasks().register("ooxmlToCanonicalLegacyXir", OoXmlToCanonicalTask.class).get();
         task.source(project.fileTree(docs.toFile(), spec -> spec.include("**/*.docx")));
         task.getOutputDirectory().set(project.getLayout().getBuildDirectory().dir("ooxml/canonical"));
         task.getLegacyXmlOutput().set(true);
-        task.getTargetExtension().set(".sexpr");
+        task.getTargetExtension().set(".xir");
 
         task.convert();
 
         Path canonicalRoot = projectDir.toPath().resolve("build/ooxml/canonical");
-        Path sexprFile = canonicalRoot.resolve("v2-diagrams.sexpr");
-        assertTrue(Files.exists(sexprFile));
-        assertTrue(!Files.exists(canonicalRoot.resolve("v2-diagrams_docx.zip")));
+        Path xirFile = canonicalRoot.resolve("v2-diagrams.xir");
+        assertTrue(Files.exists(xirFile));
+        assertFalse(Files.exists(canonicalRoot.resolve("v2-diagrams_docx.zip")));
 
-        String sexpr = Files.readString(sexprFile);
-        assertTrue(sexpr.startsWith("(."));
-        assertTrue(sexpr.contains("(version \"v2\")"));
+        String xir = Files.readString(xirFile);
+        assertTrue(xir.startsWith("(."));
+        assertTrue(xir.contains("(version \"v2\")"));
     }
 
     @Test

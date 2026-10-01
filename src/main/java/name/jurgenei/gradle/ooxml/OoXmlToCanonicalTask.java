@@ -35,7 +35,7 @@ import java.util.Set;
 public abstract class OoXmlToCanonicalTask extends DefaultTask {
     private final OpenXmlValidator validator = new OpenXmlValidator();
     private final CanonicalXmlSerializer serializer = new CanonicalXmlSerializer();
-    private final CanonicalSexprSerializer sexprSerializer = new CanonicalSexprSerializer();
+    private final CanonicalXirSerializer xirSerializer = new CanonicalXirSerializer();
     private final CanonicalZipPackageWriter packageWriter = new CanonicalZipPackageWriter();
 
     @Inject
@@ -94,8 +94,8 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
                 getLogger().debug("Converting '{}' to '{}'", input.getAbsolutePath(), output.toAbsolutePath());
                 var canonical = canonicalizer.canonicalize(input);
                 if (getLegacyXmlOutput().getOrElse(false)) {
-                    if (isSexprTarget(targetExtension)) {
-                        sexprSerializer.write(canonical, output);
+                    if (isXirTarget(targetExtension)) {
+                        xirSerializer.write(canonical, output);
                     } else {
                         serializer.write(canonical, output);
                     }
@@ -149,7 +149,7 @@ public abstract class OoXmlToCanonicalTask extends DefaultTask {
         return configured.startsWith(".") ? configured : "." + configured;
     }
 
-    private boolean isSexprTarget(String targetExtension) {
-        return ".sexpr".equalsIgnoreCase(targetExtension);
+    private boolean isXirTarget(String targetExtension) {
+        return ".xir".equalsIgnoreCase(targetExtension);
     }
 }
