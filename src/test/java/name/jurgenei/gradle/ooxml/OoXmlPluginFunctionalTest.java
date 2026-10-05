@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipFile;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OoXmlPluginFunctionalTest {
@@ -178,16 +179,16 @@ class OoXmlPluginFunctionalTest {
 
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         assertTrue(Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams.xml1")));
-        assertTrue(!Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams_docx.zip")));
+        assertFalse(Files.exists(projectDir.resolve("build/ooxml/canonical/v2-diagrams_docx.zip")));
     }
 
     @Test
-    void supportsSexprTargetExtensionInConsumerBuild() throws Exception {
-        Path projectDir = tempDir.resolve("consumer-sexpr");
+    void supportsXirTargetExtensionInConsumerBuild() throws Exception {
+        Path projectDir = tempDir.resolve("consumer-xir");
         Files.createDirectories(projectDir.resolve("docs"));
         copyFixture(projectDir.resolve("docs"), "v1-benchmark.docx", "v1-benchmark.docx");
 
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'ooxml-functional-sexpr'\n", StandardCharsets.UTF_8);
+        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'ooxml-functional-xir'\n", StandardCharsets.UTF_8);
         Files.writeString(projectDir.resolve("build.gradle"), """
                 plugins {
                     id 'name.jurgenei.gradle.ooxml'
@@ -197,7 +198,7 @@ class OoXmlPluginFunctionalTest {
                     source(fileTree(layout.projectDirectory.dir('docs')) {
                         include '**/*.docx'
                     })
-                    targetExtension.set('.sexpr')
+                    targetExtension.set('.xir')
                 }
                 """, StandardCharsets.UTF_8);
 
@@ -210,7 +211,7 @@ class OoXmlPluginFunctionalTest {
         assertTrue(result.getOutput().contains("BUILD SUCCESSFUL"));
         Path zip = projectDir.resolve("build/ooxml/canonical/v1-benchmark_docx.zip");
         assertTrue(Files.exists(zip));
-        assertTrue(zipEntryExists(zip, "canonical.sexpr"));
+        assertTrue(zipEntryExists(zip, "canonical.xir"));
     }
 
     private boolean zipEntryExists(Path zipPath, String entryName) throws Exception {

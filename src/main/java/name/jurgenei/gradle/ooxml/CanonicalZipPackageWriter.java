@@ -25,7 +25,7 @@ import java.util.zip.ZipOutputStream;
  */
 final class CanonicalZipPackageWriter {
     private final CanonicalXmlSerializer serializer = new CanonicalXmlSerializer();
-    private final CanonicalSexprSerializer sexprSerializer = new CanonicalSexprSerializer();
+    private final CanonicalXirSerializer xirSerializer = new CanonicalXirSerializer();
 
     void write(CanonicalDocument document, File sourceOoxml, Path outputZip, String targetExtension) throws IOException {
         Files.createDirectories(outputZip.getParent());
@@ -35,8 +35,8 @@ final class CanonicalZipPackageWriter {
 
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(outputZip))) {
             zip.putNextEntry(new ZipEntry(canonicalEntry));
-            if (".sexpr".equalsIgnoreCase(targetExtension)) {
-                sexprSerializer.write(document, zip);
+            if (".xir".equalsIgnoreCase(targetExtension)) {
+                xirSerializer.write(document, zip);
             } else {
                 try {
                     serializer.write(document, zip);

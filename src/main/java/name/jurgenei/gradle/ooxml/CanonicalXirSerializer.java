@@ -2,7 +2,7 @@ package name.jurgenei.gradle.ooxml;
 
 import jakarta.xml.bind.JAXBException;
 import name.jurgenei.gradle.ooxml.canonical.CanonicalDocument;
-import name.jurgenei.xml.sexpr.SExpressionSerializer;
+import name.jurgenei.xir.XirSerializer;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
@@ -19,7 +19,7 @@ import java.nio.file.Path;
 /**
  * Serializes canonical model objects to canonical S-expression syntax.
  */
-final class CanonicalSexprSerializer {
+final class CanonicalXirSerializer {
     private final CanonicalXmlSerializer xmlSerializer = new CanonicalXmlSerializer();
 
     void write(CanonicalDocument document, Path outputFile) throws IOException {
@@ -49,10 +49,10 @@ final class CanonicalSexprSerializer {
         try {
             final XMLReader reader = factory.newSAXParser().getXMLReader();
             final Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-            final SExpressionSerializer serializer = new SExpressionSerializer(
+            final XirSerializer serializer = new XirSerializer(
                     writer,
-                    SExpressionSerializer.OutputFormat.BEAUTIFIED,
-                    SExpressionSerializer.SyntaxMode.CANONICAL);
+                    XirSerializer.OutputFormat.BEAUTIFIED,
+                    XirSerializer.SyntaxMode.CANONICAL);
             reader.setContentHandler(serializer);
             reader.setProperty("http://xml.org/sax/properties/lexical-handler", serializer);
             reader.parse(new InputSource(new StringReader(xml)));

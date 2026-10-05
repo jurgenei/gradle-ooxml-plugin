@@ -14,9 +14,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class CanonicalSexprSerializerChartTest {
+class CanonicalXirSerializerChartTest {
     @Test
-    void serializesChartEvidenceAsCanonicalSexpr() throws Exception {
+    void serializesChartEvidenceAsCanonicalXir() throws Exception {
         Chart chart = new Chart(
                 "Revenue trend",
                 "Region",
@@ -36,17 +36,17 @@ class CanonicalSexprSerializerChartTest {
         );
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        new CanonicalSexprSerializer().write(document, output);
-        String sexpr = output.toString(StandardCharsets.UTF_8);
+        new CanonicalXirSerializer().write(document, output);
+        String xir = output.toString(StandardCharsets.UTF_8);
 
-        assertTrue(sexpr.startsWith("(."));
-        assertTrue(sexpr.contains("(chart"));
-        assertTrue(sexpr.contains("source-path \"/xl/charts/chart1.xml\""));
-        assertTrue(sexpr.contains("(title \"Revenue trend\")"));
-        assertTrue(sexpr.contains("(legend \"Region\")"));
-        assertTrue(sexpr.contains("role \"x\""));
-        assertTrue(sexpr.contains("role \"y\""));
-        assertTrue(sexpr.contains("(name \"NL\")"));
+        assertTrue(xir.startsWith("(."));
+        assertTrue(xir.contains("(chart"));
+        assertTrue(xir.contains("source-path \"/xl/charts/chart1.xml\""));
+        assertTrue(xir.contains("(title \"Revenue trend\")"));
+        assertTrue(xir.contains("(legend \"Region\")"));
+        assertTrue(xir.contains("role \"x\""));
+        assertTrue(xir.contains("role \"y\""));
+        assertTrue(xir.contains("(name \"NL\")"));
     }
 }
 

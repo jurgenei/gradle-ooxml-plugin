@@ -633,7 +633,7 @@ tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask)
     source(fileTree(layout.projectDirectory.dir('docs')) {
         include '**/*.docx', '**/*.pptx', '**/*.xlsx'
     })
-    targetExtension.set('.sexpr')
+    targetExtension.set('.xir')
     outputDirectory.set(layout.buildDirectory.dir('ooxml/canonical'))
 }
 ```
@@ -641,7 +641,7 @@ tasks.named('ooxmlToCanonical', name.jurgenei.gradle.ooxml.OoXmlToCanonicalTask)
 Canonicalisation target extension contract:
 
 - `targetExtension.set('.xml1')` (default): serialize canonical payload as XML
-- `targetExtension.set('.sexpr')`: serialize canonical payload as canonical S-expression
+- `targetExtension.set('.xir')`: serialize canonical payload as canonical S-expression
 
 Canonical output (same content, two serializations):
 
@@ -711,9 +711,9 @@ tasks.named('validateCanonical', name.jurgenei.gradle.ooxml.ValidateCanonicalTas
 - body can contain structural + visual evidence in source order
 - canonical package name uses input stem + extension (`document.docx` -> `document_docx.zip`)
 - package contains:
-  - `canonical.xml1` (default) or `canonical.sexpr`
+  - `canonical.xml1` (default) or `canonical.xir`
   - `media/<asset-file>` referenced by `href`
-- legacy flat mode writes `<stem><targetExtension>` (`v2-diagrams.xml1`, `v2-diagrams.sexpr`)
+- legacy flat mode writes `<stem><targetExtension>` (`v2-diagrams.xml1`, `v2-diagrams.xir`)
 
 ## Extension
 

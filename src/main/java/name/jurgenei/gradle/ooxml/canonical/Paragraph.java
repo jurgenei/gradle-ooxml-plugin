@@ -19,10 +19,10 @@ import java.util.List;
 @XmlRootElement(name = "para", namespace = CanonicalNamespace.URI)
 public class Paragraph {
     @XmlElement(name = "text", namespace = CanonicalNamespace.URI)
-    private List<String> texts = new ArrayList<>();
+    private final List<String> texts = new ArrayList<>();
 
     @XmlAnyElement
-    private List<Element> math = new ArrayList<>();
+    private final List<Element> math = new ArrayList<>();
 
     @XmlAttribute(name = "source-path")
     private String sourcePath;
