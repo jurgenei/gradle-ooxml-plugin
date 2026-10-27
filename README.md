@@ -3,15 +3,31 @@
 ![Conformance](https://img.shields.io/badge/Conformance-Check--All%20Passing-brightgreen)
 [![Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/name.jurgenei.gradle.ooxml?label=Plugin%20Portal)](https://plugins.gradle.org/plugin/name.jurgenei.gradle.ooxml)
 [![Build and Test](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/gradle-build.yml)
+[![JUnit Report](https://img.shields.io/badge/JUnit-Report-blue?logo=githubactions)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/gradle-build.yml)
 [![Coverage CI](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/coverage.yml/badge.svg)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/coverage.yml)
-[![codecov](https://codecov.io/gh/jurgenei/gradle-ooxml-plugin/graph/badge.svg?token=H9YDrwr94Y)](https://codecov.io/gh/jurgenei/gradle-ooxml-plugin)
+[![CodeQL](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/codeql.yml/badge.svg)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/codeql.yml)
+[![Dependency Check](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/dependency-check.yml/badge.svg)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/dependency-check.yml)
+[![SpotBugs Security](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/spotbugs-security.yml/badge.svg)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/spotbugs-security.yml)
+[![Checkstyle](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/checkstyle.yml/badge.svg)](https://github.com/jurgenei/gradle-ooxml-plugin/actions/workflows/checkstyle.yml)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)](https://github.com/jurgenei/gradle-ooxml-plugin/security/dependabot)
+[![Coverage](https://codecov.io/gh/jurgenei/gradle-ooxml-plugin/graph/badge.svg?branch=main)](https://codecov.io/gh/jurgenei/gradle-ooxml-plugin)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/java-21+-green.svg)](https://www.oracle.com/java/)
-[![Gradle](https://img.shields.io/badge/gradle-8+-blue.svg)](https://gradle.org/)
+[![Gradle](https://img.shields.io/badge/gradle-9.5+-blue.svg)](https://gradle.org/)
 
 Gradle plugin that converts Office Open XML documents (`.docx`, `.pptx`, `.xlsx`) into canonical XML using `docx4j` + `JAXB`.
 
 Plugin focus: deterministic canonicalisation and package asset extraction.
+
+## Position in XIR spine
+
+- **Problem solved**: observe complex OOXML packages and normalize them into deterministic structures.
+- **Relation to XIR**: observation layer that prepares high-noise documents for XIR-aligned derivation.
+- **Why it matters**: makes downstream governance, lineage, and AI context workflows reproducible.
+
+```text
+Structured Knowledge -> XIR -> Observation -> Derivation -> Knowledge -> Applications
+```
 
 ## Why Canonicalise Before LLM
 
@@ -763,4 +779,3 @@ Generate schema-first JAXB sources:
 - task conversion tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlToCanonicalTaskTest.java`
 - functional TestKit tests: `src/test/java/name/jurgenei/gradle/ooxml/OoXmlPluginFunctionalTest.java`
 - asset extraction tests: `src/test/java/name/jurgenei/gradle/ooxml/ExtractAssetsTaskTest.java`
-
